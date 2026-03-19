@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Log - iOS Edition</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #1c1c1e;
+            --input-bg: #2c2c2e;
+            --text-main: #ffffff;
+            --text-dim: #8e8e93;
+            --accent-blue: #0a84ff;
+            --accent-green: #30d158;
+            --accent-red: #ff453a;
+            --border-color: #38383a;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-color); padding: 15px; color: var(--text-main); line-height: 1.4; }
+        .container { max-width: 500px; margin: auto; }
+        
+        h2 { font-size: 22px; font-weight: 700; margin-bottom: 15px; letter-spacing: -0.5px; }
+        h3 { font-size: 17px; font-weight: 600; color: var(--text-dim); }
+
+        .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; }
+        
+        /* Kalender Apple Style */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .calendar-day-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-align: center; text-transform: uppercase; }
+        .calendar-day { 
+            aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; 
+            border-radius: 6px; font-size: 13px; font-weight: 500; transition: 0.2s;
+            background: transparent;
+        }
+        .has-workout { background: var(--accent-blue); color: white; }
+        .today { border: 1px solid var(--accent-blue); }
+
+        /* Eingaben & Buttons */
+        input { 
+            background: var(--input-bg); border: none; border-radius: 8px; 
+            padding: 12px; color: white; font-size: 16px; margin: 5px 0; width: 100%; box-sizing: border-box;
+        }
+        .exercise-block { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
+        .set-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; margin-top: 8px; }
+        
+        button { cursor: pointer; border: none; border-radius: 10px; padding: 12px; font-weight: 600; font-size: 15px; transition: 0.1s; }
+        button:active { opacity: 0.7; transform: scale(0.98); }
+        
+        .btn-add-ex { background: transparent; color: var(--accent-blue); width: 100%; text-align: left; padding-left: 0; }
+        .btn-save { background: var(--accent-blue); color: white; width: 100%; margin-top: 10px; }
+        .btn-set { background: #3a3a3c; color: var(--text-main); font-size: 13px; padding: 6px 12px; }
+        .btn-remove { background: transparent; color: var(--accent-red); font-size: 13px; }
+        .btn-edit { background: transparent; color: var(--accent-blue); padding: 0; float: right; font-weight: 400; }
+        
+        /* Stats & Verlauf */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: var(--card-bg); padding: 12px; border-radius: 12px; text-align: left; }
+        .stat-val { display: block; font-size: 24px; font-weight: 700; color: var(--accent-blue); }
+        .stat-label { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+
+        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; }
+        .history-session:last-child { border-bottom: none; }
+        .history-title { font-size: 17px; font-weight: 600; color: var(--text-main); }
+        .history-date { font-size: 14px; color: var(--text-dim); }
+        .exercise-text { font-size: 14px; color: var(--text-main); margin-top: 4px; }
+        .volume-info { font-size: 12px; color: var(--accent-green); margin-top: 2px; }
+
+        .nav-btn { background: #2c2c2e; color: var(--accent-blue); padding: 6px 12px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Training</h2>
+
+    <div class="card">
+        <h3 id="form-title" style="margin-bottom:10px; color: white;">Neue Session</h3>
+        <div style="display: flex; gap: 10px;">
+            <input type="date" id="session-date">
+            <input type="text" id="session-name" placeholder="Titel (z.B. Push)" list="title-suggestions">
+        </div>
+        <div id="exercises-container"></div>
+        <button type="button" class="btn-add-ex" onclick="addExercise()">+ Übung hinzufügen</button>
+        <button type="button" class="btn-save" id="save-btn" onclick="saveSession()">Hinzufügen</button>
+        <button type="button" id="cancel-edit" style="display:none; background:#3a3a3c; color:white; width:100%; margin-top:8px;" onclick="resetForm()">Abbrechen</button>
+    </div>
+
+    <div class="card" style="padding: 15px;">
+        <div class="calendar-header">
+            <span id="calendar-month-year" style="font-weight: 600;">Monat 202X</span>
+            <div>
+                <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+                <button class="nav-btn" onclick="changeMonth(1)">›</button>
+            </div>
+        </div>
+        <div class="calendar-grid" id="calendar-days">
+            <div class="calendar-day-label">M</div><div class="calendar-day-label">D</div>
+            <div class="calendar-day-label">M</div><div class="calendar-day-label">D</div>
+            <div class="calendar-day-label">F</div><div class="calendar-day-label">S</div>
+            <div class="calendar-day-label">S</div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-box"><span class="stat-val" id="stat-total">0</span><span class="stat-label">Gesamt Trainings</span></div>
+        <div class="stat-box"><span class="stat-val" id="stat-month">0</span><span class="stat-label">Letzte 30 Tage</span></div>
+    </div>
+
+    <div class="card">
+        <h3>Verlauf</h3>
+        <input type="text" id="filter-input" placeholder="Suchen..." onkeyup="renderAll()" style="background: #000; margin-bottom: 10px; font-size: 14px;">
+        <div id="history"></div>
+        <div style="display: flex; gap: 10px; margin-top: 20px; opacity: 0.5;">
+            <button style="flex:1; background:none; color:white; font-size:12px;" onclick="exportBackup()">Export</button>
+            <button style="flex:1; background:none; color:white; font-size:12px;" onclick="document.getElementById('import-file').click()">Import</button>
+            <input type="file" id="import-file" style="display:none" onchange="importBackup(event)">
+        </div>
+    </div>
+</div>
+
+<datalist id="exercise-list"></datalist>
+<datalist id="title-suggestions">
+    <option value="Push"><option value="Pull"><option value="Legs"><option value="Brust"><option value="Rücken">
+</datalist>
+
+<script>
+    let logs = JSON.parse(localStorage.getItem('gymSessions')) || [];
+    let editIndex = null;
+    let currentCalDate = new Date();
+
+    window.onload = () => { resetForm(); renderAll(); };
+
+    function renderAll() {
+        updateExerciseTags();
+        renderStats();
+        renderCalendar();
+        renderHistory();
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-days');
+        const labels = grid.querySelectorAll('.calendar-day-label');
+        grid.innerHTML = ""; labels.forEach(l => grid.appendChild(l));
+
+        const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+        document.getElementById('calendar-month-year').innerText = `${monthNames[currentCalDate.getMonth()]} ${currentCalDate.getFullYear()}`;
+
+        const first = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth(), 1);
+        const last = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() + 1, 0);
+        let start = first.getDay(); start = (start === 0) ? 6 : start - 1;
+
+        for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
+
+        const workoutDates = logs.map(s => s.date);
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        for (let d = 1; d <= last.getDate(); d++) {
+            const div = document.createElement('div');
+            div.className = "calendar-day";
+            div.innerText = d;
+            const dateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            if (workoutDates.includes(dateStr)) div.classList.add('has-workout');
+            if (dateStr === todayStr) div.classList.add('today');
+            grid.appendChild(div);
+        }
+    }
+
+    function changeMonth(dir) { currentCalDate.setMonth(currentCalDate.getMonth() + dir); renderCalendar(); }
+
+    function renderStats() {
+        document.getElementById('stat-total').innerText = logs.length;
+        const thirtyDays = new Date(); thirtyDays.setDate(thirtyDays.getDate() - 30);
+        document.getElementById('stat-month').innerText = logs.filter(s => new Date(s.date) >= thirtyDays).length;
+    }
+
+    function updateExerciseTags() {
+        const datalist = document.getElementById('exercise-list');
+        const allNames = new Set();
+        logs.forEach(s => s.exercises.forEach(ex => allNames.add(ex.name)));
+        datalist.innerHTML = "";
+        allNames.forEach(name => { const op = document.createElement('option'); op.value = name; datalist.appendChild(op); });
+    }
+
+    function addExercise(name = "", sets = []) {
+        const container = document.getElementById('exercises-container');
+        const exDiv = document.createElement('div');
+        exDiv.className = 'exercise-block';
+        exDiv.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <input type="text" class="ex-name" list="exercise-list" placeholder="Übung..." value="${name}" style="background:transparent; font-weight:600; padding:0; margin:0;">
+                <button type="button" class="btn-remove" onclick="this.closest('.exercise-block').remove()">Entfernen</button>
+            </div>
+            <div class="sets-list"></div>
+            <button type="button" class="btn-set" onclick="addSet(this)" style="margin-top:10px;">+ Satz</button>
+        `;
+        container.appendChild(exDiv);
+        const list = exDiv.querySelector('.sets-list');
+        if (sets.length > 0) sets.forEach(s => addSetRow(list, s.reps, s.kg));
+        else addSetRow(list);
+    }
+
+    function addSet(btn) { addSetRow(btn.previousElementSibling); }
+    function addSetRow(container, reps = "", kg = "") {
+        const row = document.createElement('div');
+        row.className = 'set-row';
+        row.innerHTML = `<input type="number" class="s-reps" placeholder="Reps" value="${reps}"> <input type="number" class="s-weight" placeholder="kg" value="${kg}"> <button type="button" class="btn-remove" onclick="this.parentElement.remove()">-</button>`;
+        container.appendChild(row);
+    }
+
+    function saveSession() {
+        const date = document.getElementById('session-date').value;
+        const title = document.getElementById('session-name').value || "Training";
+        const exBlocks = document.getElementsByClassName('exercise-block');
+        let sessionEx = [];
+        for (let b of exBlocks) {
+            const name = b.querySelector('.ex-name').value;
+            const rs = b.querySelectorAll('.s-reps'), ws = b.querySelectorAll('.s-weight');
+            let sets = [];
+            for (let i = 0; i < rs.length; i++) {
+                if (rs[i].value !== "" && ws[i].value !== "") sets.push({ reps: rs[i].value, kg: ws[i].value });
+            }
+            if (name && sets.length > 0) sessionEx.push({ name, sets });
+        }
+        if (sessionEx.length === 0) return alert("Fehlende Daten!");
+        if (editIndex !== null) logs[editIndex] = { date, title, exercises: sessionEx };
+        else logs.push({ date, title, exercises: sessionEx });
+        localStorage.setItem('gymSessions', JSON.stringify(logs));
+        resetForm(); renderAll();
+    }
+
+    function renderHistory() {
+        const historyDiv = document.getElementById('history');
+        const searchTerm = document.getElementById('filter-input').value.toLowerCase();
+        historyDiv.innerHTML = ""; 
+        const sorted = logs.map((d, i) => ({d, i})).sort((a, b) => new Date(b.d.date) - new Date(a.d.date));
+
+        sorted.forEach(item => {
+            const s = item.d;
+            if (searchTerm === "" || s.title.toLowerCase().includes(searchTerm) || s.exercises.some(ex => ex.name.toLowerCase().includes(searchTerm))) {
+                let vol = 0;
+                let html = `<div class="history-session">
+                    <button class="btn-edit" onclick="editSession(${item.i})">Bearbeiten</button>
+                    <div class="history-title">${s.title}</div>
+                    <div class="history-date">${new Date(s.date).toLocaleDateString('de-DE')}</div>`;
+                s.exercises.forEach(ex => {
+                    let exVol = ex.sets.reduce((sum, set) => sum + (set.reps * set.kg), 0);
+                    vol += exVol;
+                    html += `<div class="exercise-text"><strong>${ex.name}</strong>: ` + ex.sets.map(set => `${set.reps}x${set.kg}kg`).join(' · ') + `</div>`;
+                });
+                html += `<div class="volume-info">${vol} kg Gesamtvolumen</div></div>`;
+                historyDiv.innerHTML += html;
+            }
+        });
+    }
+
+    function editSession(idx) {
+        editIndex = idx; const s = logs[idx];
+        document.getElementById('form-title').innerText = "Bearbeiten";
+        document.getElementById('cancel-edit').style.display = "block";
+        document.getElementById('session-date').value = s.date;
+        document.getElementById('session-name').value = s.title;
+        document.getElementById('exercises-container').innerHTML = "";
+        s.exercises.forEach(ex => addExercise(ex.name, ex.sets));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        editIndex = null; document.getElementById('form-title').innerText = "Neue Session";
+        document.getElementById('cancel-edit').style.display = "none";
+        document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('session-name').value = "";
+        document.getElementById('exercises-container').innerHTML = ""; addExercise();
+    }
+
+    function exportBackup() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logs));
+        const dl = document.createElement('a'); dl.setAttribute("href", dataStr);
+        dl.setAttribute("download", "gym_backup.json"); dl.click();
+    }
+
+    function importBackup(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { logs = JSON.parse(ev.target.result); localStorage.setItem('gymSessions', JSON.stringify(logs)); renderAll(); };
+        reader.readAsText(e.target.files[0]);
+    }
+</script>
+</body>
+</html>
