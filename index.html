@@ -46,18 +46,15 @@
         .container { max-width: 500px; margin: auto; }
         .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; }
         
-        h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
-        h3 { font-size: 18px; margin-bottom: 15px; }
-
         input { 
             background: var(--input-bg); border: none; border-radius: 10px; 
             padding: 12px; color: white; font-size: 16px; width: 100%; 
             box-sizing: border-box; margin-bottom: 12px;
-            -webkit-appearance: none; /* Fix für iOS Input Styles */
+            -webkit-appearance: none;
         }
 
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .calendar-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; font-weight: 500; }
+        .calendar-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; }
         .has-workout { background: var(--accent-blue); color: white; }
         
         .exercise-block { background: #2c2c2e; padding: 18px; border-radius: 14px; margin-bottom: 15px; border: 1px solid var(--border-color); }
@@ -66,7 +63,7 @@
         button { 
             cursor: pointer; border: none; border-radius: 12px; 
             padding: 12px; font-weight: 600; font-size: 15px; 
-            transition: opacity 0.2s; min-height: 44px; /* Apple Standard */
+            transition: opacity 0.2s; min-height: 44px;
             display: flex; align-items: center; justify-content: center;
         }
         button:active { opacity: 0.6; }
@@ -74,15 +71,15 @@
         .btn-add-exercise { background: #3a3a3c; color: var(--accent-blue); width: 100%; margin-bottom: 10px; }
         .btn-save { background: var(--accent-blue); color: white; width: 100%; margin-top: 5px; }
         .btn-cancel { background: #3a3a3c; color: white; width: 100%; margin-top: 10px; }
+        .btn-delete-session { background: none; color: var(--accent-red); width: 100%; margin-top: 20px; border: 1px solid var(--accent-red); }
         
         .history-session { border-bottom: 0.5px solid var(--border-color); padding: 18px 0; position: relative; }
         .btn-edit { color: var(--accent-blue); background: none; position: absolute; right: 0; top: 15px; padding: 5px 10px; min-height: auto; }
         .stat-val { font-size: 28px; font-weight: 700; color: var(--accent-blue); }
-        .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
 
         .mgmt-container { display: flex; gap: 12px; margin-top: 25px; }
         .mgmt-btn { background: #2c2c2e; color: var(--text-dim); font-size: 13px; flex: 1; border: 1px solid var(--border-color); }
-        
         .nav-btn { background: #2c2c2e; color: var(--accent-blue); padding: 5px 15px; border-radius: 8px; }
     </style>
 </head>
@@ -100,7 +97,11 @@
         <div id="exercises-container"></div>
         <button class="btn-add-exercise" onclick="addExercise()">+ Übung hinzufügen</button>
         <button class="btn-save" onclick="saveSession()">Session speichern</button>
-        <button id="cancel-edit" class="btn-cancel" style="display:none;" onclick="resetForm()">Abbrechen</button>
+        
+        <div id="edit-options" style="display:none;">
+            <button class="btn-cancel" onclick="resetForm()">Abbrechen</button>
+            <button class="btn-delete-session" onclick="deleteCurrentSession()">Dieses Training löschen</button>
+        </div>
     </div>
 
     <div class="card">
@@ -122,7 +123,6 @@
     <div class="card">
         <h3>Verlauf</h3>
         <div id="history">Daten werden geladen...</div>
-        
         <div class="mgmt-container">
             <button class="mgmt-btn" onclick="exportBackup()">Backup Export</button>
             <button class="mgmt-btn" onclick="document.getElementById('import-file').click()">Datei Import</button>
@@ -143,7 +143,7 @@
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                 <input type="text" class="ex-name" placeholder="Übung..." value="${name}" style="margin-bottom:0; font-weight:700; background:transparent; padding-left:0;">
-                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; padding:5px;">Löschen</button>
+                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; padding:5px;">×</button>
             </div>
             <div class="sets-list"></div>
             <button onclick="addSetRow(this.previousElementSibling)" style="background:#3a3a3c; color:white; font-size:13px; margin-top:10px; padding:6px 12px; min-height:auto;">+ Satz</button>
@@ -170,9 +170,7 @@
         const querySnapshot = await getDocs(q);
         logs = [];
         querySnapshot.forEach((doc) => { logs.push({ id: doc.id, ...doc.data() }); });
-        renderStats();
-        renderCalendar();
-        renderHistory();
+        renderStats(); renderCalendar(); renderHistory();
     }
 
     window.saveSession = async function() {
@@ -194,10 +192,27 @@
         try {
             if (editDocId) {
                 await updateDoc(doc(window.db, "sessions", editDocId), data);
-                editDocId = null;
             } else { await addDoc(collection(window.db, "sessions"), data); }
             resetForm(); renderAll();
         } catch (e) { alert("Fehler!"); }
+    };
+
+    window.deleteCurrentSession = async function() {
+        if (!editDocId) return;
+        const { deleteDoc, doc } = window.firestoreFuncs;
+        
+        // Zweite Abfrage (Bestätigung)
+        const firstCheck = confirm("Möchtest du dieses Training wirklich löschen?");
+        if (firstCheck) {
+            const secondCheck = confirm("Bist du GANZ sicher? Das kann nicht rückgängig gemacht werden!");
+            if (secondCheck) {
+                try {
+                    await deleteDoc(doc(window.db, "sessions", editDocId));
+                    resetForm();
+                    renderAll();
+                } catch (e) { alert("Löschen fehlgeschlagen!"); }
+            }
+        }
     };
 
     window.renderHistory = function() {
@@ -223,7 +238,7 @@
         document.getElementById('session-name').value = s.title;
         document.getElementById('exercises-container').innerHTML = "";
         s.exercises.forEach(ex => addExercise(ex.name, ex.sets));
-        document.getElementById('cancel-edit').style.display = "block";
+        document.getElementById('edit-options').style.display = "block";
         document.getElementById('form-title').innerText = "Session bearbeiten";
         window.scrollTo({top: 0, behavior: 'smooth'});
     };
@@ -234,7 +249,7 @@
         document.getElementById('session-name').value = "";
         document.getElementById('exercises-container').innerHTML = "";
         addExercise();
-        document.getElementById('cancel-edit').style.display = "none";
+        document.getElementById('edit-options').style.display = "none";
         document.getElementById('form-title').innerText = "Neue Session";
     };
 
@@ -278,7 +293,7 @@
             try {
                 const imported = JSON.parse(event.target.result);
                 if (Array.isArray(imported)) {
-                    if(!confirm("Möchtest du " + imported.length + " Einträge hochladen?")) return;
+                    if(!confirm(imported.length + " Einträge hochladen?")) return;
                     for (const s of imported) {
                         await addDoc(collection(window.db, "sessions"), {
                             date: s.date, title: s.title || "Import", exercises: s.exercises
