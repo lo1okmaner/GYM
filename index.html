@@ -12,24 +12,21 @@
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 1. HIER DEINE CONFIG VON FIREBASE EINFÜGEN:
-       const firebaseConfig = {
-    apiKey: "AIzaSyBsOrvObL2dpbV6H4HFNnHjGk_iDVJKdhs",
-    authDomain: "my-gym-d5b6e.firebaseapp.com",
-    projectId: "my-gym-d5b6e",
-    storageBucket: "my-gym-d5b6e.firebasestorage.app",
-    messagingSenderId: "262633382169",
-    appId: "1:262633382169:web:13d6fc201eda300889e588",
-    measurementId: "G-C3L4WMBYTG"
-  };
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsOrvObL2dpbV6H4HFNnHjGk_iDVJKdhs",
+            authDomain: "my-gym-d5b6e.firebaseapp.com",
+            projectId: "my-gym-d5b6e",
+            storageBucket: "my-gym-d5b6e.firebasestorage.app",
+            messagingSenderId: "262633382169",
+            appId: "1:262633382169:web:13d6fc201eda300889e588",
+            measurementId: "G-C3L4WMBYTG"
+        };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        window.db = db; // Global verfügbar machen
+        window.db = db;
         window.firestoreFuncs = { collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc };
         
-        // App starten
         setTimeout(() => { resetForm(); renderAll(); }, 500);
     </script>
 
@@ -51,8 +48,9 @@
         button { cursor: pointer; border: none; border-radius: 10px; padding: 12px; font-weight: 600; transition: 0.1s; }
         .btn-save { background: var(--accent-blue); color: white; width: 100%; }
         .history-session { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; position: relative; }
-        .btn-edit { color: var(--accent-blue); background: none; position: absolute; right: 0; }
+        .btn-edit { color: var(--accent-blue); background: none; position: absolute; right: 0; padding: 5px; }
         .stat-val { font-size: 24px; font-weight: 700; color: var(--accent-blue); }
+        .mgmt-btn { background: #3a3a3c; color: white; font-size: 12px; flex: 1; padding: 8px; }
     </style>
 </head>
 <body>
@@ -67,7 +65,7 @@
         <div id="exercises-container"></div>
         <button onclick="addExercise()">+ Übung</button>
         <button class="btn-save" onclick="saveSession()">Speichern</button>
-        <button id="cancel-edit" style="display:none; width:100%; margin-top:5px;" onclick="resetForm()">Abbrechen</button>
+        <button id="cancel-edit" style="display:none; width:100%; margin-top:5px; background:#555;" onclick="resetForm()">Abbrechen</button>
     </div>
 
     <div class="card">
@@ -86,6 +84,13 @@
     <div class="card">
         <h3>Verlauf</h3>
         <div id="history">Lade Daten aus Cloud...</div>
+        
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+        <div style="display: flex; gap: 10px;">
+            <button class="mgmt-btn" onclick="exportBackup()">Backup (Export)</button>
+            <button class="mgmt-btn" onclick="document.getElementById('import-file').click()">Datei laden (Import)</button>
+            <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackup(event)">
+        </div>
     </div>
 </div>
 
@@ -94,7 +99,6 @@
     let editDocId = null;
     let currentCalDate = new Date();
 
-    // Übung hinzufügen UI
     window.addExercise = function(name = "", sets = []) {
         const container = document.getElementById('exercises-container');
         const div = document.createElement('div');
@@ -103,7 +107,7 @@
             <input type="text" class="ex-name" placeholder="Übung..." value="${name}">
             <div class="sets-list"></div>
             <button onclick="addSetRow(this.previousElementSibling)">+ Satz</button>
-            <button onclick="this.parentElement.remove()" style="color:red; background:none;">Löschen</button>
+            <button onclick="this.parentElement.remove()" style="color:var(--accent-red); background:none; font-size:12px; margin-left:10px;">Löschen</button>
         `;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
@@ -116,11 +120,10 @@
         row.className = 'set-row';
         row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}"> 
                          <input type="number" class="s-weight" placeholder="kg" value="${kg}">
-                         <button onclick="this.parentElement.remove()">-</button>`;
+                         <button onclick="this.parentElement.remove()" style="color:var(--accent-red); background:none;">-</button>`;
         container.appendChild(row);
     };
 
-    // Daten aus Firebase laden
     async function renderAll() {
         if(!window.db) return;
         const { query, collection, getDocs, orderBy } = window.firestoreFuncs;
@@ -130,19 +133,16 @@
         querySnapshot.forEach((doc) => {
             logs.push({ id: doc.id, ...doc.data() });
         });
-        
         renderStats();
         renderCalendar();
         renderHistory();
     }
 
-    // Speichern in Firebase
     window.saveSession = async function() {
         const { collection, addDoc, updateDoc, doc } = window.firestoreFuncs;
         const date = document.getElementById('session-date').value;
         const title = document.getElementById('session-name').value || "Training";
         const blocks = document.getElementsByClassName('exercise-block');
-        
         let sessionEx = [];
         for (let b of blocks) {
             const name = b.querySelector('.ex-name').value;
@@ -153,9 +153,7 @@
             }
             if(name) sessionEx.push({ name, sets });
         }
-
         const data = { date, title, exercises: sessionEx };
-
         try {
             if (editDocId) {
                 await updateDoc(doc(window.db, "sessions", editDocId), data);
@@ -163,12 +161,10 @@
             } else {
                 await addDoc(collection(window.db, "sessions"), data);
             }
-            resetForm();
-            renderAll();
+            resetForm(); renderAll();
         } catch (e) { alert("Fehler beim Speichern!"); }
     };
 
-    // Helfer für UI
     window.renderHistory = function() {
         const hist = document.getElementById('history');
         hist.innerHTML = "";
@@ -202,9 +198,9 @@
         document.getElementById('exercises-container').innerHTML = "";
         addExercise();
         document.getElementById('cancel-edit').style.display = "none";
+        document.getElementById('form-title').innerText = "Neue Session";
     };
 
-    // Kalender & Stats (Logik wie vorher, nur basierend auf logs Array)
     window.renderCalendar = function() {
         const grid = document.getElementById('calendar-days');
         grid.innerHTML = "";
@@ -228,6 +224,40 @@
         document.getElementById('stat-total').innerText = logs.length;
         const thirty = new Date(); thirty.setDate(thirty.getDate()-30);
         document.getElementById('stat-month').innerText = logs.filter(l => new Date(l.date) >= thirty).length;
+    };
+
+    // --- BACKUP & IMPORT LOGIK ---
+    window.exportBackup = function() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logs));
+        const dl = document.createElement('a');
+        dl.setAttribute("href", dataStr);
+        dl.setAttribute("download", "gym_cloud_backup.json");
+        dl.click();
+    };
+
+    window.importBackup = async function(e) {
+        const { collection, addDoc } = window.firestoreFuncs;
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const imported = JSON.parse(event.target.result);
+                if (Array.isArray(imported)) {
+                    if(!confirm(imported.length + " Trainings gefunden. Jetzt in die Cloud hochladen?")) return;
+                    for (const s of imported) {
+                        await addDoc(collection(window.db, "sessions"), {
+                            date: s.date,
+                            title: s.title || "Import",
+                            exercises: s.exercises
+                        });
+                    }
+                    alert("Import erfolgreich!");
+                    renderAll();
+                }
+            } catch (err) { alert("Fehler beim Lesen der Datei!"); }
+        };
+        reader.readAsText(file);
     };
 </script>
 </body>
