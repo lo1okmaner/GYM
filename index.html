@@ -144,6 +144,11 @@
             <h3 style="margin-top:0;">Verlauf</h3>
             <div id="history">Lade Daten...</div>
         </div>
+        <div style="margin-top: 20px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 10px; text-align: center;">
+    <small style="color: var(--text-dim); display: block; margin-bottom: 10px;">Alte JSON-Daten importieren:</small>
+    <button class="btn-ghost" style="min-height: auto; font-size: 12px;" onclick="document.getElementById('cloud-import-file').click()">Datei auswählen</button>
+    <input type="file" id="cloud-import-file" style="display:none" accept=".json" onchange="importBackupToCloud(event)">
+</div>
     </div>
 </div>
 
@@ -282,6 +287,41 @@
         addExercise(); document.getElementById('edit-options').style.display = "none";
         document.getElementById('form-title').innerText = "Neue Session";
     }
+
+    window.importBackupToCloud = async function(e) {
+    const user = window.auth.currentUser;
+    if (!user) return alert("Bitte erst einloggen!");
+
+    const { collection, addDoc } = window.fs;
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            const imported = JSON.parse(event.target.result);
+            if (Array.isArray(imported)) {
+                if(!confirm(imported.length + " Trainings gefunden. Deinem Account zuordnen und hochladen?")) return;
+                
+                alert("Upload läuft... Schließe die App nicht.");
+                
+                for (const s of imported) {
+                    await addDoc(collection(window.db, "sessions"), {
+                        userId: user.uid, // DEINE ID wird hier gesetzt
+                        date: s.date,
+                        title: s.title || "Import",
+                        exercises: s.exercises
+                    });
+                }
+                alert("Fertig! Alle Daten sind jetzt in deiner Cloud.");
+                renderAll(); // Ansicht aktualisieren
+            }
+        } catch (err) { 
+            alert("Fehler beim Lesen der Datei. Sicher, dass es die richtige JSON ist?"); 
+        }
+    };
+    reader.readAsText(file);
+};
 </script>
 </body>
 </html>
