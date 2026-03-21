@@ -81,14 +81,27 @@
         .btn-blue { background: var(--accent-blue); color: white; }
         .btn-ghost { background: none; color: var(--text-dim); margin-top: 10px; border: 1px dashed var(--border-color); }
 
-        /* Accordion Style */
-        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 14px 0; cursor: pointer; }
-        .history-header { display: flex; align-items: center; position: relative; }
-        .chevron { color: var(--accent-blue); font-size: 12px; transition: transform 0.3s; margin-right: 12px; width: 15px; display: inline-block; }
+        /* iPhone Accordion Fix */
+        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 16px 0; -webkit-tap-highlight-color: transparent; }
+        .history-header { display: flex; align-items: center; position: relative; cursor: pointer; }
+        
+        /* Das Dreieck als CSS-Shape */
+        .chevron { 
+            width: 0; height: 0; 
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 8px solid var(--accent-blue);
+            margin-right: 15px;
+            transition: transform 0.3s ease;
+            display: inline-block;
+            flex-shrink: 0;
+        }
         .history-session.active .chevron { transform: rotate(90deg); }
-        .history-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 27px; }
-        .history-session.active .history-details { max-height: 1500px; padding-top: 10px; }
-        .exercise-line { font-size: 14px; margin-bottom: 4px; color: var(--text-main); }
+        
+        .history-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 23px; }
+        .history-session.active .history-details { max-height: 2000px; padding-top: 12px; }
+        
+        .exercise-line { font-size: 14px; margin-bottom: 6px; color: var(--text-main); line-height: 1.4; }
         .exercise-name { color: var(--accent-blue); font-weight: 600; }
 
         .exercise-block { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
@@ -116,7 +129,7 @@
     <div id="app-section" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items: baseline;">
             <h2>Training</h2>
-            <button onclick="handleLogout()" style="width:auto; background:none; color:var(--accent-red); font-size:14px; min-height:auto;">Logout</button>
+            <button onclick="handleLogout()" style="width:auto; background:none; color:var(--accent-red); font-size:14px; min-height:auto; padding: 10px;">Logout</button>
         </div>
 
         <div class="card">
@@ -150,9 +163,9 @@
             <div id="history">Lade Daten...</div>
         </div>
 
-        <div class="card" style="text-align: center; border-style: dashed;">
+        <div class="card" style="text-align: center; border-style: dashed; opacity: 0.6;">
             <small style="color: var(--text-dim); display: block; margin-bottom: 10px;">Daten importieren:</small>
-            <button class="btn-ghost" style="margin:0; font-size: 12px;" onclick="document.getElementById('cloud-import-file').click()">JSON Datei auswählen</button>
+            <button class="btn-ghost" style="margin:0; font-size: 12px; min-height: 34px;" onclick="document.getElementById('cloud-import-file').click()">JSON Datei auswählen</button>
             <input type="file" id="cloud-import-file" style="display:none" accept=".json" onchange="importBackupToCloud(event)">
         </div>
     </div>
@@ -188,10 +201,10 @@
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <input type="text" class="ex-name" placeholder="Übung..." value="${name}" style="background:none; font-weight:700; margin:0;">
-                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; width:auto; font-size:20px;">×</button>
+                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; width:auto; font-size:24px; padding: 0 10px;">×</button>
             </div>
             <div class="sets-list"></div>
-            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; margin-top:10px; background:#3a3a3c;">+ Satz</button>
+            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; margin-top:10px; background:#3a3a3c; padding: 8px 15px;">+ Satz</button>
         `;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
@@ -203,7 +216,7 @@
         row.className = 'set-row';
         row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}"> 
                          <input type="number" class="s-weight" placeholder="kg" value="${kg}">
-                         <button onclick="this.parentElement.remove()" style="background:none; color:var(--accent-red); width:auto;">-</button>`;
+                         <button onclick="this.parentElement.remove()" style="background:none; color:var(--accent-red); width:auto; font-size: 20px;">×</button>`;
         container.appendChild(row);
     };
 
@@ -268,7 +281,7 @@
 
     window.renderHistory = function() {
         const hist = document.getElementById('history'); hist.innerHTML = "";
-        if(logs.length === 0) { hist.innerText = "Keine Daten."; return; }
+        if(logs.length === 0) { hist.innerText = "Keine Daten vorhanden."; return; }
         
         logs.forEach(s => {
             const sessionDiv = document.createElement('div');
@@ -284,12 +297,12 @@
 
             sessionDiv.innerHTML = `
                 <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
-                    <span class="chevron">▶</span>
+                    <span class="chevron"></span>
                     <div style="flex-grow:1;">
                         <div style="font-weight:700; font-size:16px;">${s.title}</div>
                         <small style="color:var(--text-dim);">${new Date(s.date).toLocaleDateString('de-DE')}</small>
                     </div>
-                    <button onclick="event.stopPropagation(); editSession('${s.id}')" style="width:auto; min-height:auto; background:none; color:var(--accent-blue); font-size:13px; padding:0;">Edit</button>
+                    <button onclick="event.stopPropagation(); editSession('${s.id}')" style="width:auto; min-height:auto; background:none; color:var(--accent-blue); font-size:14px; padding: 10px;">Edit</button>
                 </div>
                 <div class="history-details">${exercisesHtml}</div>
             `;
@@ -304,6 +317,7 @@
         document.getElementById('exercises-container').innerHTML = "";
         s.exercises.forEach(ex => addExercise(ex.name, ex.sets));
         document.getElementById('edit-options').style.display = "block";
+        document.getElementById('form-title').innerText = "Bearbeiten";
         window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
@@ -330,7 +344,7 @@
                             userId: user.uid, date: s.date, title: s.title || "Import", exercises: s.exercises
                         });
                     }
-                    alert("Fertig!"); renderAll();
+                    alert("Erfolg!"); renderAll();
                 }
             } catch (err) { alert("Fehler!"); }
         };
