@@ -29,7 +29,6 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
-        // Persistenz erzwingen (Eingeloggt bleiben)
         setPersistence(auth, browserLocalPersistence);
 
         window.db = db;
@@ -37,7 +36,6 @@
         window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc };
         window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
 
-        // AUTH LISTENER (AUTO-LOGIN)
         onAuthStateChanged(auth, (user) => {
             const loadingScreen = document.getElementById('loading-screen');
             const loginSection = document.getElementById('login-section');
@@ -69,26 +67,16 @@
             margin: 0; -webkit-font-smoothing: antialiased;
         }
         .container { max-width: 500px; margin: auto; padding-top: 20px; }
-        
-        /* Loading Screen */
-        #loading-screen {
-            position: fixed; top:0; left:0; width:100%; height:100%; 
-            background: #000; z-index: 9999; display: flex; 
-            align-items: center; justify-content: center; transition: 0.5s;
-        }
+        #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
         .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* UI Elements */
         .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         h2 { font-size: 26px; font-weight: 700; margin-bottom: 15px; }
         input { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
-        button { cursor: pointer; border: none; border-radius: 12px; padding: 12px; font-weight: 600; font-size: 16px; min-height: 48px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        button { cursor: pointer; border: none; border-radius: 12px; padding: 12px; font-weight: 600; font-size: 16px; min-height: 48px; display: flex; align-items: center; justify-content: center; transition: 0.2s; width: 100%; }
         button:active { opacity: 0.5; }
-        .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
-        .btn-ghost { background: none; color: var(--text-dim); width: 100%; margin-top: 10px; }
-        
-        /* Workout Form */
+        .btn-blue { background: var(--accent-blue); color: white; }
+        .btn-ghost { background: none; color: var(--text-dim); margin-top: 10px; border: 1px dashed var(--border-color); }
         .exercise-block { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .set-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; margin-top: 10px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
@@ -105,18 +93,17 @@
     <div id="login-section" style="display:none; margin-top: 60px;">
         <div class="card" style="text-align: center;">
             <h2>GymLog Pro</h2>
-            <p style="color: var(--text-dim); margin-bottom: 25px;">Melde dich an, um dein Training zu synchronisieren.</p>
             <input type="email" id="login-email" placeholder="E-Mail Adresse">
             <input type="password" id="login-pass" placeholder="Passwort">
             <button class="btn-blue" onclick="handleLogin()">Anmelden</button>
-            <button class="btn-ghost" onclick="handleRegister()">Account erstellen</button>
+            <button class="btn-ghost" style="border:none" onclick="handleRegister()">Account erstellen</button>
         </div>
     </div>
 
     <div id="app-section" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items: baseline; margin-bottom: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items: baseline;">
             <h2>Training</h2>
-            <button onclick="handleLogout()" style="background:none; color:var(--accent-red); font-size:14px; min-height:auto;">Logout</button>
+            <button onclick="handleLogout()" style="width:auto; background:none; color:var(--accent-red); font-size:14px; min-height:auto;">Logout</button>
         </div>
 
         <div class="card">
@@ -126,29 +113,35 @@
                 <input type="text" id="session-name" placeholder="Titel" style="flex:1">
             </div>
             <div id="exercises-container"></div>
-            <button class="btn-ghost" onclick="addExercise()" style="border: 1px dashed var(--border-color);">+ Übung hinzufügen</button>
+            <button class="btn-ghost" onclick="addExercise()">+ Übung hinzufügen</button>
             <button class="btn-blue" onclick="saveSession()" style="margin-top:10px;">Session speichern</button>
-            
             <div id="edit-options" style="display:none;">
                 <button class="btn-ghost" onclick="resetForm()">Abbrechen</button>
-                <button style="background:none; color:var(--accent-red); width:100%; margin-top:15px;" onclick="deleteCurrentSession()">Training löschen</button>
+                <button style="background:none; color:var(--accent-red); margin-top:15px;" onclick="deleteCurrentSession()">Löschen</button>
             </div>
         </div>
 
         <div class="card">
-            <div id="cal-label" style="font-weight:700; margin-bottom:12px; color: var(--accent-blue);">Monat</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div id="cal-label" style="font-weight:700; color: var(--accent-blue);">Monat</div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="changeMonth(-1)" style="width:40px; min-height:30px; padding:0; background:#333;">‹</button>
+                    <button onclick="changeMonth(1)" style="width:40px; min-height:30px; padding:0; background:#333;">›</button>
+                </div>
+            </div>
             <div class="calendar-grid" id="calendar-days"></div>
         </div>
 
         <div class="card">
-            <h3 style="margin-top:0;">Verlauf</h3>
+            <h3>Verlauf</h3>
             <div id="history">Lade Daten...</div>
         </div>
-        <div style="margin-top: 20px; padding: 10px; border: 1px dashed var(--border-color); border-radius: 10px; text-align: center;">
-    <small style="color: var(--text-dim); display: block; margin-bottom: 10px;">Alte JSON-Daten importieren:</small>
-    <button class="btn-ghost" style="min-height: auto; font-size: 12px;" onclick="document.getElementById('cloud-import-file').click()">Datei auswählen</button>
-    <input type="file" id="cloud-import-file" style="display:none" accept=".json" onchange="importBackupToCloud(event)">
-</div>
+
+        <div class="card" style="text-align: center; border-style: dashed;">
+            <small style="color: var(--text-dim); display: block; margin-bottom: 10px;">Alte Daten importieren:</small>
+            <button class="btn-ghost" style="margin:0; font-size: 12px;" onclick="document.getElementById('cloud-import-file').click()">JSON Datei auswählen</button>
+            <input type="file" id="cloud-import-file" style="display:none" accept=".json" onchange="importBackupToCloud(event)">
+        </div>
     </div>
 </div>
 
@@ -157,37 +150,35 @@
     let editDocId = null;
     let currentCalDate = new Date();
 
-    // AUTH FUNKTIONEN
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
         try { await window.authFuncs.signInWithEmailAndPassword(window.auth, email, pass); }
-        catch(e) { alert("Login fehlgeschlagen: " + e.message); }
+        catch(e) { alert("Fehler: " + e.message); }
     }
 
     async function handleRegister() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
-        if(confirm("Neuen Account erstellen?")) {
+        if(confirm("Account erstellen?")) {
             try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, email, pass); }
-            catch(e) { alert("Registrierung fehlgeschlagen."); }
+            catch(e) { alert("Fehler: " + e.message); }
         }
     }
 
     function handleLogout() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
 
-    // UI LOGIK
     window.addExercise = function(name = "", sets = []) {
         const container = document.getElementById('exercises-container');
         const div = document.createElement('div');
         div.className = 'exercise-block';
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <input type="text" class="ex-name" placeholder="Übung Name..." value="${name}" style="background:none; font-weight:700; margin-bottom:0; padding-left:0;">
-                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; font-size:20px;">×</button>
+                <input type="text" class="ex-name" placeholder="Übung..." value="${name}" style="background:none; font-weight:700; margin:0;">
+                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; width:auto; font-size:20px;">×</button>
             </div>
             <div class="sets-list"></div>
-            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:13px; margin-top:10px; background:#3a3a3c; min-height:34px;">+ Satz</button>
+            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; margin-top:10px; background:#3a3a3c;">+ Satz</button>
         `;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
@@ -197,22 +188,26 @@
     window.addSetRow = function(container, reps="", kg="") {
         const row = document.createElement('div');
         row.className = 'set-row';
-        row.innerHTML = `<input type="number" class="s-reps" placeholder="Reps" value="${reps}"> 
+        row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}"> 
                          <input type="number" class="s-weight" placeholder="kg" value="${kg}">
-                         <button onclick="this.parentElement.remove()" style="background:none; color:var(--accent-red); font-size:18px;">-</button>`;
+                         <button onclick="this.parentElement.remove()" style="background:none; color:var(--accent-red); width:auto;">-</button>`;
         container.appendChild(row);
     };
 
-    // DATABASE LOGIK
     async function renderAll() {
         const user = window.auth.currentUser;
         if(!user) return;
-        const { query, collection, getDocs, orderBy, where } = window.fs;
-        const q = query(collection(window.db, "sessions"), where("userId", "==", user.uid), orderBy("date", "desc"));
-        const snap = await getDocs(q);
-        logs = [];
-        snap.forEach(doc => logs.push({id: doc.id, ...doc.data()}));
-        renderCalendar(); renderHistory();
+        try {
+            const { query, collection, getDocs, orderBy, where } = window.fs;
+            const q = query(collection(window.db, "sessions"), where("userId", "==", user.uid), orderBy("date", "desc"));
+            const snap = await getDocs(q);
+            logs = [];
+            snap.forEach(doc => logs.push({id: doc.id, ...doc.data()}));
+            renderCalendar(); renderHistory();
+        } catch(e) {
+            console.error(e);
+            document.getElementById('history').innerText = "Fehler beim Laden. Falls dies dein erster Login ist, erstelle erst ein Training oder prüfe die Firebase-Indizes.";
+        }
     }
 
     window.saveSession = async function() {
@@ -234,16 +229,15 @@
             if(editDocId) await updateDoc(doc(window.db, "sessions", editDocId), data);
             else await addDoc(collection(window.db, "sessions"), data);
             resetForm(); renderAll();
-        } catch(e) { alert("Fehler beim Speichern!"); }
+        } catch(e) { alert("Fehler!"); }
     };
 
     window.deleteCurrentSession = async function() {
-        if(!editDocId || !confirm("Wirklich löschen?")) return;
-        try { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editDocId)); resetForm(); renderAll(); }
-        catch(e) { alert("Fehler!"); }
+        if(!editDocId || !confirm("Löschen?")) return;
+        await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editDocId));
+        resetForm(); renderAll();
     };
 
-    // KALENDER & HISTORY (Apple Style)
     function renderCalendar() {
         const grid = document.getElementById('calendar-days'); grid.innerHTML = "";
         const workoutDates = logs.map(l => l.date);
@@ -252,19 +246,22 @@
         let start = (first.getDay() + 6) % 7;
         for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
         for (let d = 1; d <= last.getDate(); d++) {
-            const dateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const ds = `${currentCalDate.getFullYear()}-${String(currentCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const div = document.createElement('div');
-            div.className = "calendar-day" + (workoutDates.includes(dateStr) ? " has-workout" : "");
+            div.className = "calendar-day" + (workoutDates.includes(ds) ? " has-workout" : "");
             div.innerText = d; grid.appendChild(div);
         }
         document.getElementById('cal-label').innerText = currentCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
     }
 
+    window.changeMonth = (val) => { currentCalDate.setMonth(currentCalDate.getMonth() + val); renderCalendar(); };
+
     function renderHistory() {
         const hist = document.getElementById('history'); hist.innerHTML = "";
+        if(logs.length === 0) hist.innerText = "Keine Trainings gefunden.";
         logs.forEach(s => {
             const div = document.createElement('div'); div.className = "history-session";
-            div.innerHTML = `<button onclick="editSession('${s.id}')" style="float:right; background:none; color:var(--accent-blue); min-height:auto;">Bearbeiten</button>
+            div.innerHTML = `<button onclick="editSession('${s.id}')" style="float:right; background:none; color:var(--accent-blue); width:auto; min-height:auto;">Edit</button>
                              <div style="font-weight:700;">${s.title}</div><small style="color:var(--text-dim);">${s.date}</small>`;
             hist.appendChild(div);
         });
@@ -277,51 +274,45 @@
         document.getElementById('exercises-container').innerHTML = "";
         s.exercises.forEach(ex => addExercise(ex.name, ex.sets));
         document.getElementById('edit-options').style.display = "block";
-        document.getElementById('form-title').innerText = "Session bearbeiten";
         window.scrollTo({top: 0, behavior: 'smooth'});
-    }
+    };
 
     window.resetForm = function() {
         editDocId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('session-name').value = ""; document.getElementById('exercises-container').innerHTML = "";
         addExercise(); document.getElementById('edit-options').style.display = "none";
-        document.getElementById('form-title').innerText = "Neue Session";
-    }
+    };
 
     window.importBackupToCloud = async function(e) {
-    const user = window.auth.currentUser;
-    if (!user) return alert("Bitte erst einloggen!");
-
-    const { collection, addDoc } = window.fs;
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-        try {
-            const imported = JSON.parse(event.target.result);
-            if (Array.isArray(imported)) {
-                if(!confirm(imported.length + " Trainings gefunden. Deinem Account zuordnen und hochladen?")) return;
-                
-                alert("Upload läuft... Schließe die App nicht.");
-                
-                for (const s of imported) {
-                    await addDoc(collection(window.db, "sessions"), {
-                        userId: user.uid, // DEINE ID wird hier gesetzt
-                        date: s.date,
-                        title: s.title || "Import",
-                        exercises: s.exercises
-                    });
+        const user = window.auth.currentUser;
+        if (!user) return alert("Logge dich erst ein!");
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const imported = JSON.parse(event.target.result);
+                if (Array.isArray(imported)) {
+                    if(!confirm(imported.length + " Trainings hochladen?")) return;
+                    const hist = document.getElementById('history');
+                    let i = 0;
+                    for (const s of imported) {
+                        await window.fs.addDoc(window.fs.collection(window.db, "sessions"), {
+                            userId: user.uid,
+                            date: s.date,
+                            title: s.title || "Import",
+                            exercises: s.exercises
+                        });
+                        i++;
+                        hist.innerText = `Importiere: ${i} / ${imported.length}`;
+                    }
+                    alert("Fertig!");
+                    renderAll();
                 }
-                alert("Fertig! Alle Daten sind jetzt in deiner Cloud.");
-                renderAll(); // Ansicht aktualisieren
-            }
-        } catch (err) { 
-            alert("Fehler beim Lesen der Datei. Sicher, dass es die richtige JSON ist?"); 
-        }
+            } catch (err) { alert("Fehler beim JSON-Lesen"); }
+        };
+        reader.readAsText(file);
     };
-    reader.readAsText(file);
-};
 </script>
 </body>
 </html>
