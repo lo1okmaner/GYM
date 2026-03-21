@@ -67,22 +67,35 @@
             margin: 0; -webkit-font-smoothing: antialiased;
         }
         .container { max-width: 500px; margin: auto; padding-top: 20px; }
+        
         #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
         .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
         .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         h2 { font-size: 26px; font-weight: 700; margin-bottom: 15px; }
         input { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
+        
         button { cursor: pointer; border: none; border-radius: 12px; padding: 12px; font-weight: 600; font-size: 16px; min-height: 48px; display: flex; align-items: center; justify-content: center; transition: 0.2s; width: 100%; }
         button:active { opacity: 0.5; }
         .btn-blue { background: var(--accent-blue); color: white; }
         .btn-ghost { background: none; color: var(--text-dim); margin-top: 10px; border: 1px dashed var(--border-color); }
+
+        /* Accordion Style */
+        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 14px 0; cursor: pointer; }
+        .history-header { display: flex; align-items: center; position: relative; }
+        .chevron { color: var(--accent-blue); font-size: 12px; transition: transform 0.3s; margin-right: 12px; width: 15px; display: inline-block; }
+        .history-session.active .chevron { transform: rotate(90deg); }
+        .history-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 27px; }
+        .history-session.active .history-details { max-height: 1500px; padding-top: 10px; }
+        .exercise-line { font-size: 14px; margin-bottom: 4px; color: var(--text-main); }
+        .exercise-name { color: var(--accent-blue); font-weight: 600; }
+
         .exercise-block { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .set-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; margin-top: 10px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .calendar-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 13px; font-weight: 500; }
         .has-workout { background: var(--accent-blue); color: white; }
-        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; position: relative; }
     </style>
 </head>
 <body>
@@ -138,7 +151,7 @@
         </div>
 
         <div class="card" style="text-align: center; border-style: dashed;">
-            <small style="color: var(--text-dim); display: block; margin-bottom: 10px;">Alte Daten importieren:</small>
+            <small style="color: var(--text-dim); display: block; margin-bottom: 10px;">Daten importieren:</small>
             <button class="btn-ghost" style="margin:0; font-size: 12px;" onclick="document.getElementById('cloud-import-file').click()">JSON Datei auswählen</button>
             <input type="file" id="cloud-import-file" style="display:none" accept=".json" onchange="importBackupToCloud(event)">
         </div>
@@ -204,10 +217,7 @@
             logs = [];
             snap.forEach(doc => logs.push({id: doc.id, ...doc.data()}));
             renderCalendar(); renderHistory();
-        } catch(e) {
-            console.error(e);
-            document.getElementById('history').innerText = "Fehler beim Laden. Falls dies dein erster Login ist, erstelle erst ein Training oder prüfe die Firebase-Indizes.";
-        }
+        } catch(e) { console.error(e); }
     }
 
     window.saveSession = async function() {
@@ -256,16 +266,36 @@
 
     window.changeMonth = (val) => { currentCalDate.setMonth(currentCalDate.getMonth() + val); renderCalendar(); };
 
-    function renderHistory() {
+    window.renderHistory = function() {
         const hist = document.getElementById('history'); hist.innerHTML = "";
-        if(logs.length === 0) hist.innerText = "Keine Trainings gefunden.";
+        if(logs.length === 0) { hist.innerText = "Keine Daten."; return; }
+        
         logs.forEach(s => {
-            const div = document.createElement('div'); div.className = "history-session";
-            div.innerHTML = `<button onclick="editSession('${s.id}')" style="float:right; background:none; color:var(--accent-blue); width:auto; min-height:auto;">Edit</button>
-                             <div style="font-weight:700;">${s.title}</div><small style="color:var(--text-dim);">${s.date}</small>`;
-            hist.appendChild(div);
+            const sessionDiv = document.createElement('div');
+            sessionDiv.className = "history-session";
+            
+            let exercisesHtml = "";
+            s.exercises.forEach(ex => {
+                exercisesHtml += `<div class="exercise-line">
+                    <span class="exercise-name">${ex.name}:</span> 
+                    ${ex.sets.map(st => `${st.reps}x${st.kg}kg`).join(' · ')}
+                </div>`;
+            });
+
+            sessionDiv.innerHTML = `
+                <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
+                    <span class="chevron">▶</span>
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:700; font-size:16px;">${s.title}</div>
+                        <small style="color:var(--text-dim);">${new Date(s.date).toLocaleDateString('de-DE')}</small>
+                    </div>
+                    <button onclick="event.stopPropagation(); editSession('${s.id}')" style="width:auto; min-height:auto; background:none; color:var(--accent-blue); font-size:13px; padding:0;">Edit</button>
+                </div>
+                <div class="history-details">${exercisesHtml}</div>
+            `;
+            hist.appendChild(sessionDiv);
         });
-    }
+    };
 
     window.editSession = function(id) {
         const s = logs.find(l => l.id === id); editDocId = id;
@@ -281,11 +311,12 @@
         editDocId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('session-name').value = ""; document.getElementById('exercises-container').innerHTML = "";
         addExercise(); document.getElementById('edit-options').style.display = "none";
+        document.getElementById('form-title').innerText = "Neue Session";
     };
 
     window.importBackupToCloud = async function(e) {
         const user = window.auth.currentUser;
-        if (!user) return alert("Logge dich erst ein!");
+        if (!user) return;
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
@@ -293,23 +324,15 @@
             try {
                 const imported = JSON.parse(event.target.result);
                 if (Array.isArray(imported)) {
-                    if(!confirm(imported.length + " Trainings hochladen?")) return;
-                    const hist = document.getElementById('history');
-                    let i = 0;
+                    if(!confirm(imported.length + " Einträge hochladen?")) return;
                     for (const s of imported) {
                         await window.fs.addDoc(window.fs.collection(window.db, "sessions"), {
-                            userId: user.uid,
-                            date: s.date,
-                            title: s.title || "Import",
-                            exercises: s.exercises
+                            userId: user.uid, date: s.date, title: s.title || "Import", exercises: s.exercises
                         });
-                        i++;
-                        hist.innerText = `Importiere: ${i} / ${imported.length}`;
                     }
-                    alert("Fertig!");
-                    renderAll();
+                    alert("Fertig!"); renderAll();
                 }
-            } catch (err) { alert("Fehler beim JSON-Lesen"); }
+            } catch (err) { alert("Fehler!"); }
         };
         reader.readAsText(file);
     };
