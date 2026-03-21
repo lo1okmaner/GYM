@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GymLog Cloud</title>
+    <title>GymLog Pro</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="GymLog">
-<link rel="apple-touch-icon" href="icon.png">
-    
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GymLog">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2906/2906496.png">
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc } 
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBsOrvObL2dpbV6H4HFNnHjGk_iDVJKdhs",
@@ -20,16 +22,38 @@
             projectId: "my-gym-d5b6e",
             storageBucket: "my-gym-d5b6e.firebasestorage.app",
             messagingSenderId: "262633382169",
-            appId: "1:262633382169:web:13d6fc201eda300889e588",
-            measurementId: "G-C3L4WMBYTG"
+            appId: "1:262633382169:web:13d6fc201eda300889e588"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        window.db = db;
-        window.firestoreFuncs = { collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc };
+        const auth = getAuth(app);
         
-        setTimeout(() => { resetForm(); renderAll(); }, 500);
+        // Persistenz erzwingen (Eingeloggt bleiben)
+        setPersistence(auth, browserLocalPersistence);
+
+        window.db = db;
+        window.auth = auth;
+        window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc };
+        window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
+
+        // AUTH LISTENER (AUTO-LOGIN)
+        onAuthStateChanged(auth, (user) => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const loginSection = document.getElementById('login-section');
+            const appSection = document.getElementById('app-section');
+
+            if (user) {
+                loginSection.style.display = 'none';
+                appSection.style.display = 'block';
+                renderAll();
+            } else {
+                loginSection.style.display = 'block';
+                appSection.style.display = 'none';
+            }
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => loadingScreen.style.display = 'none', 500);
+        });
     </script>
 
     <style>
@@ -40,95 +64,85 @@
         }
         body { 
             font-family: -apple-system, system-ui, sans-serif; 
-            background: var(--bg-color); 
-            padding: 20px 15px env(safe-area-inset-bottom); 
-            color: var(--text-main); 
-            -webkit-font-smoothing: antialiased;
+            background: var(--bg-color); color: var(--text-main); 
+            padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom);
+            margin: 0; -webkit-font-smoothing: antialiased;
         }
-        .container { max-width: 500px; margin: auto; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; }
+        .container { max-width: 500px; margin: auto; padding-top: 20px; }
         
-        input { 
-            background: var(--input-bg); border: none; border-radius: 10px; 
-            padding: 12px; color: white; font-size: 16px; width: 100%; 
-            box-sizing: border-box; margin-bottom: 12px;
-            -webkit-appearance: none;
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: #000; z-index: 9999; display: flex; 
+            align-items: center; justify-content: center; transition: 0.5s;
         }
+        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .calendar-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; }
+        /* UI Elements */
+        .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        h2 { font-size: 26px; font-weight: 700; margin-bottom: 15px; }
+        input { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
+        button { cursor: pointer; border: none; border-radius: 12px; padding: 12px; font-weight: 600; font-size: 16px; min-height: 48px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        button:active { opacity: 0.5; }
+        .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
+        .btn-ghost { background: none; color: var(--text-dim); width: 100%; margin-top: 10px; }
+        
+        /* Workout Form */
+        .exercise-block { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .set-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; margin-top: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .calendar-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 13px; font-weight: 500; }
         .has-workout { background: var(--accent-blue); color: white; }
-        
-        .exercise-block { background: #2c2c2e; padding: 18px; border-radius: 14px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .set-row { display: grid; grid-template-columns: 1fr 1fr 45px; gap: 12px; margin-top: 10px; align-items: center; }
-        
-        button { 
-            cursor: pointer; border: none; border-radius: 12px; 
-            padding: 12px; font-weight: 600; font-size: 15px; 
-            transition: opacity 0.2s; min-height: 44px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        button:active { opacity: 0.6; }
-
-        .btn-add-exercise { background: #3a3a3c; color: var(--accent-blue); width: 100%; margin-bottom: 10px; }
-        .btn-save { background: var(--accent-blue); color: white; width: 100%; margin-top: 5px; }
-        .btn-cancel { background: #3a3a3c; color: white; width: 100%; margin-top: 10px; }
-        .btn-delete-session { background: none; color: var(--accent-red); width: 100%; margin-top: 20px; border: 1px solid var(--accent-red); }
-        
-        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 18px 0; position: relative; }
-        .btn-edit { color: var(--accent-blue); background: none; position: absolute; right: 0; top: 15px; padding: 5px 10px; min-height: auto; }
-        .stat-val { font-size: 28px; font-weight: 700; color: var(--accent-blue); }
-        .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
-
-        .mgmt-container { display: flex; gap: 12px; margin-top: 25px; }
-        .mgmt-btn { background: #2c2c2e; color: var(--text-dim); font-size: 13px; flex: 1; border: 1px solid var(--border-color); }
-        .nav-btn { background: #2c2c2e; color: var(--accent-blue); padding: 5px 15px; border-radius: 8px; }
+        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; position: relative; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 id="status">GymLog Cloud</h2>
+<div id="loading-screen"><div class="spinner"></div></div>
 
-    <div class="card">
-        <h3 id="form-title">Neue Session</h3>
-        <div style="display: flex; gap: 10px; margin-bottom: 5px;">
-            <input type="date" id="session-date" style="flex: 1.2;">
-            <input type="text" id="session-name" placeholder="Titel" style="flex: 1;">
-        </div>
-        <div id="exercises-container"></div>
-        <button class="btn-add-exercise" onclick="addExercise()">+ Übung hinzufügen</button>
-        <button class="btn-save" onclick="saveSession()">Session speichern</button>
-        
-        <div id="edit-options" style="display:none;">
-            <button class="btn-cancel" onclick="resetForm()">Abbrechen</button>
-            <button class="btn-delete-session" onclick="deleteCurrentSession()">Dieses Training löschen</button>
+<div class="container">
+    <div id="login-section" style="display:none; margin-top: 60px;">
+        <div class="card" style="text-align: center;">
+            <h2>GymLog Pro</h2>
+            <p style="color: var(--text-dim); margin-bottom: 25px;">Melde dich an, um dein Training zu synchronisieren.</p>
+            <input type="email" id="login-email" placeholder="E-Mail Adresse">
+            <input type="password" id="login-pass" placeholder="Passwort">
+            <button class="btn-blue" onclick="handleLogin()">Anmelden</button>
+            <button class="btn-ghost" onclick="handleRegister()">Account erstellen</button>
         </div>
     </div>
 
-    <div class="card">
-        <div id="calendar-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <span id="cal-label" style="font-weight: 600;">Monat</span>
-            <div style="display: flex; gap: 8px;">
-                <button class="nav-btn" onclick="changeMonth(-1)">‹</button> 
-                <button class="nav-btn" onclick="changeMonth(1)">›</button>
+    <div id="app-section" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items: baseline; margin-bottom: 10px;">
+            <h2>Training</h2>
+            <button onclick="handleLogout()" style="background:none; color:var(--accent-red); font-size:14px; min-height:auto;">Logout</button>
+        </div>
+
+        <div class="card">
+            <h3 id="form-title" style="margin-top:0;">Neue Session</h3>
+            <div style="display:flex; gap:10px;">
+                <input type="date" id="session-date" style="flex:1.2">
+                <input type="text" id="session-name" placeholder="Titel" style="flex:1">
+            </div>
+            <div id="exercises-container"></div>
+            <button class="btn-ghost" onclick="addExercise()" style="border: 1px dashed var(--border-color);">+ Übung hinzufügen</button>
+            <button class="btn-blue" onclick="saveSession()" style="margin-top:10px;">Session speichern</button>
+            
+            <div id="edit-options" style="display:none;">
+                <button class="btn-ghost" onclick="resetForm()">Abbrechen</button>
+                <button style="background:none; color:var(--accent-red); width:100%; margin-top:15px;" onclick="deleteCurrentSession()">Training löschen</button>
             </div>
         </div>
-        <div class="calendar-grid" id="calendar-days"></div>
-    </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-        <div class="card" style="margin-bottom:0; padding:15px;"><span class="stat-val" id="stat-total">0</span><span class="stat-label">Gesamt</span></div>
-        <div class="card" style="margin-bottom:0; padding:15px;"><span class="stat-val" id="stat-month">0</span><span class="stat-label">30 Tage</span></div>
-    </div>
+        <div class="card">
+            <div id="cal-label" style="font-weight:700; margin-bottom:12px; color: var(--accent-blue);">Monat</div>
+            <div class="calendar-grid" id="calendar-days"></div>
+        </div>
 
-    <div class="card">
-        <h3>Verlauf</h3>
-        <div id="history">Daten werden geladen...</div>
-        <div class="mgmt-container">
-            <button class="mgmt-btn" onclick="exportBackup()">Backup Export</button>
-            <button class="mgmt-btn" onclick="document.getElementById('import-file').click()">Datei Import</button>
-            <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackup(event)">
+        <div class="card">
+            <h3 style="margin-top:0;">Verlauf</h3>
+            <div id="history">Lade Daten...</div>
         </div>
     </div>
 </div>
@@ -138,104 +152,121 @@
     let editDocId = null;
     let currentCalDate = new Date();
 
+    // AUTH FUNKTIONEN
+    async function handleLogin() {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        try { await window.authFuncs.signInWithEmailAndPassword(window.auth, email, pass); }
+        catch(e) { alert("Login fehlgeschlagen: " + e.message); }
+    }
+
+    async function handleRegister() {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        if(confirm("Neuen Account erstellen?")) {
+            try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, email, pass); }
+            catch(e) { alert("Registrierung fehlgeschlagen."); }
+        }
+    }
+
+    function handleLogout() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
+
+    // UI LOGIK
     window.addExercise = function(name = "", sets = []) {
         const container = document.getElementById('exercises-container');
         const div = document.createElement('div');
         div.className = 'exercise-block';
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <input type="text" class="ex-name" placeholder="Übung..." value="${name}" style="margin-bottom:0; font-weight:700; background:transparent; padding-left:0;">
-                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; padding:5px;">×</button>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <input type="text" class="ex-name" placeholder="Übung Name..." value="${name}" style="background:none; font-weight:700; margin-bottom:0; padding-left:0;">
+                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; font-size:20px;">×</button>
             </div>
             <div class="sets-list"></div>
-            <button onclick="addSetRow(this.previousElementSibling)" style="background:#3a3a3c; color:white; font-size:13px; margin-top:10px; padding:6px 12px; min-height:auto;">+ Satz</button>
+            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:13px; margin-top:10px; background:#3a3a3c; min-height:34px;">+ Satz</button>
         `;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
-        if(sets.length > 0) sets.forEach(s => addSetRow(list, s.reps, s.kg));
-        else addSetRow(list);
+        if(sets.length > 0) sets.forEach(s => addSetRow(list, s.reps, s.kg)); else addSetRow(list);
     };
 
-    window.addSetRow = function(container, reps = "", kg = "") {
+    window.addSetRow = function(container, reps="", kg="") {
         const row = document.createElement('div');
         row.className = 'set-row';
-        row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}" style="margin-bottom:0;"> 
-                         <input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin-bottom:0;">
-                         <button onclick="this.parentElement.remove()" style="color:var(--accent-red); background:none; font-size:20px; padding:0;">×</button>`;
+        row.innerHTML = `<input type="number" class="s-reps" placeholder="Reps" value="${reps}"> 
+                         <input type="number" class="s-weight" placeholder="kg" value="${kg}">
+                         <button onclick="this.parentElement.remove()" style="background:none; color:var(--accent-red); font-size:18px;">-</button>`;
         container.appendChild(row);
     };
 
+    // DATABASE LOGIK
     async function renderAll() {
-        if(!window.db) return;
-        const { query, collection, getDocs, orderBy } = window.firestoreFuncs;
-        const q = query(collection(window.db, "sessions"), orderBy("date", "desc"));
-        const querySnapshot = await getDocs(q);
+        const user = window.auth.currentUser;
+        if(!user) return;
+        const { query, collection, getDocs, orderBy, where } = window.fs;
+        const q = query(collection(window.db, "sessions"), where("userId", "==", user.uid), orderBy("date", "desc"));
+        const snap = await getDocs(q);
         logs = [];
-        querySnapshot.forEach((doc) => { logs.push({ id: doc.id, ...doc.data() }); });
-        renderStats(); renderCalendar(); renderHistory();
+        snap.forEach(doc => logs.push({id: doc.id, ...doc.data()}));
+        renderCalendar(); renderHistory();
     }
 
     window.saveSession = async function() {
-        const { collection, addDoc, updateDoc, doc } = window.firestoreFuncs;
+        const user = window.auth.currentUser;
+        const { collection, addDoc, updateDoc, doc } = window.fs;
         const date = document.getElementById('session-date').value;
         const title = document.getElementById('session-name').value || "Training";
         const blocks = document.getElementsByClassName('exercise-block');
         let sessionEx = [];
-        for (let b of blocks) {
+        for(let b of blocks) {
             const name = b.querySelector('.ex-name').value;
             const rs = b.querySelectorAll('.s-reps'), ws = b.querySelectorAll('.s-weight');
             let sets = [];
-            for (let i = 0; i < rs.length; i++) {
-                if(rs[i].value) sets.push({ reps: rs[i].value, kg: ws[i].value });
-            }
-            if(name) sessionEx.push({ name, sets });
+            for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
+            if(name) sessionEx.push({name, sets});
         }
-        const data = { date, title, exercises: sessionEx };
+        const data = { userId: user.uid, date, title, exercises: sessionEx };
         try {
-            if (editDocId) {
-                await updateDoc(doc(window.db, "sessions", editDocId), data);
-            } else { await addDoc(collection(window.db, "sessions"), data); }
+            if(editDocId) await updateDoc(doc(window.db, "sessions", editDocId), data);
+            else await addDoc(collection(window.db, "sessions"), data);
             resetForm(); renderAll();
-        } catch (e) { alert("Fehler!"); }
+        } catch(e) { alert("Fehler beim Speichern!"); }
     };
 
     window.deleteCurrentSession = async function() {
-        if (!editDocId) return;
-        const { deleteDoc, doc } = window.firestoreFuncs;
-        
-        // Zweite Abfrage (Bestätigung)
-        const firstCheck = confirm("Möchtest du dieses Training wirklich löschen?");
-        if (firstCheck) {
-            const secondCheck = confirm("Bist du GANZ sicher? Das kann nicht rückgängig gemacht werden!");
-            if (secondCheck) {
-                try {
-                    await deleteDoc(doc(window.db, "sessions", editDocId));
-                    resetForm();
-                    renderAll();
-                } catch (e) { alert("Löschen fehlgeschlagen!"); }
-            }
-        }
+        if(!editDocId || !confirm("Wirklich löschen?")) return;
+        try { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editDocId)); resetForm(); renderAll(); }
+        catch(e) { alert("Fehler!"); }
     };
 
-    window.renderHistory = function() {
-        const hist = document.getElementById('history');
-        hist.innerHTML = "";
-        logs.forEach(s => {
+    // KALENDER & HISTORY (Apple Style)
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-days'); grid.innerHTML = "";
+        const workoutDates = logs.map(l => l.date);
+        const first = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth(), 1);
+        const last = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() + 1, 0);
+        let start = (first.getDay() + 6) % 7;
+        for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
+        for (let d = 1; d <= last.getDate(); d++) {
+            const dateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const div = document.createElement('div');
-            div.className = "history-session";
-            div.innerHTML = `<button class="btn-edit" onclick="editSession('${s.id}')">Edit</button>
-                             <div style="font-weight:700; font-size:16px;">${s.title}</div>
-                             <div style="color:var(--text-dim); font-size:13px; margin-bottom:8px;">${new Date(s.date).toLocaleDateString('de-DE')}</div>`;
-            s.exercises.forEach(ex => {
-                div.innerHTML += `<div style="font-size:14px; margin-bottom:2px;"><span style="color:var(--accent-blue); font-weight:600;">${ex.name}:</span> ${ex.sets.map(st => st.reps+'x'+st.kg+'kg').join(' · ')}</div>`;
-            });
+            div.className = "calendar-day" + (workoutDates.includes(dateStr) ? " has-workout" : "");
+            div.innerText = d; grid.appendChild(div);
+        }
+        document.getElementById('cal-label').innerText = currentCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
+    }
+
+    function renderHistory() {
+        const hist = document.getElementById('history'); hist.innerHTML = "";
+        logs.forEach(s => {
+            const div = document.createElement('div'); div.className = "history-session";
+            div.innerHTML = `<button onclick="editSession('${s.id}')" style="float:right; background:none; color:var(--accent-blue); min-height:auto;">Bearbeiten</button>
+                             <div style="font-weight:700;">${s.title}</div><small style="color:var(--text-dim);">${s.date}</small>`;
             hist.appendChild(div);
         });
-    };
+    }
 
     window.editSession = function(id) {
-        const s = logs.find(l => l.id === id);
-        editDocId = id;
+        const s = logs.find(l => l.id === id); editDocId = id;
         document.getElementById('session-date').value = s.date;
         document.getElementById('session-name').value = s.title;
         document.getElementById('exercises-container').innerHTML = "";
@@ -243,70 +274,14 @@
         document.getElementById('edit-options').style.display = "block";
         document.getElementById('form-title').innerText = "Session bearbeiten";
         window.scrollTo({top: 0, behavior: 'smooth'});
-    };
+    }
 
     window.resetForm = function() {
-        editDocId = null;
-        document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('session-name').value = "";
-        document.getElementById('exercises-container').innerHTML = "";
-        addExercise();
-        document.getElementById('edit-options').style.display = "none";
+        editDocId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('session-name').value = ""; document.getElementById('exercises-container').innerHTML = "";
+        addExercise(); document.getElementById('edit-options').style.display = "none";
         document.getElementById('form-title').innerText = "Neue Session";
-    };
-
-    window.renderCalendar = function() {
-        const grid = document.getElementById('calendar-days');
-        grid.innerHTML = "";
-        const first = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth(), 1);
-        const last = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() + 1, 0);
-        let start = (first.getDay() + 6) % 7;
-        for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
-        const workoutDates = logs.map(l => l.date);
-        for (let d = 1; d <= last.getDate(); d++) {
-            const dateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const div = document.createElement('div');
-            div.className = "calendar-day" + (workoutDates.includes(dateStr) ? " has-workout" : "");
-            div.innerText = d;
-            grid.appendChild(div);
-        }
-        document.getElementById('cal-label').innerText = currentCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
-    };
-
-    window.changeMonth = (d) => { currentCalDate.setMonth(currentCalDate.getMonth()+d); renderCalendar(); };
-    window.renderStats = () => {
-        document.getElementById('stat-total').innerText = logs.length;
-        const thirty = new Date(); thirty.setDate(thirty.getDate()-30);
-        document.getElementById('stat-month').innerText = logs.filter(l => new Date(l.date) >= thirty).length;
-    };
-
-    window.exportBackup = function() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logs));
-        const dl = document.createElement('a'); dl.setAttribute("href", dataStr);
-        dl.setAttribute("download", "gym_cloud_backup.json"); dl.click();
-    };
-
-    window.importBackup = async function(e) {
-        const { collection, addDoc } = window.firestoreFuncs;
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            try {
-                const imported = JSON.parse(event.target.result);
-                if (Array.isArray(imported)) {
-                    if(!confirm(imported.length + " Einträge hochladen?")) return;
-                    for (const s of imported) {
-                        await addDoc(collection(window.db, "sessions"), {
-                            date: s.date, title: s.title || "Import", exercises: s.exercises
-                        });
-                    }
-                    alert("Erfolg!"); renderAll();
-                }
-            } catch (err) { alert("Fehler!"); }
-        };
-        reader.readAsText(file);
-    };
+    }
 </script>
 </body>
 </html>
