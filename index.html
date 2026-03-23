@@ -10,7 +10,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc } 
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -30,7 +30,7 @@
         setPersistence(auth, browserLocalPersistence);
 
         window.db = db; window.auth = auth;
-        window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc };
+        window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc };
         window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
 
         onAuthStateChanged(auth, (user) => {
@@ -54,33 +54,32 @@
             --accent-red: #ff453a; --border-color: #38383a;
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 500px; margin: auto; padding: 20px 15px 120px 15px; }
         
-        /* Layout & Navigation */
-        .container { max-width: 500px; margin: auto; padding: 20px 15px 100px 15px; }
+        /* Tab Bar */
         .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(28, 28, 30, 0.95); border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 1000; backdrop-filter: blur(10px); }
-        .tab-item { color: var(--text-dim); text-align: center; font-size: 10px; text-decoration: none; flex: 1; border: none; background: none; cursor: pointer; }
+        .tab-item { color: var(--text-dim); text-align: center; font-size: 11px; background: none; border: none; flex: 1; cursor: pointer; }
         .tab-item.active { color: var(--accent-blue); }
         .tab-icon { font-size: 22px; display: block; margin-bottom: 4px; }
 
-        /* UI Elements */
+        /* General UI */
         .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         input, select { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
-        button { border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-blue { background: var(--accent-blue); color: white; padding: 14px; width: 100%; }
+        button { border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; min-height: 44px; }
+        .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
         
-        /* Content Sections */
         .view { display: none; }
         .view.active { display: block; }
 
-        /* History & Exercises */
+        /* History Accordion */
         .list-item { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; }
         .history-header { display: flex; align-items: center; cursor: pointer; }
         .chevron { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--accent-blue); margin-right: 12px; transition: 0.3s; }
         .active .chevron { transform: rotate(90deg); }
         .details { max-height: 0; overflow: hidden; transition: 0.3s; margin-left: 20px; font-size: 14px; }
-        .active .details { max-height: 1000px; padding-top: 10px; }
+        .active .details { max-height: 2000px; padding-top: 10px; }
         
-        #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
+        #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -91,11 +90,11 @@
 
 <div id="login-section" class="container" style="display:none; margin-top: 60px;">
     <div class="card" style="text-align: center;">
-        <h2>GymLog</h2>
+        <h2>GymLog Login</h2>
         <input type="email" id="email" placeholder="E-Mail">
         <input type="password" id="pass" placeholder="Passwort">
-        <button class="btn-blue" onclick="handleLogin()">Login</button>
-        <button onclick="handleRegister()" style="background:none; color:var(--text-dim); margin-top:15px;">Account erstellen</button>
+        <button class="btn-blue" onclick="handleLogin()">Einloggen</button>
+        <button onclick="handleRegister()" style="background:none; color:var(--text-dim); margin-top:15px; width:100%;">Neu hier? Account erstellen</button>
     </div>
 </div>
 
@@ -103,10 +102,10 @@
     <div class="container">
         
         <div id="view-exercises" class="view">
-            <h2>Meine Übungen</h2>
+            <h2>Übungskatalog</h2>
             <div class="card">
-                <input type="text" id="new-ex-name" placeholder="Name der Übung...">
-                <button class="btn-blue" onclick="addExerciseDefinition()">Übung speichern</button>
+                <input type="text" id="new-ex-name" placeholder="Neue Übung (z.B. Bankdrücken)">
+                <button class="btn-blue" onclick="addExerciseDefinition()">Hinzufügen</button>
             </div>
             <div id="exercise-definitions-list"></div>
         </div>
@@ -114,43 +113,44 @@
         <div id="view-tracking" class="view active">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h2>Tracking</h2>
-                <button onclick="handleLogout()" style="background:none; color:var(--accent-red); font-size:12px;">Logout</button>
+                <button onclick="handleLogout()" style="background:none; color:var(--accent-red); font-size:12px; width:auto; min-height:auto;">Logout</button>
             </div>
             
             <div class="card">
                 <h3 id="form-title">Neue Session</h3>
                 <div style="display:flex; gap:10px;">
                     <input type="date" id="session-date">
-                    <input type="text" id="session-name" placeholder="Titel (Push/Pull)">
+                    <input type="text" id="session-name" placeholder="Titel">
                 </div>
                 <div id="tracking-exercises"></div>
-                <button onclick="addTrackingExercise()" style="background:#3a3a3c; color:var(--accent-blue); width:100%; padding:12px; margin-bottom:10px;">+ Übung wählen</button>
-                <button class="btn-blue" onclick="saveSession()">Training speichern</button>
+                <button onclick="addTrackingExercise()" style="background:#3a3a3c; color:var(--accent-blue); width:100%; margin-bottom:10px;">+ Übung hinzufügen</button>
+                <button class="btn-blue" onclick="saveSession()">Session speichern</button>
                 <button id="cancel-edit" onclick="resetForm()" style="display:none; width:100%; background:none; color:var(--text-dim); margin-top:10px;">Abbrechen</button>
             </div>
 
             <div class="card">
-                <div id="history">Lade Verlauf...</div>
+                <h3>Verlauf</h3>
+                <div id="history">Keine Daten</div>
+            </div>
+
+            <div class="card" style="border-style: dashed; opacity: 0.5; margin-top: 20px; text-align: center;">
+                <small style="display:block; margin-bottom:10px;">Alte JSON Daten importieren (inkl. Übungen):</small>
+                <button onclick="document.getElementById('import-file').click()" style="background:#333; color:white; font-size:12px; min-height:30px; width:auto; padding: 0 20px;">Datei wählen</button>
+                <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackupToNewSystem(event)">
             </div>
         </div>
 
         <div id="view-bro" class="view">
             <h2>Bro Bereich</h2>
-            <div class="card"><p style="color:var(--text-dim);">Platzhalter für deine zukünftigen Ideen.</p></div>
+            <div class="card"><p style="color:var(--text-dim);">Demnächst...</p></div>
         </div>
 
     </div>
 
     <nav class="tab-bar">
-        <button class="tab-item" onclick="switchTab('exercises', this)">
-            <span class="tab-icon">🏋️</span>Übungen
-        </button>
-        <button class="tab-item active" onclick="switchTab('tracking', this)">
-            <span class="tab-icon">📊</span>Tracking
-        </button>
-        <button class="tab-item" onclick="switchTab('bro', this)">
-            <span class="tab-icon">🤜</span>Bro
-        </button>
+        <button class="tab-item" id="tab-exercises" onclick="switchTab('exercises')"><span class="tab-icon">🏋️</span>Übungen</button>
+        <button class="tab-item active" id="tab-tracking" onclick="switchTab('tracking')"><span class="tab-icon">📊</span>Tracking</button>
+        <button class="tab-item" id="tab-bro" onclick="switchTab('bro')"><span class="tab-icon">🤜</span>Bro</button>
     </nav>
 </div>
 
@@ -159,54 +159,45 @@
     let exerciseDefinitions = [];
     let editId = null;
 
-    // NAVIGATION
-    function switchTab(tab, btn) {
+    function switchTab(tab) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
-        btn.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
         window.scrollTo(0,0);
     }
 
-    // AUTH
     async function handleLogin() {
         try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-        catch(e) { alert(e.message); }
+        catch(e) { alert("Fehler: " + e.message); }
     }
     async function handleRegister() {
-        if(confirm("Account erstellen?")) {
-            try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-            catch(e) { alert(e.message); }
-        }
+        try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
+        catch(e) { alert("Fehler: " + e.message); }
     }
-    function handleLogout() { if(confirm("Logout?")) window.authFuncs.signOut(window.auth); }
+    function handleLogout() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
 
-    // INITIALISIERUNG
     async function initApp() {
         const user = window.auth.currentUser;
         if(!user) return;
         
-        // 1. Übungen laden
-        const exQuery = window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid));
-        const exSnap = await window.fs.getDocs(exQuery);
+        // Übungen laden
+        const exSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid)));
         exerciseDefinitions = [];
         exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
         renderExerciseDefinitions();
 
-        // 2. Trainings laden
-        const tQuery = window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.where("userId", "==", user.uid), window.fs.orderBy("date", "desc"));
-        const tSnap = await window.fs.getDocs(tQuery);
+        // Trainings laden
+        const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.where("userId", "==", user.uid), window.fs.orderBy("date", "desc")));
         logs = [];
         tSnap.forEach(d => logs.push({id: d.id, ...d.data()}));
         renderHistory();
     }
 
-    // ÜBUNGS-VERWALTUNG (LINKS)
     async function addExerciseDefinition() {
         const name = document.getElementById('new-ex-name').value;
         if(!name) return;
-        const user = window.auth.currentUser;
-        await window.fs.addDoc(window.fs.collection(window.db, "exerciseDefs"), { userId: user.uid, name: name });
+        await window.fs.addDoc(window.fs.collection(window.db, "exerciseDefs"), { userId: window.auth.currentUser.uid, name: name });
         document.getElementById('new-ex-name').value = "";
         initApp();
     }
@@ -217,34 +208,23 @@
         exerciseDefinitions.sort((a,b) => a.name.localeCompare(b.name)).forEach(ex => {
             const div = document.createElement('div');
             div.className = "list-item";
-            div.style.display = "flex";
-            div.style.justifyContent = "space-between";
-            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" style="background:none; color:red;">Löschen</button>`;
+            div.style.display = "flex"; div.style.justifyContent = "space-between";
+            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" style="background:none; color:red; min-height:auto;">×</button>`;
             list.appendChild(div);
         });
     }
 
     async function deleteExDef(id) {
-        if(confirm("Übung aus Liste entfernen?")) {
-            await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id));
-            initApp();
-        }
+        if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); }
     }
 
-    // TRACKING (MITTE)
     window.addTrackingExercise = function(name = "", sets = []) {
         const container = document.getElementById('tracking-exercises');
         const div = document.createElement('div');
-        div.className = "card";
-        div.style.padding = "15px";
-        
+        div.className = "card"; div.style.padding = "15px";
         let options = exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('');
-        
         div.innerHTML = `
-            <select class="ex-select" style="margin-bottom:10px; font-weight:700;">
-                <option value="">-- Übung wählen --</option>
-                ${options}
-            </select>
+            <select class="ex-select" style="margin-bottom:10px; font-weight:700;"><option value="">-- Übung wählen --</option>${options}</select>
             <div class="sets-list"></div>
             <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; padding:6px 12px; background:#3a3a3c; margin-top:5px;">+ Satz</button>
             <button onclick="this.parentElement.remove()" style="float:right; background:none; color:red; font-size:12px; margin-top:5px;">Entfernen</button>
@@ -274,60 +254,75 @@
             for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
             if(name) sessionEx.push({name, sets});
         });
-
-        const data = { 
-            userId: user.uid, 
-            date: document.getElementById('session-date').value, 
-            title: document.getElementById('session-name').value || "Training", 
-            exercises: sessionEx 
-        };
-
+        const data = { userId: user.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Training", exercises: sessionEx };
         if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), data);
         else await window.fs.addDoc(window.fs.collection(window.db, "sessions"), data);
-        
         resetForm(); initApp();
     }
 
     function renderHistory() {
         const hist = document.getElementById('history'); hist.innerHTML = "";
         logs.forEach(s => {
-            const item = document.createElement('div');
-            item.className = "list-item";
+            const item = document.createElement('div'); item.className = "list-item";
             let exHtml = s.exercises.map(ex => `<div><b>${ex.name}</b>: ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
             item.innerHTML = `
                 <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
                     <span class="chevron"></span>
                     <div style="flex-grow:1;"><b>${s.title}</b> <small>${s.date}</small></div>
-                    <button onclick="event.stopPropagation(); loadEdit('${s.id}')" style="background:none; color:var(--accent-blue); font-size:12px;">Edit</button>
+                    <button onclick="event.stopPropagation(); loadEdit('${s.id}')" style="background:none; color:var(--accent-blue); font-size:12px; width:auto; min-height:auto;">Edit</button>
                 </div>
-                <div class="details">${exHtml}</div>
-            `;
+                <div class="details">${exHtml}</div>`;
             hist.appendChild(item);
         });
     }
 
     window.loadEdit = function(id) {
         const s = logs.find(l => l.id === id);
-        editId = id;
-        document.getElementById('session-date').value = s.date;
-        document.getElementById('session-name').value = s.title;
+        editId = id; document.getElementById('session-date').value = s.date; document.getElementById('session-name').value = s.title;
         document.getElementById('tracking-exercises').innerHTML = "";
         s.exercises.forEach(ex => addTrackingExercise(ex.name, ex.sets));
-        document.getElementById('form-title').innerText = "Training bearbeiten";
-        document.getElementById('cancel-edit').style.display = "block";
+        document.getElementById('form-title').innerText = "Editieren"; document.getElementById('cancel-edit').style.display = "block";
         window.scrollTo(0,0);
     }
 
     window.resetForm = function() {
-        editId = null;
-        document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('session-name').value = "";
-        document.getElementById('tracking-exercises').innerHTML = "";
-        document.getElementById('form-title').innerText = "Neue Session";
-        document.getElementById('cancel-edit').style.display = "none";
+        editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
+        document.getElementById('form-title').innerText = "Neue Session"; document.getElementById('cancel-edit').style.display = "none";
     };
 
-    // Auto-Set Date
+    // --- DER INTELLIGENTE IMPORT ---
+    window.importBackupToNewSystem = async function(e) {
+        const user = window.auth.currentUser;
+        if (!user) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const imported = JSON.parse(event.target.result);
+            if(!confirm(imported.length + " Trainings importieren?")) return;
+            const hist = document.getElementById('history');
+            let i = 0;
+            for (const s of imported) {
+                // Training speichern
+                await window.fs.addDoc(window.fs.collection(window.db, "sessions"), {
+                    userId: user.uid, date: s.date, title: s.title || "Import", exercises: s.exercises
+                });
+                // Übungs-Namen automatisch lernen
+                for (const ex of s.exercises) {
+                    const exists = exerciseDefinitions.some(d => d.name === ex.name);
+                    if (!exists) {
+                        const newDef = { userId: user.uid, name: ex.name };
+                        await window.fs.addDoc(window.fs.collection(window.db, "exerciseDefs"), newDef);
+                        exerciseDefinitions.push(newDef);
+                    }
+                }
+                i++; hist.innerText = `Import: ${i} / ${imported.length}`;
+            }
+            alert("Fertig!"); initApp();
+        };
+        reader.readAsText(file);
+    };
+
     document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
