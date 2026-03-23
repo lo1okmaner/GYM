@@ -6,12 +6,11 @@
     <title>GymLog Pro</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GymLog">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2906/2906496.png">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc } 
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -28,29 +27,23 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        
         setPersistence(auth, browserLocalPersistence);
 
-        window.db = db;
-        window.auth = auth;
-        window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc };
+        window.db = db; window.auth = auth;
+        window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc };
         window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
 
         onAuthStateChanged(auth, (user) => {
-            const loadingScreen = document.getElementById('loading-screen');
-            const loginSection = document.getElementById('login-section');
-            const appSection = document.getElementById('app-section');
-
+            const ls = document.getElementById('loading-screen');
             if (user) {
-                loginSection.style.display = 'none';
-                appSection.style.display = 'block';
-                renderAll();
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('main-wrapper').style.display = 'block';
+                initApp();
             } else {
-                loginSection.style.display = 'block';
-                appSection.style.display = 'none';
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('main-wrapper').style.display = 'none';
             }
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => loadingScreen.style.display = 'none', 500);
+            ls.style.opacity = '0'; setTimeout(() => ls.style.display = 'none', 500);
         });
     </script>
 
@@ -58,175 +51,203 @@
         :root {
             --bg-color: #000000; --card-bg: #1c1c1e; --input-bg: #2c2c2e;
             --text-main: #ffffff; --text-dim: #8e8e93; --accent-blue: #0a84ff;
-            --accent-green: #30d158; --accent-red: #ff453a; --border-color: #38383a;
+            --accent-red: #ff453a; --border-color: #38383a;
         }
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            background: var(--bg-color); color: var(--text-main); 
-            padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom);
-            margin: 0; -webkit-font-smoothing: antialiased;
-        }
-        .container { max-width: 500px; margin: auto; padding-top: 20px; }
-        #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
-        h2 { font-size: 26px; font-weight: 700; margin-bottom: 15px; }
-        input, select { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; -webkit-appearance: none; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
         
-        button { cursor: pointer; border: none; border-radius: 12px; padding: 12px; font-weight: 600; font-size: 16px; min-height: 48px; display: flex; align-items: center; justify-content: center; transition: 0.2s; width: 100%; }
-        button:active { opacity: 0.5; }
-        .btn-blue { background: var(--accent-blue); color: white; }
-        .btn-ghost { background: none; color: var(--text-dim); margin-top: 10px; border: 1px dashed var(--border-color); }
+        /* Layout & Navigation */
+        .container { max-width: 500px; margin: auto; padding: 20px 15px 100px 15px; }
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(28, 28, 30, 0.95); border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 1000; backdrop-filter: blur(10px); }
+        .tab-item { color: var(--text-dim); text-align: center; font-size: 10px; text-decoration: none; flex: 1; border: none; background: none; cursor: pointer; }
+        .tab-item.active { color: var(--accent-blue); }
+        .tab-icon { font-size: 22px; display: block; margin-bottom: 4px; }
 
-        .history-session { border-bottom: 0.5px solid var(--border-color); padding: 16px 0; -webkit-tap-highlight-color: transparent; }
-        .history-header { display: flex; align-items: center; position: relative; cursor: pointer; }
-        .chevron { width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 8px solid var(--accent-blue); margin-right: 15px; transition: transform 0.3s ease; display: inline-block; flex-shrink: 0; }
-        .history-session.active .chevron { transform: rotate(90deg); }
-        .history-details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 23px; }
-        .history-session.active .history-details { max-height: 2000px; padding-top: 12px; }
-        .exercise-line { font-size: 14px; margin-bottom: 6px; color: var(--text-main); line-height: 1.4; }
-        .exercise-name { color: var(--accent-blue); font-weight: 600; }
+        /* UI Elements */
+        .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        input, select { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
+        button { border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-blue { background: var(--accent-blue); color: white; padding: 14px; width: 100%; }
+        
+        /* Content Sections */
+        .view { display: none; }
+        .view.active { display: block; }
 
-        .exercise-block { background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .set-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; margin-top: 10px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .calendar-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 13px; font-weight: 500; }
-        .has-workout { background: var(--accent-blue); color: white; }
+        /* History & Exercises */
+        .list-item { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; }
+        .history-header { display: flex; align-items: center; cursor: pointer; }
+        .chevron { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--accent-blue); margin-right: 12px; transition: 0.3s; }
+        .active .chevron { transform: rotate(90deg); }
+        .details { max-height: 0; overflow: hidden; transition: 0.3s; margin-left: 20px; font-size: 14px; }
+        .active .details { max-height: 1000px; padding-top: 10px; }
+        
+        #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
+        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div id="loading-screen"><div class="spinner"></div></div>
 
-<datalist id="exercise-suggestions">
-    <option value="Bankdrücken">
-    <option value="Kniebeugen">
-    <option value="Kreuzheben">
-    <option value="Schulterdrücken">
-    <option value="Klimmzüge">
-    <option value="Rudern">
-    <option value="Bizeps Curls">
-    <option value="Trizeps Drücken">
-</datalist>
-
-<div class="container">
-    <div id="login-section" style="display:none; margin-top: 60px;">
-        <div class="card" style="text-align: center;">
-            <h2>GymLog Pro</h2>
-            <input type="email" id="login-email" placeholder="E-Mail Adresse">
-            <input type="password" id="login-pass" placeholder="Passwort">
-            <button class="btn-blue" onclick="handleLogin()">Anmelden</button>
-            <button class="btn-ghost" style="border:none" onclick="handleRegister()">Account erstellen</button>
-        </div>
+<div id="login-section" class="container" style="display:none; margin-top: 60px;">
+    <div class="card" style="text-align: center;">
+        <h2>GymLog</h2>
+        <input type="email" id="email" placeholder="E-Mail">
+        <input type="password" id="pass" placeholder="Passwort">
+        <button class="btn-blue" onclick="handleLogin()">Login</button>
+        <button onclick="handleRegister()" style="background:none; color:var(--text-dim); margin-top:15px;">Account erstellen</button>
     </div>
+</div>
 
-    <div id="app-section" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items: baseline;">
-            <h2>Training</h2>
-            <button onclick="handleLogout()" style="width:auto; background:none; color:var(--accent-red); font-size:14px; min-height:auto; padding: 10px;">Logout</button>
+<div id="main-wrapper" style="display:none;">
+    <div class="container">
+        
+        <div id="view-exercises" class="view">
+            <h2>Meine Übungen</h2>
+            <div class="card">
+                <input type="text" id="new-ex-name" placeholder="Name der Übung...">
+                <button class="btn-blue" onclick="addExerciseDefinition()">Übung speichern</button>
+            </div>
+            <div id="exercise-definitions-list"></div>
         </div>
 
-        <div class="card">
-            <h3 id="form-title" style="margin-top:0;">Neue Session</h3>
-            <div style="display:flex; gap:10px;">
-                <input type="date" id="session-date" style="flex:1.2">
-                <input type="text" id="session-name" placeholder="Titel" list="workout-titles" style="flex:1">
-                <datalist id="workout-titles">
-                    <option value="Push">
-                    <option value="Pull">
-                    <option value="Legs">
-                    <option value="Oberkörper">
-                    <option value="Unterkörper">
-                </datalist>
+        <div id="view-tracking" class="view active">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Tracking</h2>
+                <button onclick="handleLogout()" style="background:none; color:var(--accent-red); font-size:12px;">Logout</button>
             </div>
-            <div id="exercises-container"></div>
-            <button class="btn-ghost" onclick="addExercise()">+ Übung hinzufügen</button>
-            <button class="btn-blue" onclick="saveSession()" style="margin-top:10px;">Session speichern</button>
-            <div id="edit-options" style="display:none;">
-                <button class="btn-ghost" onclick="resetForm()">Abbrechen</button>
-                <button style="background:none; color:var(--accent-red); margin-top:15px;" onclick="deleteCurrentSession()">Löschen</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div id="cal-label" style="font-weight:700; color: var(--accent-blue);">Monat</div>
+            
+            <div class="card">
+                <h3 id="form-title">Neue Session</h3>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="changeMonth(-1)" style="width:40px; min-height:30px; padding:0; background:#333;">‹</button>
-                    <button onclick="changeMonth(1)" style="width:40px; min-height:30px; padding:0; background:#333;">›</button>
+                    <input type="date" id="session-date">
+                    <input type="text" id="session-name" placeholder="Titel (Push/Pull)">
                 </div>
+                <div id="tracking-exercises"></div>
+                <button onclick="addTrackingExercise()" style="background:#3a3a3c; color:var(--accent-blue); width:100%; padding:12px; margin-bottom:10px;">+ Übung wählen</button>
+                <button class="btn-blue" onclick="saveSession()">Training speichern</button>
+                <button id="cancel-edit" onclick="resetForm()" style="display:none; width:100%; background:none; color:var(--text-dim); margin-top:10px;">Abbrechen</button>
             </div>
-            <div class="calendar-grid" id="calendar-days"></div>
+
+            <div class="card">
+                <div id="history">Lade Verlauf...</div>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Verlauf</h3>
-            <div id="history">Lade Daten...</div>
+        <div id="view-bro" class="view">
+            <h2>Bro Bereich</h2>
+            <div class="card"><p style="color:var(--text-dim);">Platzhalter für deine zukünftigen Ideen.</p></div>
         </div>
 
-        <div class="card" style="text-align: center; border-style: dashed; opacity: 0.6;">
-            <small style="color: var(--text-dim); display: block; margin-bottom: 10px;">Daten importieren:</small>
-            <button class="btn-ghost" style="margin:0; font-size: 12px; min-height: 34px;" onclick="document.getElementById('cloud-import-file').click()">JSON Datei auswählen</button>
-            <input type="file" id="cloud-import-file" style="display:none" accept=".json" onchange="importBackupToCloud(event)">
-        </div>
     </div>
+
+    <nav class="tab-bar">
+        <button class="tab-item" onclick="switchTab('exercises', this)">
+            <span class="tab-icon">🏋️</span>Übungen
+        </button>
+        <button class="tab-item active" onclick="switchTab('tracking', this)">
+            <span class="tab-icon">📊</span>Tracking
+        </button>
+        <button class="tab-item" onclick="switchTab('bro', this)">
+            <span class="tab-icon">🤜</span>Bro
+        </button>
+    </nav>
 </div>
 
 <script>
     let logs = [];
-    let editDocId = null;
-    let currentCalDate = new Date();
+    let exerciseDefinitions = [];
+    let editId = null;
 
-    async function handleLogin() {
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-        try { await window.authFuncs.signInWithEmailAndPassword(window.auth, email, pass); }
-        catch(e) { alert("Fehler: " + e.message); }
+    // NAVIGATION
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        document.getElementById('view-' + tab).classList.add('active');
+        btn.classList.add('active');
+        window.scrollTo(0,0);
     }
 
+    // AUTH
+    async function handleLogin() {
+        try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
+        catch(e) { alert(e.message); }
+    }
     async function handleRegister() {
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
         if(confirm("Account erstellen?")) {
-            try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, email, pass); }
-            catch(e) { alert("Fehler: " + e.message); }
+            try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
+            catch(e) { alert(e.message); }
         }
     }
+    function handleLogout() { if(confirm("Logout?")) window.authFuncs.signOut(window.auth); }
 
-    function handleLogout() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
+    // INITIALISIERUNG
+    async function initApp() {
+        const user = window.auth.currentUser;
+        if(!user) return;
+        
+        // 1. Übungen laden
+        const exQuery = window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid));
+        const exSnap = await window.fs.getDocs(exQuery);
+        exerciseDefinitions = [];
+        exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
+        renderExerciseDefinitions();
 
-    // --- NEU: ÜBUNGEN AKTUALISIEREN ---
-    function updateExerciseSuggestions() {
-        const list = document.getElementById('exercise-suggestions');
-        const existingSuggestions = Array.from(list.options).map(o => o.value);
-        
-        // Alle bereits geloggten Übungen sammeln
-        const loggedExercises = new Set();
-        logs.forEach(s => s.exercises.forEach(ex => loggedExercises.add(ex.name)));
-        
-        // Neue Übungen zur Liste hinzufügen, falls noch nicht drin
-        loggedExercises.forEach(exName => {
-            if(!existingSuggestions.includes(exName)) {
-                const option = document.createElement('option');
-                option.value = exName;
-                list.appendChild(option);
-            }
+        // 2. Trainings laden
+        const tQuery = window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.where("userId", "==", user.uid), window.fs.orderBy("date", "desc"));
+        const tSnap = await window.fs.getDocs(tQuery);
+        logs = [];
+        tSnap.forEach(d => logs.push({id: d.id, ...d.data()}));
+        renderHistory();
+    }
+
+    // ÜBUNGS-VERWALTUNG (LINKS)
+    async function addExerciseDefinition() {
+        const name = document.getElementById('new-ex-name').value;
+        if(!name) return;
+        const user = window.auth.currentUser;
+        await window.fs.addDoc(window.fs.collection(window.db, "exerciseDefs"), { userId: user.uid, name: name });
+        document.getElementById('new-ex-name').value = "";
+        initApp();
+    }
+
+    function renderExerciseDefinitions() {
+        const list = document.getElementById('exercise-definitions-list');
+        list.innerHTML = "";
+        exerciseDefinitions.sort((a,b) => a.name.localeCompare(b.name)).forEach(ex => {
+            const div = document.createElement('div');
+            div.className = "list-item";
+            div.style.display = "flex";
+            div.style.justifyContent = "space-between";
+            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" style="background:none; color:red;">Löschen</button>`;
+            list.appendChild(div);
         });
     }
 
-    window.addExercise = function(name = "", sets = []) {
-        const container = document.getElementById('exercises-container');
+    async function deleteExDef(id) {
+        if(confirm("Übung aus Liste entfernen?")) {
+            await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id));
+            initApp();
+        }
+    }
+
+    // TRACKING (MITTE)
+    window.addTrackingExercise = function(name = "", sets = []) {
+        const container = document.getElementById('tracking-exercises');
         const div = document.createElement('div');
-        div.className = 'exercise-block';
+        div.className = "card";
+        div.style.padding = "15px";
+        
+        let options = exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('');
+        
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <input type="text" class="ex-name" placeholder="Übung wählen oder tippen..." value="${name}" list="exercise-suggestions" style="background:none; font-weight:700; margin:0;">
-                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--accent-red); background:none; min-height:auto; width:auto; font-size:24px; padding: 0 10px;">×</button>
-            </div>
+            <select class="ex-select" style="margin-bottom:10px; font-weight:700;">
+                <option value="">-- Übung wählen --</option>
+                ${options}
+            </select>
             <div class="sets-list"></div>
-            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; margin-top:10px; background:#3a3a3c; padding: 8px 15px;">+ Satz</button>
+            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; padding:6px 12px; background:#3a3a3c; margin-top:5px;">+ Satz</button>
+            <button onclick="this.parentElement.remove()" style="float:right; background:none; color:red; font-size:12px; margin-top:5px;">Entfernen</button>
         `;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
@@ -235,144 +256,79 @@
 
     window.addSetRow = function(container, reps="", kg="") {
         const row = document.createElement('div');
-        row.className = 'set-row';
-        row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}"> 
-                         <input type="number" class="s-weight" placeholder="kg" value="${kg}">
-                         <button onclick="this.parentElement.remove()" style="background:none; color:var(--accent-red); width:auto; font-size: 20px;">×</button>`;
+        row.style.display = "grid"; row.style.gridTemplateColumns = "1fr 1fr 30px"; row.style.gap = "8px"; row.style.marginTop = "5px";
+        row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}" style="margin:0;">
+                         <input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;">
+                         <button onclick="this.parentElement.remove()" style="background:none; color:red;">×</button>`;
         container.appendChild(row);
     };
 
-    async function renderAll() {
+    async function saveSession() {
         const user = window.auth.currentUser;
-        if(!user) return;
-        try {
-            const { query, collection, getDocs, orderBy, where } = window.fs;
-            const q = query(collection(window.db, "sessions"), where("userId", "==", user.uid), orderBy("date", "desc"));
-            const snap = await getDocs(q);
-            logs = [];
-            snap.forEach(doc => logs.push({id: doc.id, ...doc.data()}));
-            updateExerciseSuggestions(); // Dropdown Liste aktualisieren
-            renderCalendar(); renderHistory();
-        } catch(e) { console.error(e); }
-    }
-
-    window.saveSession = async function() {
-        const user = window.auth.currentUser;
-        const { collection, addDoc, updateDoc, doc } = window.fs;
-        const date = document.getElementById('session-date').value;
-        const title = document.getElementById('session-name').value || "Training";
-        const blocks = document.getElementsByClassName('exercise-block');
+        const blocks = document.querySelectorAll('#tracking-exercises .card');
         let sessionEx = [];
-        for(let b of blocks) {
-            const name = b.querySelector('.ex-name').value;
+        blocks.forEach(b => {
+            const name = b.querySelector('.ex-select').value;
             const rs = b.querySelectorAll('.s-reps'), ws = b.querySelectorAll('.s-weight');
             let sets = [];
             for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
             if(name) sessionEx.push({name, sets});
-        }
-        const data = { userId: user.uid, date, title, exercises: sessionEx };
-        try {
-            if(editDocId) await updateDoc(doc(window.db, "sessions", editDocId), data);
-            else await addDoc(collection(window.db, "sessions"), data);
-            resetForm(); renderAll();
-        } catch(e) { alert("Fehler!"); }
-    };
+        });
 
-    window.deleteCurrentSession = async function() {
-        if(!editDocId || !confirm("Löschen?")) return;
-        await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editDocId));
-        resetForm(); renderAll();
-    };
+        const data = { 
+            userId: user.uid, 
+            date: document.getElementById('session-date').value, 
+            title: document.getElementById('session-name').value || "Training", 
+            exercises: sessionEx 
+        };
 
-    function renderCalendar() {
-        const grid = document.getElementById('calendar-days'); grid.innerHTML = "";
-        const workoutDates = logs.map(l => l.date);
-        const first = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth(), 1);
-        const last = new Date(currentCalDate.getFullYear(), currentCalDate.getMonth() + 1, 0);
-        let start = (first.getDay() + 6) % 7;
-        for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
-        for (let d = 1; d <= last.getDate(); d++) {
-            const ds = `${currentCalDate.getFullYear()}-${String(currentCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const div = document.createElement('div');
-            div.className = "calendar-day" + (workoutDates.includes(ds) ? " has-workout" : "");
-            div.innerText = d; grid.appendChild(div);
-        }
-        document.getElementById('cal-label').innerText = currentCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
+        if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), data);
+        else await window.fs.addDoc(window.fs.collection(window.db, "sessions"), data);
+        
+        resetForm(); initApp();
     }
 
-    window.changeMonth = (val) => { currentCalDate.setMonth(currentCalDate.getMonth() + val); renderCalendar(); };
-
-    window.renderHistory = function() {
+    function renderHistory() {
         const hist = document.getElementById('history'); hist.innerHTML = "";
-        if(logs.length === 0) { hist.innerText = "Keine Daten vorhanden."; return; }
-        
         logs.forEach(s => {
-            const sessionDiv = document.createElement('div');
-            sessionDiv.className = "history-session";
-            
-            let exercisesHtml = "";
-            s.exercises.forEach(ex => {
-                exercisesHtml += `<div class="exercise-line">
-                    <span class="exercise-name">${ex.name}:</span> 
-                    ${ex.sets.map(st => `${st.reps}x${st.kg}kg`).join(' · ')}
-                </div>`;
-            });
-
-            sessionDiv.innerHTML = `
+            const item = document.createElement('div');
+            item.className = "list-item";
+            let exHtml = s.exercises.map(ex => `<div><b>${ex.name}</b>: ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
+            item.innerHTML = `
                 <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
                     <span class="chevron"></span>
-                    <div style="flex-grow:1;">
-                        <div style="font-weight:700; font-size:16px;">${s.title}</div>
-                        <small style="color:var(--text-dim);">${new Date(s.date).toLocaleDateString('de-DE')}</small>
-                    </div>
-                    <button onclick="event.stopPropagation(); editSession('${s.id}')" style="width:auto; min-height:auto; background:none; color:var(--accent-blue); font-size:14px; padding: 10px;">Edit</button>
+                    <div style="flex-grow:1;"><b>${s.title}</b> <small>${s.date}</small></div>
+                    <button onclick="event.stopPropagation(); loadEdit('${s.id}')" style="background:none; color:var(--accent-blue); font-size:12px;">Edit</button>
                 </div>
-                <div class="history-details">${exercisesHtml}</div>
+                <div class="details">${exHtml}</div>
             `;
-            hist.appendChild(sessionDiv);
+            hist.appendChild(item);
         });
-    };
+    }
 
-    window.editSession = function(id) {
-        const s = logs.find(l => l.id === id); editDocId = id;
+    window.loadEdit = function(id) {
+        const s = logs.find(l => l.id === id);
+        editId = id;
         document.getElementById('session-date').value = s.date;
         document.getElementById('session-name').value = s.title;
-        document.getElementById('exercises-container').innerHTML = "";
-        s.exercises.forEach(ex => addExercise(ex.name, ex.sets));
-        document.getElementById('edit-options').style.display = "block";
-        document.getElementById('form-title').innerText = "Bearbeiten";
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    };
+        document.getElementById('tracking-exercises').innerHTML = "";
+        s.exercises.forEach(ex => addTrackingExercise(ex.name, ex.sets));
+        document.getElementById('form-title').innerText = "Training bearbeiten";
+        document.getElementById('cancel-edit').style.display = "block";
+        window.scrollTo(0,0);
+    }
 
     window.resetForm = function() {
-        editDocId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('session-name').value = ""; document.getElementById('exercises-container').innerHTML = "";
-        addExercise(); document.getElementById('edit-options').style.display = "none";
+        editId = null;
+        document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('session-name').value = "";
+        document.getElementById('tracking-exercises').innerHTML = "";
         document.getElementById('form-title').innerText = "Neue Session";
+        document.getElementById('cancel-edit').style.display = "none";
     };
 
-    window.importBackupToCloud = async function(e) {
-        const user = window.auth.currentUser;
-        if (!user) return;
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            try {
-                const imported = JSON.parse(event.target.result);
-                if (Array.isArray(imported)) {
-                    if(!confirm(imported.length + " Einträge hochladen?")) return;
-                    for (const s of imported) {
-                        await window.fs.addDoc(window.fs.collection(window.db, "sessions"), {
-                            userId: user.uid, date: s.date, title: s.title || "Import", exercises: s.exercises
-                        });
-                    }
-                    alert("Erfolg!"); renderAll();
-                }
-            } catch (err) { alert("Fehler!"); }
-        };
-        reader.readAsText(file);
-    };
+    // Auto-Set Date
+    document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
 </html>
