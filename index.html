@@ -8,6 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.png">
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc } 
@@ -62,7 +64,7 @@
         .tab-item.active { color: var(--accent-blue); }
         .tab-icon { font-size: 22px; display: block; margin-bottom: 4px; }
 
-        /* UI Elements */
+        /* General UI */
         .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         input, select { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
         button { border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; min-height: 44px; }
@@ -71,27 +73,26 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        /* History Accordion (Drauf tippen zum Ausklappen) */
+        /* History Accordion */
         .list-item { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; -webkit-tap-highlight-color: transparent; }
         .history-header { display: flex; align-items: center; cursor: pointer; position: relative; }
-        
-        .chevron { 
-            width: 0; height: 0; 
-            border-top: 5px solid transparent; border-bottom: 5px solid transparent;
-            border-left: 7px solid var(--accent-blue);
-            margin-right: 15px; transition: 0.3s; flex-shrink: 0;
-        }
-        .list-item.active .chevron { transform: rotate(90deg); }
-        
+        .chevron { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--accent-blue); margin-right: 15px; transition: 0.3s; flex-shrink: 0; }
+        .active .chevron { transform: rotate(90deg); }
         .details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 22px; font-size: 14px; }
-        .list-item.active .details { max-height: 2000px; padding-top: 12px; }
+        .active .details { max-height: 1500px; padding-top: 10px; }
         
-        .ex-line { margin-bottom: 4px; color: var(--text-main); }
-        .ex-name-label { color: var(--accent-blue); font-weight: 600; }
-
         #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Switch Styling for Bro View */
+        .switch-container { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-blue); }
+        input:checked + .slider:before { transform: translateX(24px); }
     </style>
 </head>
 <body>
@@ -140,20 +141,16 @@
             
             <div class="card">
                 <h3 id="form-title">Training loggen</h3>
-                
                 <select id="load-tpl-select" onchange="applyTemplate(this.value)" style="border: 1px solid var(--accent-blue); background: rgba(10, 132, 255, 0.05);">
                     <option value="">-- Vorlage laden? --</option>
                 </select>
-
                 <div style="display:flex; gap:10px;">
                     <input type="date" id="session-date">
                     <input type="text" id="session-name" placeholder="Titel">
                 </div>
-                
                 <div id="tracking-exercises"></div>
                 <button onclick="addTrackingExercise()" style="background:#3a3a3c; color:var(--accent-blue); width:100%; margin-bottom:10px;">+ Übung hinzufügen</button>
                 <button class="btn-blue" onclick="saveSession()">Session speichern</button>
-                
                 <div id="edit-controls" style="display:none;">
                     <button onclick="resetForm()" style="background:none; color:var(--text-dim); width:100%; margin-top:10px;">Abbrechen</button>
                     <button onclick="deleteCurrentSession()" style="background:none; color:var(--accent-red); width:100%; margin-top:15px; border: 1px solid var(--accent-red);">Training löschen</button>
@@ -167,8 +164,24 @@
         </div>
 
         <div id="view-bro" class="view">
-            <h2>Bro Bereich</h2>
-            <div class="card"><p style="color:var(--text-dim);">Platzhalter für deine Ideen.</p></div>
+            <h2>Bro Progress</h2>
+            <div class="card">
+                <select id="bro-exercise-select" onchange="updateBroChart()">
+                    <option value="">-- Übung wählen --</option>
+                </select>
+                
+                <div class="switch-container">
+                    <span>Mit Bruder vergleichen</span>
+                    <label class="switch">
+                        <input type="checkbox" id="compare-bro-toggle" onchange="updateBroChart()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 10px;">
+                <canvas id="progessChart" style="width: 100%; height: 300px;"></canvas>
+            </div>
         </div>
 
     </div>
@@ -182,15 +195,18 @@
 
 <script>
     let logs = [];
+    let allSessionsRaw = []; // Alle Sessions (auch vom Bruder)
     let exerciseDefinitions = [];
     let workoutTemplates = [];
     let editId = null;
+    let myChart = null;
 
     function switchTab(tab) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
         document.getElementById('tab-' + tab).classList.add('active');
+        if(tab === 'bro') updateBroExerciseDropdown();
         window.scrollTo(0,0);
     }
 
@@ -213,6 +229,7 @@
         exerciseDefinitions = [];
         exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
         renderExerciseDefinitions();
+        updateBroExerciseDropdown();
 
         // Templates laden
         const tplSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "workoutTemplates"), window.fs.where("userId", "==", user.uid)));
@@ -221,14 +238,18 @@
         renderWorkoutTemplates();
         updateTemplateDropdown();
 
-        // Trainings laden
-        const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.where("userId", "==", user.uid), window.fs.orderBy("date", "desc")));
-        logs = [];
-        tSnap.forEach(d => logs.push({id: d.id, ...d.data()}));
+        // Alle Trainings laden (inkl. Bruder für Vergleich)
+        // Hinweis: Wir laden alle Sessions und filtern im Code
+        const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.orderBy("date", "asc")));
+        allSessionsRaw = [];
+        tSnap.forEach(d => allSessionsRaw.push({id: d.id, ...d.data()}));
+        
+        // Nur eigene für den Verlauf anzeigen
+        logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
         renderHistory();
     }
 
-    // ÜBUNGSKATALOG
+    // ÜBUNGEN
     async function addExerciseDefinition() {
         const name = document.getElementById('new-ex-name').value;
         if(!name) return;
@@ -252,7 +273,7 @@
         if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); }
     }
 
-    // VORLAGEN (TEMPLATES)
+    // VORLAGEN
     window.addTemplateExerciseSelector = function() {
         const container = document.getElementById('tpl-exercise-selector');
         const select = document.createElement('select');
@@ -267,7 +288,7 @@
         const selects = document.querySelectorAll('.tpl-ex-item');
         let names = [];
         selects.forEach(s => { if(s.value) names.push(s.value); });
-        if(!title || names.length === 0) return alert("Titel und Übungen fehlen!");
+        if(!title || names.length === 0) return alert("Titel/Übungen fehlen!");
         await window.fs.addDoc(window.fs.collection(window.db, "workoutTemplates"), {
             userId: window.auth.currentUser.uid, title: title, exerciseNames: names
         });
@@ -296,8 +317,7 @@
         sel.innerHTML = '<option value="">-- Vorlage laden? --</option>';
         workoutTemplates.forEach(t => {
             const opt = document.createElement('option');
-            opt.value = t.id; opt.innerText = t.title;
-            sel.appendChild(opt);
+            opt.value = t.id; opt.innerText = t.title; sel.appendChild(opt);
         });
     }
 
@@ -310,7 +330,7 @@
         document.getElementById('load-tpl-select').value = "";
     };
 
-    // TRACKING LOGIK
+    // TRACKING
     window.addTrackingExercise = function(name = "", sets = []) {
         const container = document.getElementById('tracking-exercises');
         const div = document.createElement('div');
@@ -354,7 +374,7 @@
     }
 
     async function deleteCurrentSession() {
-        if(!editId || !confirm("Training löschen?")) return;
+        if(!editId || !confirm("Löschen?")) return;
         await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId));
         resetForm(); initApp();
     }
@@ -362,11 +382,8 @@
     function renderHistory() {
         const hist = document.getElementById('history'); hist.innerHTML = "";
         logs.forEach(s => {
-            const item = document.createElement('div'); 
-            item.className = "list-item";
-            
+            const item = document.createElement('div'); item.className = "list-item";
             let exHtml = s.exercises.map(ex => `<div class="ex-line"><span class="ex-name-label">${ex.name}:</span> ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
-            
             item.innerHTML = `
                 <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
                     <span class="chevron"></span>
@@ -380,9 +397,7 @@
 
     window.loadEdit = function(id) {
         const s = logs.find(l => l.id === id);
-        editId = id; 
-        document.getElementById('session-date').value = s.date; 
-        document.getElementById('session-name').value = s.title;
+        editId = id; document.getElementById('session-date').value = s.date; document.getElementById('session-name').value = s.title;
         document.getElementById('tracking-exercises').innerHTML = "";
         s.exercises.forEach(ex => addTrackingExercise(ex.name, ex.sets));
         document.getElementById('form-title').innerText = "Bearbeiten"; 
@@ -391,12 +406,85 @@
     }
 
     window.resetForm = function() {
-        editId = null; 
-        document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('session-name').value = ""; 
-        document.getElementById('tracking-exercises').innerHTML = "";
-        document.getElementById('form-title').innerText = "Training loggen"; 
-        document.getElementById('edit-controls').style.display = "none";
+        editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
+        document.getElementById('form-title').innerText = "Training loggen"; document.getElementById('edit-controls').style.display = "none";
+    };
+
+    // --- BRO SECTION LOGIK ---
+
+    function updateBroExerciseDropdown() {
+        const sel = document.getElementById('bro-exercise-select');
+        const currentVal = sel.value;
+        sel.innerHTML = '<option value="">-- Übung wählen --</option>';
+        exerciseDefinitions.sort((a,b) => a.name.localeCompare(b.name)).forEach(ex => {
+            const opt = document.createElement('option');
+            opt.value = ex.name; opt.innerText = ex.name; sel.appendChild(opt);
+        });
+        sel.value = currentVal;
+    }
+
+    window.updateBroChart = function() {
+        const exName = document.getElementById('bro-exercise-select').value;
+        const compareWithBro = document.getElementById('compare-bro-toggle').checked;
+        const currentUserId = window.auth.currentUser.uid;
+
+        if(!exName) return;
+
+        // Daten filtern: Nur Sessions, die diese Übung enthalten
+        const myData = [];
+        const broData = [];
+
+        allSessionsRaw.forEach(s => {
+            const exData = s.exercises.find(e => e.name === exName);
+            if(exData) {
+                // Maximalgewicht dieser Session finden
+                const maxKg = Math.max(...exData.sets.map(st => parseFloat(st.kg) || 0));
+                const dataPoint = { x: s.date, y: maxKg };
+                
+                if(s.userId === currentUserId) myData.push(dataPoint);
+                else broData.push(dataPoint);
+            }
+        });
+
+        const datasets = [{
+            label: 'Ich',
+            data: myData,
+            borderColor: '#0a84ff',
+            backgroundColor: 'rgba(10, 132, 255, 0.1)',
+            tension: 0.3,
+            fill: true
+        }];
+
+        if(compareWithBro && broData.length > 0) {
+            datasets.push({
+                label: 'Bruder',
+                data: broData,
+                borderColor: '#ff453a',
+                backgroundColor: 'rgba(255, 69, 58, 0.1)',
+                tension: 0.3,
+                fill: true
+            });
+        }
+
+        if(myChart) myChart.destroy();
+
+        const ctx = document.getElementById('progessChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: { datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } },
+                    y: { grid: { color: '#333' }, ticks: { color: '#8e8e93' }, title: { display: true, text: 'Max KG', color: '#8e8e93' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#fff' } }
+                }
+            }
+        });
     };
 
     document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
