@@ -60,7 +60,7 @@
         
         /* Tab Bar */
         .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(28, 28, 30, 0.95); border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 1000; backdrop-filter: blur(10px); }
-        .tab-item { color: var(--text-dim); text-align: center; font-size: 11px; background: none; border: none; flex: 1; cursor: pointer; }
+        .tab-item { color: var(--text-dim); text-align: center; font-size: 11px; background: none; border: none; flex: 1; cursor: pointer; padding: 5px; }
         .tab-item.active { color: var(--accent-blue); }
         .tab-icon { font-size: 22px; display: block; margin-bottom: 4px; }
 
@@ -73,26 +73,36 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        /* History Accordion */
+        /* Akkordeon-System Fix */
         .list-item { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; -webkit-tap-highlight-color: transparent; }
-        .history-header { display: flex; align-items: center; cursor: pointer; position: relative; }
-        .chevron { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--accent-blue); margin-right: 15px; transition: 0.3s; flex-shrink: 0; }
-        .active .chevron { transform: rotate(90deg); }
-        .details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 22px; font-size: 14px; }
-        .active .details { max-height: 1500px; padding-top: 10px; }
+        .history-header { display: flex; align-items: center; cursor: pointer; position: relative; width: 100%; }
         
+        .chevron { 
+            width: 0; height: 0; 
+            border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+            border-left: 7px solid var(--accent-blue);
+            margin-right: 15px; transition: 0.3s; flex-shrink: 0;
+        }
+        .list-item.is-open .chevron { transform: rotate(90deg); }
+        
+        .details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 22px; font-size: 14px; }
+        .list-item.is-open .details { max-height: 2000px; padding-top: 10px; }
+        
+        .ex-line { margin-bottom: 5px; color: var(--text-main); }
+        .ex-name-label { color: var(--accent-blue); font-weight: 600; }
+
+        /* Bro View Spezialitäten */
+        .switch-container { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 5px 0; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-blue); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
         #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Switch Styling for Bro View */
-        .switch-container { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--accent-blue); }
-        input:checked + .slider:before { transform: translateX(24px); }
     </style>
 </head>
 <body>
@@ -166,12 +176,13 @@
         <div id="view-bro" class="view">
             <h2>Bro Progress</h2>
             <div class="card">
+                <p style="margin-top:0; color:var(--text-dim); font-size:13px;">Wähle eine Übung aus deinem Katalog:</p>
                 <select id="bro-exercise-select" onchange="updateBroChart()">
                     <option value="">-- Übung wählen --</option>
                 </select>
                 
                 <div class="switch-container">
-                    <span>Mit Bruder vergleichen</span>
+                    <span>Vergleich mit Bruder</span>
                     <label class="switch">
                         <input type="checkbox" id="compare-bro-toggle" onchange="updateBroChart()">
                         <span class="slider"></span>
@@ -179,8 +190,8 @@
                 </div>
             </div>
 
-            <div class="card" style="padding: 10px;">
-                <canvas id="progessChart" style="width: 100%; height: 300px;"></canvas>
+            <div class="card" style="padding: 10px; height: 350px;">
+                <canvas id="progressChart"></canvas>
             </div>
         </div>
 
@@ -195,31 +206,43 @@
 
 <script>
     let logs = [];
-    let allSessionsRaw = []; // Alle Sessions (auch vom Bruder)
+    let allSessionsRaw = []; 
     let exerciseDefinitions = [];
     let workoutTemplates = [];
     let editId = null;
     let myChart = null;
 
-    function switchTab(tab) {
+    // --- NAVIGATION ---
+    window.switchTab = function(tab) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
         document.getElementById('tab-' + tab).classList.add('active');
-        if(tab === 'bro') updateBroExerciseDropdown();
+        if(tab === 'bro') {
+            updateBroExerciseDropdown();
+            setTimeout(updateBroChart, 100);
+        }
         window.scrollTo(0,0);
     }
 
+    // --- AKKORDEON LOGIK ---
+    window.toggleAccordion = function(element) {
+        const item = element.closest('.list-item');
+        item.classList.toggle('is-open');
+    }
+
+    // --- AUTH ---
     async function handleLogin() {
         try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-        catch(e) { alert("Login fehlgeschlagen."); }
+        catch(e) { alert("Fehler beim Login."); }
     }
     async function handleRegister() {
         try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-        catch(e) { alert("Registrierung fehlgeschlagen."); }
+        catch(e) { alert("Fehler bei der Registrierung."); }
     }
-    function handleLogout() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
+    window.handleLogout = function() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
 
+    // --- APP INIT ---
     async function initApp() {
         const user = window.auth.currentUser;
         if(!user) return;
@@ -229,7 +252,6 @@
         exerciseDefinitions = [];
         exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
         renderExerciseDefinitions();
-        updateBroExerciseDropdown();
 
         // Templates laden
         const tplSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "workoutTemplates"), window.fs.where("userId", "==", user.uid)));
@@ -238,18 +260,18 @@
         renderWorkoutTemplates();
         updateTemplateDropdown();
 
-        // Alle Trainings laden (inkl. Bruder für Vergleich)
-        // Hinweis: Wir laden alle Sessions und filtern im Code
+        // Alle Trainings laden (auch vom Bruder für den Graph)
         const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.orderBy("date", "asc")));
         allSessionsRaw = [];
         tSnap.forEach(d => allSessionsRaw.push({id: d.id, ...d.data()}));
         
-        // Nur eigene für den Verlauf anzeigen
+        // Filter für eigenen Verlauf
         logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
         renderHistory();
+        updateBroExerciseDropdown();
     }
 
-    // ÜBUNGEN
+    // --- ÜBUNGS-TAB FUNKTIONEN ---
     async function addExerciseDefinition() {
         const name = document.getElementById('new-ex-name').value;
         if(!name) return;
@@ -273,7 +295,7 @@
         if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); }
     }
 
-    // VORLAGEN
+    // --- TEMPLATE FUNKTIONEN ---
     window.addTemplateExerciseSelector = function() {
         const container = document.getElementById('tpl-exercise-selector');
         const select = document.createElement('select');
@@ -308,10 +330,6 @@
         });
     }
 
-    async function deleteTpl(id) {
-        if(confirm("Vorlage löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "workoutTemplates", id)); initApp(); }
-    }
-
     function updateTemplateDropdown() {
         const sel = document.getElementById('load-tpl-select');
         sel.innerHTML = '<option value="">-- Vorlage laden? --</option>';
@@ -330,7 +348,7 @@
         document.getElementById('load-tpl-select').value = "";
     };
 
-    // TRACKING
+    // --- TRACKING FUNKTIONEN ---
     window.addTrackingExercise = function(name = "", sets = []) {
         const container = document.getElementById('tracking-exercises');
         const div = document.createElement('div');
@@ -374,7 +392,7 @@
     }
 
     async function deleteCurrentSession() {
-        if(!editId || !confirm("Löschen?")) return;
+        if(!editId || !confirm("Training löschen?")) return;
         await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId));
         resetForm(); initApp();
     }
@@ -385,7 +403,7 @@
             const item = document.createElement('div'); item.className = "list-item";
             let exHtml = s.exercises.map(ex => `<div class="ex-line"><span class="ex-name-label">${ex.name}:</span> ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
             item.innerHTML = `
-                <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
+                <div class="history-header" onclick="toggleAccordion(this)">
                     <span class="chevron"></span>
                     <div style="flex-grow:1;"><b>${s.title}</b> <br><small style="color:var(--text-dim)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div>
                     <button onclick="event.stopPropagation(); loadEdit('${s.id}')" style="background:none; color:var(--accent-blue); font-size:12px; width:auto; min-height:auto; padding:10px;">Edit</button>
@@ -412,7 +430,6 @@
     };
 
     // --- BRO SECTION LOGIK ---
-
     function updateBroExerciseDropdown() {
         const sel = document.getElementById('bro-exercise-select');
         const currentVal = sel.value;
@@ -426,66 +443,49 @@
 
     window.updateBroChart = function() {
         const exName = document.getElementById('bro-exercise-select').value;
+        if(!exName) return;
+
         const compareWithBro = document.getElementById('compare-bro-toggle').checked;
         const currentUserId = window.auth.currentUser.uid;
 
-        if(!exName) return;
-
-        // Daten filtern: Nur Sessions, die diese Übung enthalten
         const myData = [];
         const broData = [];
 
         allSessionsRaw.forEach(s => {
             const exData = s.exercises.find(e => e.name === exName);
             if(exData) {
-                // Maximalgewicht dieser Session finden
                 const maxKg = Math.max(...exData.sets.map(st => parseFloat(st.kg) || 0));
                 const dataPoint = { x: s.date, y: maxKg };
-                
                 if(s.userId === currentUserId) myData.push(dataPoint);
                 else broData.push(dataPoint);
             }
         });
 
         const datasets = [{
-            label: 'Ich',
-            data: myData,
-            borderColor: '#0a84ff',
-            backgroundColor: 'rgba(10, 132, 255, 0.1)',
-            tension: 0.3,
-            fill: true
+            label: 'Ich', data: myData, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true
         }];
 
         if(compareWithBro && broData.length > 0) {
             datasets.push({
-                label: 'Bruder',
-                data: broData,
-                borderColor: '#ff453a',
-                backgroundColor: 'rgba(255, 69, 58, 0.1)',
-                tension: 0.3,
-                fill: true
+                label: 'Bruder', data: broData, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true
             });
         }
 
         if(myChart) myChart.destroy();
-
-        const ctx = document.getElementById('progessChart').getContext('2d');
+        const ctx = document.getElementById('progressChart').getContext('2d');
         myChart = new Chart(ctx, {
             type: 'line',
             data: { datasets: datasets },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: {
                     x: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } },
-                    y: { grid: { color: '#333' }, ticks: { color: '#8e8e93' }, title: { display: true, text: 'Max KG', color: '#8e8e93' } }
+                    y: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } }
                 },
-                plugins: {
-                    legend: { labels: { color: '#fff' } }
-                }
+                plugins: { legend: { labels: { color: '#fff' } } }
             }
         });
-    };
+    }
 
     document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
 </script>
