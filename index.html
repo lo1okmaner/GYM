@@ -55,26 +55,43 @@
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
         .container { max-width: 500px; margin: auto; padding: 20px 15px 120px 15px; }
+        
+        /* Tab Bar */
         .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(28, 28, 30, 0.95); border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 1000; backdrop-filter: blur(10px); }
         .tab-item { color: var(--text-dim); text-align: center; font-size: 11px; background: none; border: none; flex: 1; cursor: pointer; }
         .tab-item.active { color: var(--accent-blue); }
         .tab-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+
+        /* UI Elements */
         .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         input, select { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
         button { border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; min-height: 44px; }
         .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
+        
         .view { display: none; }
         .view.active { display: block; }
-        .list-item { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; }
+
+        /* History Accordion (Drauf tippen zum Ausklappen) */
+        .list-item { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; -webkit-tap-highlight-color: transparent; }
         .history-header { display: flex; align-items: center; cursor: pointer; position: relative; }
-        .chevron { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--accent-blue); margin-right: 15px; transition: 0.3s; flex-shrink: 0; }
-        .active .chevron { transform: rotate(90deg); }
+        
+        .chevron { 
+            width: 0; height: 0; 
+            border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+            border-left: 7px solid var(--accent-blue);
+            margin-right: 15px; transition: 0.3s; flex-shrink: 0;
+        }
+        .list-item.active .chevron { transform: rotate(90deg); }
+        
         .details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 22px; font-size: 14px; }
-        .active .details { max-height: 1500px; padding-top: 10px; }
+        .list-item.active .details { max-height: 2000px; padding-top: 12px; }
+        
+        .ex-line { margin-bottom: 4px; color: var(--text-main); }
+        .ex-name-label { color: var(--accent-blue); font-weight: 600; }
+
         #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .template-tag { background: #3a3a3c; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -83,7 +100,7 @@
 
 <div id="login-section" class="container" style="display:none; margin-top: 60px;">
     <div class="card" style="text-align: center;">
-        <h2>GymLog Login</h2>
+        <h2>GymLog Pro</h2>
         <input type="email" id="email" placeholder="E-Mail">
         <input type="password" id="pass" placeholder="Passwort">
         <button class="btn-blue" onclick="handleLogin()">Einloggen</button>
@@ -103,7 +120,7 @@
             </div>
 
             <div class="card">
-                <h3>+ Neues Workout Template</h3>
+                <h3>+ Workout Vorlage</h3>
                 <input type="text" id="tpl-title" placeholder="Name (z.B. Push Day)">
                 <div id="tpl-exercise-selector"></div>
                 <button onclick="addTemplateExerciseSelector()" style="background:none; color:var(--accent-blue); width:100%; margin-bottom:10px;">+ Übung hinzufügen</button>
@@ -122,21 +139,25 @@
             </div>
             
             <div class="card">
-                <h3 id="form-title">Workout loggen</h3>
+                <h3 id="form-title">Training loggen</h3>
                 
-                <select id="load-tpl-select" onchange="applyTemplate(this.value)" style="border: 1px solid var(--accent-blue); background: rgba(10, 132, 255, 0.1);">
+                <select id="load-tpl-select" onchange="applyTemplate(this.value)" style="border: 1px solid var(--accent-blue); background: rgba(10, 132, 255, 0.05);">
                     <option value="">-- Vorlage laden? --</option>
                 </select>
 
                 <div style="display:flex; gap:10px;">
                     <input type="date" id="session-date">
-                    <input type="text" id="session-name" placeholder="Workout Titel">
+                    <input type="text" id="session-name" placeholder="Titel">
                 </div>
                 
                 <div id="tracking-exercises"></div>
                 <button onclick="addTrackingExercise()" style="background:#3a3a3c; color:var(--accent-blue); width:100%; margin-bottom:10px;">+ Übung hinzufügen</button>
                 <button class="btn-blue" onclick="saveSession()">Session speichern</button>
-                <button id="cancel-edit" onclick="resetForm()" style="display:none; width:100%; background:none; color:var(--text-dim); margin-top:10px;">Abbrechen</button>
+                
+                <div id="edit-controls" style="display:none;">
+                    <button onclick="resetForm()" style="background:none; color:var(--text-dim); width:100%; margin-top:10px;">Abbrechen</button>
+                    <button onclick="deleteCurrentSession()" style="background:none; color:var(--accent-red); width:100%; margin-top:15px; border: 1px solid var(--accent-red);">Training löschen</button>
+                </div>
             </div>
 
             <div class="card">
@@ -147,7 +168,7 @@
 
         <div id="view-bro" class="view">
             <h2>Bro Bereich</h2>
-            <div class="card"><p style="color:var(--text-dim);">Coming Soon...</p></div>
+            <div class="card"><p style="color:var(--text-dim);">Platzhalter für deine Ideen.</p></div>
         </div>
 
     </div>
@@ -218,20 +239,20 @@
 
     function renderExerciseDefinitions() {
         const list = document.getElementById('exercise-definitions-list');
-        list.innerHTML = "<h4>Alle Übungen</h4>";
+        list.innerHTML = "";
         exerciseDefinitions.sort((a,b) => a.name.localeCompare(b.name)).forEach(ex => {
             const div = document.createElement('div'); div.className = "list-item";
             div.style.display = "flex"; div.style.justifyContent = "space-between";
-            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" style="background:none; color:red; min-height:auto;">×</button>`;
+            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" style="background:none; color:red; min-height:auto; width:auto;">×</button>`;
             list.appendChild(div);
         });
     }
 
     async function deleteExDef(id) {
-        if(confirm("Löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); }
+        if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); }
     }
 
-    // TEMPLATES (VORLAGEN)
+    // VORLAGEN (TEMPLATES)
     window.addTemplateExerciseSelector = function() {
         const container = document.getElementById('tpl-exercise-selector');
         const select = document.createElement('select');
@@ -247,11 +268,8 @@
         let names = [];
         selects.forEach(s => { if(s.value) names.push(s.value); });
         if(!title || names.length === 0) return alert("Titel und Übungen fehlen!");
-        
         await window.fs.addDoc(window.fs.collection(window.db, "workoutTemplates"), {
-            userId: window.auth.currentUser.uid,
-            title: title,
-            exerciseNames: names
+            userId: window.auth.currentUser.uid, title: title, exerciseNames: names
         });
         document.getElementById('tpl-title').value = "";
         document.getElementById('tpl-exercise-selector').innerHTML = "";
@@ -263,8 +281,8 @@
         list.innerHTML = "<h4>Meine Vorlagen</h4>";
         workoutTemplates.forEach(t => {
             const div = document.createElement('div'); div.className = "list-item";
-            div.innerHTML = `<b>${t.title}</b><br><small>${t.exerciseNames.join(', ')}</small>
-            <button onclick="deleteTpl('${t.id}')" style="background:none; color:red; min-height:auto; float:right;">Löschen</button>`;
+            div.innerHTML = `<b>${t.title}</b><br><small style="color:var(--text-dim)">${t.exerciseNames.join(', ')}</small>
+            <button onclick="deleteTpl('${t.id}')" style="background:none; color:red; min-height:auto; float:right; width:auto;">Löschen</button>`;
             list.appendChild(div);
         });
     }
@@ -289,7 +307,7 @@
         document.getElementById('session-name').value = tpl.title;
         document.getElementById('tracking-exercises').innerHTML = "";
         tpl.exerciseNames.forEach(name => addTrackingExercise(name));
-        document.getElementById('load-tpl-select').value = ""; // Reset select
+        document.getElementById('load-tpl-select').value = "";
     };
 
     // TRACKING LOGIK
@@ -302,7 +320,7 @@
             <select class="ex-select" style="margin-bottom:10px; font-weight:700;"><option value="">-- Übung wählen --</option>${options}</select>
             <div class="sets-list"></div>
             <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; padding:6px 12px; background:#3a3a3c; margin-top:5px;">+ Satz</button>
-            <button onclick="this.parentElement.remove()" style="float:right; background:none; color:red; font-size:24px; margin-top:-5px;">×</button>
+            <button onclick="this.parentElement.remove()" style="float:right; background:none; color:red; font-size:24px; margin-top:-5px; width:auto;">×</button>
         `;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
@@ -314,7 +332,7 @@
         row.style.display = "grid"; row.style.gridTemplateColumns = "1fr 1fr 30px"; row.style.gap = "8px"; row.style.marginTop = "5px";
         row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}" style="margin:0;">
                          <input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;">
-                         <button onclick="this.parentElement.remove()" style="background:none; color:red;">×</button>`;
+                         <button onclick="this.parentElement.remove()" style="background:none; color:red; width:auto;">×</button>`;
         container.appendChild(row);
     };
 
@@ -335,11 +353,20 @@
         resetForm(); initApp();
     }
 
+    async function deleteCurrentSession() {
+        if(!editId || !confirm("Training löschen?")) return;
+        await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId));
+        resetForm(); initApp();
+    }
+
     function renderHistory() {
         const hist = document.getElementById('history'); hist.innerHTML = "";
         logs.forEach(s => {
-            const item = document.createElement('div'); item.className = "list-item";
-            let exHtml = s.exercises.map(ex => `<div><b>${ex.name}</b>: ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
+            const item = document.createElement('div'); 
+            item.className = "list-item";
+            
+            let exHtml = s.exercises.map(ex => `<div class="ex-line"><span class="ex-name-label">${ex.name}:</span> ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
+            
             item.innerHTML = `
                 <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
                     <span class="chevron"></span>
@@ -353,17 +380,23 @@
 
     window.loadEdit = function(id) {
         const s = logs.find(l => l.id === id);
-        editId = id; document.getElementById('session-date').value = s.date; document.getElementById('session-name').value = s.title;
+        editId = id; 
+        document.getElementById('session-date').value = s.date; 
+        document.getElementById('session-name').value = s.title;
         document.getElementById('tracking-exercises').innerHTML = "";
         s.exercises.forEach(ex => addTrackingExercise(ex.name, ex.sets));
-        document.getElementById('form-title').innerText = "Editieren"; document.getElementById('cancel-edit').style.display = "block";
+        document.getElementById('form-title').innerText = "Bearbeiten"; 
+        document.getElementById('edit-controls').style.display = "block";
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     window.resetForm = function() {
-        editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
-        document.getElementById('form-title').innerText = "Neue Session"; document.getElementById('cancel-edit').style.display = "none";
+        editId = null; 
+        document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('session-name').value = ""; 
+        document.getElementById('tracking-exercises').innerHTML = "";
+        document.getElementById('form-title').innerText = "Training loggen"; 
+        document.getElementById('edit-controls').style.display = "none";
     };
 
     document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
