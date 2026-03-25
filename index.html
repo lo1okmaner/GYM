@@ -78,7 +78,6 @@
 
         h2 { font-size: 34px; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 25px; }
 
-        /* CARDS */
         .card { 
             background: var(--card-bg); 
             backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
@@ -106,7 +105,6 @@
         .btn-text { background: none; color: var(--system-blue); font-size: 16px; min-height: auto; width: auto; padding: 5px; }
         .btn-red-text { background: none; color: var(--system-red); font-size: 15px; min-height: auto; width: auto; }
 
-        /* TAB BAR SVG */
         .tab-bar { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
             background: rgba(15, 15, 15, 0.85); 
@@ -118,26 +116,18 @@
         .tab-item.active { color: var(--system-blue); }
         .tab-icon-svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
 
-        /* REPARIERTES AKKORDEON CSS */
         .chevron-icon { 
             width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray);
             transform: rotate(45deg); transition: 0.3s ease; flex-shrink: 0; margin-left: 10px;
         }
-        
         .is-open .chevron-icon { transform: rotate(135deg); border-color: var(--system-blue); }
-        
-        .collapsible-area { 
-            max-height: 0; overflow: hidden; 
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
+        .collapsible-area { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .is-open .collapsible-area { max-height: 2000px; padding-top: 15px; }
 
         .list-item { border-bottom: 0.5px solid var(--separator); padding: 12px 0; }
-        .list-item:last-child { border-bottom: none; }
         .ex-line { font-size: 15px; margin-bottom: 6px; color: var(--text-dim); }
         .ex-name-label { color: white; font-weight: 500; }
 
-        /* CALENDAR */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1/1; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
         .day-me { background: var(--system-blue); }
@@ -236,7 +226,7 @@
                 <button class="btn-blue" style="margin-top:15px;" onclick="saveSession()">Speichern</button>
                 <div id="edit-controls" style="display:none;">
                     <button onclick="resetForm()" class="btn-text" style="width:100%;">Abbrechen</button>
-                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:20px; padding:10px; border:1px solid var(--system-red); border-radius:14px;">Löschen</button>
+                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:20px; padding:10px; border:1px solid var(--system-red); border-radius:14px;">Training löschen</button>
                 </div>
             </div>
             <div id="history"></div>
@@ -255,15 +245,15 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div style="height: 240px; margin-top:20px;"><canvas id="progressChart"></canvas></div>
+                <div style="height: 280px; margin-top:20px;"><canvas id="progressChart"></canvas></div>
             </div>
 
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h3 id="bro-cal-month" style="margin:0;">Monat</h3>
                     <div style="display:flex; gap:15px;">
-                        <button onclick="changeBroMonth(-1)" class="btn-text" style="font-size:20px;">‹</button>
-                        <button onclick="changeBroMonth(1)" class="btn-text" style="font-size:20px;">›</button>
+                        <button onclick="changeBroMonth(-1)" class="btn-text">‹</button>
+                        <button onclick="changeBroMonth(1)" class="btn-text">›</button>
                     </div>
                 </div>
                 <div class="cal-grid" id="bro-calendar-days"></div>
@@ -306,11 +296,8 @@
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // ROBUSTE AKKORDEON FUNKTION
     window.toggleAccordion = function(element) {
-        // Sucht das nächste übergeordnete Element (Card oder List-Item) und schaltet die Klasse um
-        const parent = element.parentElement;
-        parent.classList.toggle('is-open');
+        element.parentElement.classList.toggle('is-open');
     }
 
     async function handleLogin() {
@@ -332,10 +319,13 @@
         const tplSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "workoutTemplates"), window.fs.where("userId", "==", user.uid)));
         workoutTemplates = []; tplSnap.forEach(d => workoutTemplates.push({id: d.id, ...d.data()}));
         renderWorkoutTemplates(); updateTemplateDropdown();
+        
+        // DATEN FRISCH LADEN (WICHTIG FÜR LÖSCH-SYNCHRONISATION)
         const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.orderBy("date", "asc")));
         allSessionsRaw = []; tSnap.forEach(d => allSessionsRaw.push({id: d.id, ...d.data()}));
         logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
         renderHistory(); updateBroExerciseDropdown();
+        if(document.getElementById('view-bro').classList.contains('active')) updateBroChart();
     }
 
     async function addExerciseDefinition() {
@@ -350,7 +340,7 @@
         exerciseDefinitions.sort((a,b)=>a.name.localeCompare(b.name)).forEach(ex => {
             const div = document.createElement('div'); div.className = "list-item";
             div.style.display="flex"; div.style.justifyContent="space-between";
-            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" class="btn-red-text">Löschen</button>`;
+            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" class="btn-red-text" style="font-size: 14px;">Löschen</button>`;
             list.appendChild(div);
         });
     }
@@ -430,7 +420,13 @@
         resetForm(); initApp();
     }
 
-    async function deleteCurrentSession() { if(editId && confirm("Wirklich löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); resetForm(); initApp(); } }
+    async function deleteCurrentSession() { 
+        if(editId && confirm("Wirklich löschen?")) { 
+            await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); 
+            resetForm(); 
+            await initApp(); // Wartet auf frische Daten
+        } 
+    }
 
     function renderHistory() {
         const h = document.getElementById('history'); h.innerHTML = "";
@@ -472,21 +468,66 @@
     }
 
     window.updateBroChart = function() {
-        const exName = document.getElementById('bro-exercise-select').value; if(!exName) return;
+        const exName = document.getElementById('bro-exercise-select').value; 
+        if(!exName) { if(myChart) myChart.destroy(); return; }
+
         const compare = document.getElementById('compare-bro-toggle').checked;
         const uid = window.auth.currentUser.uid;
         const myD = [], broD = [];
-        allSessionsRaw.forEach(s=>{
-            const ex = s.exercises.find(e=>e.name===exName);
+
+        allSessionsRaw.forEach(s => {
+            const ex = s.exercises.find(e => e.name === exName);
             if(ex) {
-                const max = Math.max(...ex.sets.map(st=>parseFloat(st.kg)||0));
-                if(s.userId === uid) myD.push({x:s.date, y:max}); else broD.push({x:s.date, y:max});
+                const max = Math.max(...ex.sets.map(st => parseFloat(st.kg) || 0));
+                if(s.userId === uid) myD.push({x: s.date, y: max}); 
+                else if(compare) broD.push({x: s.date, y: max});
             }
         });
-        const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true, pointRadius: 2 }];
-        if(compare && broD.length>0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true, pointRadius: 2 });
+
+        // OFFSET BERECHNUNG FÜR Y-ACHSE (ZENTRIERUNG)
+        const allY = [...myD.map(p=>p.y), ...broD.map(p=>p.y)];
+        const minY = Math.min(...allY);
+        const maxY = Math.max(...allY);
+        const range = maxY - minY;
+        const offset = range === 0 ? 10 : range * 0.25;
+
+        const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true, pointRadius: 4 }];
+        if(compare && broD.length > 0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true, pointRadius: 4 });
+
         if(myChart) myChart.destroy();
-        myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { type: 'line', data: { datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { color: '#636366' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#636366' } } }, plugins: { legend: { display: false } } } });
+        myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { 
+            type: 'line', 
+            data: { datasets: ds }, 
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { 
+                    x: { 
+                        type: 'category',
+                        display: false, // AUSBLENDEN DER DATUMSZEILE
+                        grid: { display: false } 
+                    }, 
+                    y: { 
+                        min: minY - offset, 
+                        max: maxY + offset, 
+                        grid: { color: 'rgba(255,255,255,0.05)' }, 
+                        ticks: { color: '#636366' } 
+                    } 
+                }, 
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            title: (items) => {
+                                // Zeigt das Datum im Tooltip an, obwohl es unten versteckt ist
+                                return new Date(items[0].raw.x).toLocaleDateString('de-DE');
+                            }
+                        }
+                    }
+                } 
+            } 
+        });
     }
 
     window.changeBroMonth = (v) => { broCalDate.setMonth(broCalDate.getMonth() + v); renderBroCalendar(); }
