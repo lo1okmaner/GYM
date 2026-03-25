@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GymLog</title>
+    <title>GymLog Pro</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.png">
@@ -53,7 +53,9 @@
         :root {
             --system-blue: #0A84FF;
             --system-red: #FF453A;
-            --card-bg: rgba(28, 28, 30, 0.6);
+            --system-gray: #8E8E93;
+            --card-bg: rgba(28, 28, 30, 0.7);
+            --input-bg: rgba(44, 44, 46, 0.6);
             --text-main: #FFFFFF;
             --text-dim: #98989D;
             --separator: rgba(255, 255, 255, 0.1);
@@ -62,7 +64,7 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             background-color: #000;
-            background-image: radial-gradient(at 0% 0%, rgba(10, 132, 255, 0.07) 0, transparent 40%);
+            background-image: radial-gradient(at 0% 0%, rgba(10, 132, 255, 0.08) 0, transparent 40%);
             background-attachment: fixed;
             color: var(--text-main); 
             margin: 0; padding: 0; 
@@ -74,7 +76,6 @@
 
         .container { max-width: 500px; margin: auto; padding: 60px 20px 140px 20px; }
 
-        /* LARGE TITLE */
         h2 { font-size: 34px; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 25px; }
 
         /* CARDS */
@@ -85,10 +86,11 @@
             padding: 16px; 
             margin-bottom: 24px;
             border: 0.5px solid var(--separator);
+            overflow: hidden;
         }
 
-        .section-header-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 10px 0; }
-        .section-header-row h3 { margin: 0; font-size: 19px; font-weight: 600; }
+        .accordion-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; width: 100%; }
+        .accordion-header h3 { margin: 0; font-size: 19px; font-weight: 600; }
 
         input, select { 
             background: rgba(255,255,255,0.06); 
@@ -104,7 +106,7 @@
         .btn-text { background: none; color: var(--system-blue); font-size: 16px; min-height: auto; width: auto; padding: 5px; }
         .btn-red-text { background: none; color: var(--system-red); font-size: 15px; min-height: auto; width: auto; }
 
-        /* TAB BAR ICONS (SVG) */
+        /* TAB BAR SVG */
         .tab-bar { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
             background: rgba(15, 15, 15, 0.85); 
@@ -116,20 +118,26 @@
         .tab-item.active { color: var(--system-blue); }
         .tab-icon-svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
 
-        /* ACCORDIONS */
-        .list-item { border-bottom: 0.5px solid var(--separator); padding: 15px 0; }
-        .chevron-small { 
-            width: 7px; height: 7px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray);
-            transform: rotate(45deg); transition: 0.3s ease;
+        /* REPARIERTES AKKORDEON CSS */
+        .chevron-icon { 
+            width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray);
+            transform: rotate(45deg); transition: 0.3s ease; flex-shrink: 0; margin-left: 10px;
         }
-        .is-open .chevron-small, .is-open .chevron { transform: rotate(135deg); border-color: var(--system-blue); }
         
-        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .is-open + .collapsible-content { max-height: 2000px; padding-top: 10px; }
+        .is-open .chevron-icon { transform: rotate(135deg); border-color: var(--system-blue); }
+        
+        .collapsible-area { 
+            max-height: 0; overflow: hidden; 
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .is-open .collapsible-area { max-height: 2000px; padding-top: 15px; }
 
+        .list-item { border-bottom: 0.5px solid var(--separator); padding: 12px 0; }
+        .list-item:last-child { border-bottom: none; }
         .ex-line { font-size: 15px; margin-bottom: 6px; color: var(--text-dim); }
+        .ex-name-label { color: white; font-weight: 500; }
 
-        /* CALENDAR COMPARISON */
+        /* CALENDAR */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day { aspect-ratio: 1/1; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
         .day-me { background: var(--system-blue); }
@@ -169,33 +177,43 @@
             <h2>Listen</h2>
             
             <div class="card">
-                <h3>+ Übung erstellen</h3>
-                <input type="text" id="new-ex-name" placeholder="Name der Übung">
-                <button class="btn-blue" onclick="addExerciseDefinition()">Hinzufügen</button>
+                <div class="accordion-header" onclick="this.parentElement.classList.toggle('is-open')">
+                    <h3>+ Übung erstellen</h3>
+                    <div class="chevron-icon"></div>
+                </div>
+                <div class="collapsible-area">
+                    <input type="text" id="new-ex-name" placeholder="Name der Übung">
+                    <button class="btn-blue" onclick="addExerciseDefinition()">Hinzufügen</button>
+                </div>
             </div>
 
             <div class="card">
-                <h3>+ Workout Vorlage</h3>
-                <input type="text" id="tpl-title" placeholder="Workout Name">
-                <div id="tpl-exercise-selector"></div>
-                <button onclick="addTemplateExerciseSelector()" class="btn-text" style="width:100%;">+ Übung wählen</button>
-                <button class="btn-blue" style="margin-top:15px;" onclick="saveWorkoutTemplate()">Vorlage speichern</button>
+                <div class="accordion-header" onclick="this.parentElement.classList.toggle('is-open')">
+                    <h3>+ Workout Vorlage</h3>
+                    <div class="chevron-icon"></div>
+                </div>
+                <div class="collapsible-area">
+                    <input type="text" id="tpl-title" placeholder="Workout Name">
+                    <div id="tpl-exercise-selector"></div>
+                    <button onclick="addTemplateExerciseSelector()" class="btn-text" style="width:100%;">+ Übung wählen</button>
+                    <button class="btn-blue" style="margin-top:15px;" onclick="saveWorkoutTemplate()">Vorlage speichern</button>
+                </div>
             </div>
 
             <div class="card">
-                <div class="section-header-row" onclick="this.parentElement.classList.toggle('is-open')">
+                <div class="accordion-header" onclick="this.parentElement.classList.toggle('is-open')">
                     <h3>Übungskatalog</h3>
-                    <div class="chevron-small"></div>
+                    <div class="chevron-icon"></div>
                 </div>
-                <div class="collapsible-content" id="exercise-definitions-list"></div>
+                <div class="collapsible-area" id="exercise-definitions-list"></div>
             </div>
 
             <div class="card">
-                <div class="section-header-row" onclick="this.parentElement.classList.toggle('is-open')">
+                <div class="accordion-header" onclick="this.parentElement.classList.toggle('is-open')">
                     <h3>Workout Vorlagen</h3>
-                    <div class="chevron-small"></div>
+                    <div class="chevron-icon"></div>
                 </div>
-                <div class="collapsible-content" id="workout-templates-list"></div>
+                <div class="collapsible-area" id="workout-templates-list"></div>
             </div>
         </div>
 
@@ -205,20 +223,20 @@
                 <button onclick="handleLogout()" class="btn-red-text">Logout</button>
             </div>
             <div class="card">
-                <h3 id="form-title" style="color:var(--system-blue)">Training loggen</h3>
+                <h3 id="form-title" style="color:var(--system-blue); margin-bottom:15px;">Training loggen</h3>
                 <select id="load-tpl-select" onchange="applyTemplate(this.value)">
                     <option value="">Vorlage wählen...</option>
                 </select>
                 <div style="display:flex; gap:10px;">
                     <input type="date" id="session-date">
-                    <input type="text" id="session-name" placeholder="Fokus">
+                    <input type="text" id="session-name" placeholder="Titel">
                 </div>
                 <div id="tracking-exercises"></div>
                 <button onclick="addTrackingExercise()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:12px;">+ Übung hinzufügen</button>
                 <button class="btn-blue" style="margin-top:15px;" onclick="saveSession()">Speichern</button>
                 <div id="edit-controls" style="display:none;">
                     <button onclick="resetForm()" class="btn-text" style="width:100%;">Abbrechen</button>
-                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:20px; padding:10px; border:1px solid var(--system-red); border-radius:14px;">Training löschen</button>
+                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:20px; padding:10px; border:1px solid var(--system-red); border-radius:14px;">Löschen</button>
                 </div>
             </div>
             <div id="history"></div>
@@ -244,8 +262,8 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h3 id="bro-cal-month" style="margin:0;">Monat</h3>
                     <div style="display:flex; gap:15px;">
-                        <button onclick="changeBroMonth(-1)" class="btn-text">‹</button>
-                        <button onclick="changeBroMonth(1)" class="btn-text">›</button>
+                        <button onclick="changeBroMonth(-1)" class="btn-text" style="font-size:20px;">‹</button>
+                        <button onclick="changeBroMonth(1)" class="btn-text" style="font-size:20px;">›</button>
                     </div>
                 </div>
                 <div class="cal-grid" id="bro-calendar-days"></div>
@@ -288,8 +306,11 @@
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
+    // ROBUSTE AKKORDEON FUNKTION
     window.toggleAccordion = function(element) {
-        element.closest('.list-item').classList.toggle('is-open');
+        // Sucht das nächste übergeordnete Element (Card oder List-Item) und schaltet die Klasse um
+        const parent = element.parentElement;
+        parent.classList.toggle('is-open');
     }
 
     async function handleLogin() {
@@ -361,6 +382,8 @@
         });
     }
 
+    async function deleteTpl(id) { if(confirm("Vorlage löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "workoutTemplates", id)); initApp(); } }
+
     function updateTemplateDropdown() {
         const sel = document.getElementById('load-tpl-select'); sel.innerHTML = '<option value="">Vorlage laden...</option>';
         workoutTemplates.forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.innerText = t.title; sel.appendChild(opt); });
@@ -388,7 +411,7 @@
 
     window.addSetRow = function(container, reps="", kg="") {
         const row = document.createElement('div'); row.style.display = "grid"; row.style.gridTemplateColumns = "1fr 1fr 30px"; row.style.gap = "8px"; row.style.marginTop = "8px";
-        row.innerHTML = `<input type="number" class="s-reps" placeholder="Wdh" value="${reps}" style="margin:0;"><input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;"><button onclick="this.parentElement.remove()" class="btn-red-text">×</button>`;
+        row.innerHTML = `<input type="number" class="s-reps" placeholder="Reps" value="${reps}" style="margin:0;"><input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;"><button onclick="this.parentElement.remove()" class="btn-red-text">×</button>`;
         container.appendChild(row);
     };
 
@@ -401,7 +424,7 @@
             let sets = []; for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
             if(n) ex.push({name: n, sets: sets});
         });
-        const data = { userId: u.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Gym", exercises: ex };
+        const data = { userId: u.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Training", exercises: ex };
         if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), data);
         else await window.fs.addDoc(window.fs.collection(window.db, "sessions"), data);
         resetForm(); initApp();
@@ -412,9 +435,17 @@
     function renderHistory() {
         const h = document.getElementById('history'); h.innerHTML = "";
         logs.forEach(s => {
-            const item = document.createElement('div'); item.className = "list-item card";
+            const item = document.createElement('div'); item.className = "card";
             let exHtml = s.exercises.map(ex => `<div class="ex-line"><span class="ex-name-label">${ex.name}:</span> ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
-            item.innerHTML = `<div class="history-header" onclick="toggleAccordion(this)"><div class="chevron" style="width:8px; height:8px; border-top:2px solid var(--system-blue); border-right:2px solid var(--system-blue); transform:rotate(45deg); margin-right:15px; transition:0.3s;"></div><div style="flex-grow:1;"><div style="font-weight:600; font-size:17px;">${s.title}</div><small style="color:var(--text-dim)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div><button onclick="event.stopPropagation(); loadEdit('${s.id}')" class="btn-text">Edit</button></div><div class="details" style="max-height:0; overflow:hidden; transition:0.4s; margin-left:24px;">${exHtml}</div>`;
+            item.innerHTML = `
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <div><div style="font-weight:600; font-size:17px;">${s.title}</div><small style="color:var(--text-dim)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div>
+                    <div style="display:flex; align-items:center;">
+                        <button onclick="event.stopPropagation(); loadEdit('${s.id}')" class="btn-text">Edit</button>
+                        <div class="chevron-icon"></div>
+                    </div>
+                </div>
+                <div class="collapsible-area">${exHtml}</div>`;
             h.appendChild(item);
         });
     }
@@ -430,7 +461,7 @@
     window.resetForm = function() {
         editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
-        document.getElementById('form-title').innerText = "Training loggen"; document.getElementById('edit-controls').style.display = "none";
+        document.getElementById('form-title').innerText = "Gym-Session"; document.getElementById('edit-controls').style.display = "none";
     };
 
     function updateBroExerciseDropdown() {
