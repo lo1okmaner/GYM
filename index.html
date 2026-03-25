@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GymLog Pro</title>
+    <title>GymLog</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.png">
@@ -51,102 +51,116 @@
 
     <style>
         :root {
-            --bg-color: #000000;
-            --secondary-bg: #1C1C1E;
-            --tertiary-bg: #2C2C2E;
             --system-blue: #0A84FF;
             --system-red: #FF453A;
-            --separator: #38383A;
-            --text-primary: #FFFFFF;
-            --text-secondary: #8E8E93;
+            --system-gray: #8E8E93;
+            --card-bg: rgba(28, 28, 30, 0.7);
+            --input-bg: rgba(44, 44, 46, 0.6);
+            --text-main: #FFFFFF;
+            --text-dim: #98989D;
+            --separator: rgba(255, 255, 255, 0.1);
         }
 
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color); 
-            color: var(--text-primary); 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+            background-color: #000;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(10, 132, 255, 0.08) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(88, 86, 214, 0.08) 0, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main); 
             margin: 0; padding: 0; 
-            -webkit-font-smoothing: antialiased; 
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* --- NAVIGATION LOGIK (Wichtig für dein Problem) --- */
-        .view { display: none !important; } /* Standardmäßig alles verstecken */
-        .view.active { display: block !important; } /* Nur aktiven Tab zeigen */
+        /* TAB LOGIK */
+        .view { display: none !important; }
+        .view.active { display: block !important; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .container { max-width: 500px; margin: auto; padding: 40px 16px 140px 16px; }
+        .container { max-width: 500px; margin: auto; padding: 60px 20px 140px 20px; }
 
-        h2 { font-size: 34px; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px; }
-        h3 { font-size: 20px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
-        .section-label { font-size: 13px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; margin-left: 4px; font-weight: 500; }
+        /* TYPOGRAPHY */
+        h2 { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 25px; }
+        h3 { font-size: 19px; font-weight: 600; margin: 0 0 15px 0; letter-spacing: -0.2px; }
+        .section-header { font-size: 13px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 4px; }
 
+        /* CELLS / CARDS */
         .card { 
-            background-color: var(--secondary-bg); 
-            border-radius: 12px; 
+            background: var(--card-bg); 
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border-radius: 14px; 
             padding: 16px; 
-            margin-bottom: 24px; 
+            margin-bottom: 24px;
+            border: 0.5px solid var(--separator);
         }
 
         input, select { 
-            background-color: var(--tertiary-bg); 
+            background: var(--input-bg); 
             border: none; border-radius: 10px; 
-            padding: 12px 16px; color: white; 
+            padding: 12px 14px; color: white; 
             font-size: 17px; width: 100%; 
             box-sizing: border-box; margin-bottom: 12px; outline: none;
         }
 
         button { 
             border-radius: 12px; font-weight: 600; font-size: 17px;
-            cursor: pointer; border: none; transition: 0.2s; min-height: 50px; 
+            cursor: pointer; border: none; transition: all 0.2s; min-height: 48px; 
         }
-        button:active { opacity: 0.7; transform: scale(0.97); }
-        .btn-blue { background-color: var(--system-blue); color: white; width: 100%; }
-        .btn-text { background: none; color: var(--system-blue); font-size: 16px; min-height: auto; padding: 8px; }
-        .btn-red-text { background: none; color: var(--system-red); font-size: 16px; min-height: auto; }
+        button:active { transform: scale(0.96); opacity: 0.8; }
+        .btn-blue { background: var(--system-blue); color: white; width: 100%; }
+        .btn-ghost { background: var(--input-bg); color: var(--system-blue); width: 100%; }
+        .btn-text { background: none; color: var(--system-blue); font-size: 16px; min-height: auto; width: auto; padding: 5px; }
+        .btn-red-text { background: none; color: var(--system-red); font-size: 16px; min-height: auto; width: auto; }
 
         /* TAB BAR */
         .tab-bar { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
-            background: rgba(28, 28, 30, 0.94); 
+            background: rgba(20, 20, 20, 0.8); 
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border-top: 0.5px solid var(--separator); 
             display: flex; justify-content: space-around; 
-            padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); 
-            z-index: 1000; backdrop-filter: saturate(180%) blur(20px); 
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); 
+            z-index: 1000;
         }
-        .tab-item { color: var(--text-secondary); text-align: center; font-size: 10px; background: none; border: none; flex: 1; }
+        .tab-item { color: #636366; text-align: center; font-size: 10px; background: none; border: none; flex: 1; transition: color 0.2s; }
         .tab-item.active { color: var(--system-blue); }
         .tab-icon { font-size: 24px; display: block; margin-bottom: 4px; }
 
-        /* AKKORDEON */
-        .list-item { border-bottom: 0.5px solid var(--separator); padding: 16px 0; }
+        /* LIST ITEMS / HISTORY */
+        .list-item { border-bottom: 0.5px solid var(--separator); padding: 14px 0; }
+        .list-item:last-child { border-bottom: none; }
         .history-header { display: flex; align-items: center; cursor: pointer; }
         .chevron { 
-            width: 8px; height: 8px; 
-            border-top: 2.5px solid var(--system-blue); 
-            border-right: 2.5px solid var(--system-blue);
-            transform: rotate(45deg); margin-right: 16px;
-            transition: 0.3s ease; flex-shrink: 0;
+            width: 8px; height: 8px; border-top: 1.5px solid var(--system-gray); border-right: 1.5px solid var(--system-gray);
+            transform: rotate(45deg); transition: 0.3s ease; margin-right: 18px; flex-shrink: 0;
         }
-        .list-item.is-open .chevron { transform: rotate(135deg); }
-        .details { max-height: 0; overflow: hidden; transition: 0.3s ease-in-out; margin-left: 28px; color: var(--text-secondary); }
-        .list-item.is-open .details { max-height: 1500px; padding-top: 12px; }
+        .list-item.is-open .chevron { transform: rotate(135deg); border-color: var(--system-blue); }
+        .details { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-left: 26px; }
+        .list-item.is-open .details { max-height: 1000px; padding-top: 12px; }
+        .ex-line { font-size: 15px; margin-bottom: 5px; color: var(--text-dim); }
+        .ex-name-label { color: var(--text-main); font-weight: 500; }
 
-        /* BRO CALENDAR */
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
-        .cal-day { aspect-ratio: 1/1; border-radius: 8px; background: var(--tertiary-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
-        .day-me { background-color: var(--system-blue); color: white; }
-        .day-bro { background-color: var(--system-red); color: white; }
-        .day-both { background: linear-gradient(135deg, var(--system-blue) 50%, var(--system-red) 50%); color: white; }
+        /* CALENDAR */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+        .cal-day { aspect-ratio: 1/1; border-radius: 6px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; }
+        .day-label { color: var(--text-dim); font-size: 11px; text-align: center; margin-bottom: 4px; font-weight: 600; }
+        .day-me { background: var(--system-blue); color: #fff; }
+        .day-bro { background: var(--system-red); color: #fff; }
+        .day-both { background: linear-gradient(135deg, var(--system-blue) 50%, var(--system-red) 50%); color: #fff; }
 
-        .switch-container { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+        /* SWITCH */
+        .switch-container { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 0.5px solid var(--separator); margin-top: 10px; }
         .switch { position: relative; width: 51px; height: 31px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; inset: 0; background-color: #39393d; transition: .3s; border-radius: 34px; cursor: pointer; }
-        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
+        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
         input:checked + .slider { background-color: #34c759; }
         input:checked + .slider:before { transform: translateX(20px); }
 
         #loading-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--system-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        .spinner { width: 30px; height: 30px; border: 2px solid #333; border-top-color: var(--system-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -160,7 +174,7 @@
         <input type="email" id="email" placeholder="E-Mail">
         <input type="password" id="pass" placeholder="Passwort">
         <button class="btn-blue" onclick="handleLogin()">Anmelden</button>
-        <button onclick="handleRegister()" class="btn-text" style="margin-top: 15px;">Account erstellen</button>
+        <button onclick="handleRegister()" class="btn-text" style="margin-top: 20px;">Account erstellen</button>
     </div>
 </div>
 
@@ -169,16 +183,16 @@
         
         <div id="view-exercises" class="view">
             <h2>Übungen</h2>
-            <div class="section-label">Katalog</div>
+            <div class="section-header">Katalog</div>
             <div class="card">
-                <input type="text" id="new-ex-name" placeholder="Name der Übung">
-                <button class="btn-blue" onclick="addExerciseDefinition()">Speichern</button>
+                <input type="text" id="new-ex-name" placeholder="Übung hinzufügen...">
+                <button class="btn-blue" onclick="addExerciseDefinition()">Hinzufügen</button>
             </div>
-            <div class="section-label">Vorlagen</div>
+            <div class="section-header">Workout Vorlagen</div>
             <div class="card">
-                <input type="text" id="tpl-title" placeholder="Workout Name (z.B. Push)">
+                <input type="text" id="tpl-title" placeholder="Workout Name">
                 <div id="tpl-exercise-selector"></div>
-                <button onclick="addTemplateExerciseSelector()" class="btn-text" style="width:100%;">+ Übung hinzufügen</button>
+                <button onclick="addTemplateExerciseSelector()" class="btn-text" style="width:100%; text-align:center;">+ Übung wählen</button>
                 <button class="btn-blue" style="margin-top:15px;" onclick="saveWorkoutTemplate()">Vorlage speichern</button>
             </div>
             <div id="exercise-definitions-list"></div>
@@ -191,48 +205,49 @@
                 <button onclick="handleLogout()" class="btn-red-text">Logout</button>
             </div>
             <div class="card">
+                <h3 id="form-title">Gym-Session</h3>
                 <select id="load-tpl-select" onchange="applyTemplate(this.value)">
                     <option value="">Vorlage wählen...</option>
                 </select>
                 <div style="display:flex; gap:10px;">
                     <input type="date" id="session-date">
-                    <input type="text" id="session-name" placeholder="Titel">
+                    <input type="text" id="session-name" placeholder="Fokus (z.B. Push)">
                 </div>
                 <div id="tracking-exercises"></div>
-                <button onclick="addTrackingExercise()" class="btn-text" style="width:100%;">+ Übung hinzufügen</button>
-                <button class="btn-blue" onclick="saveSession()">Training speichern</button>
+                <button onclick="addTrackingExercise()" class="btn-ghost">+ Übung</button>
+                <button class="btn-blue" style="margin-top:12px;" onclick="saveSession()">Loggen</button>
                 <div id="edit-controls" style="display:none;">
-                    <button onclick="resetForm()" class="btn-text" style="width:100%;">Abbrechen</button>
-                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:15px;">Löschen</button>
+                    <button onclick="resetForm()" class="btn-text" style="width:100%; margin-top:10px;">Abbrechen</button>
+                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:20px; border: 0.5px solid var(--system-red); border-radius:12px; padding:10px;">Training löschen</button>
                 </div>
             </div>
-            <div class="section-label">Verlauf</div>
-            <div class="card" id="history">Lade...</div>
+            <div class="section-header">Verlauf</div>
+            <div class="card" id="history"></div>
         </div>
 
         <div id="view-bro" class="view">
             <h2>Bro Progress</h2>
-            <div class="section-label">Graphen</div>
+            <div class="section-header">Leistung</div>
             <div class="card">
                 <select id="bro-exercise-select" onchange="updateBroChart()">
                     <option value="">Übung wählen...</option>
                 </select>
                 <div class="switch-container">
-                    <span>Bruder einblenden</span>
+                    <span style="font-size:16px;">Bruder einblenden</span>
                     <label class="switch">
                         <input type="checkbox" id="compare-bro-toggle" onchange="updateBroChart(); renderBroCalendar();">
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div style="height: 250px; margin-top:15px;"><canvas id="progressChart"></canvas></div>
+                <div style="height: 250px; margin-top:20px;"><canvas id="progressChart"></canvas></div>
             </div>
-            <div class="section-label">Kalender</div>
+            <div class="section-header">Vergleichskalender</div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <h3 id="bro-cal-month" style="margin:0; font-size:17px;">Monat</h3>
-                    <div style="display:flex; gap:10px;">
-                        <button onclick="changeBroMonth(-1)" class="btn-text">‹</button>
-                        <button onclick="changeBroMonth(1)" class="btn-text">›</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 id="bro-cal-month" style="margin:0;">Monat</h3>
+                    <div style="display:flex; gap:15px;">
+                        <button onclick="changeBroMonth(-1)" class="btn-text" style="font-size:20px;">‹</button>
+                        <button onclick="changeBroMonth(1)" class="btn-text" style="font-size:20px;">›</button>
                     </div>
                 </div>
                 <div class="cal-grid" id="bro-calendar-days"></div>
@@ -242,15 +257,9 @@
     </div>
 
     <nav class="tab-bar">
-        <button class="tab-item" onclick="switchTab('exercises', this)">
-            <span class="tab-icon">🏋️</span>Übungen
-        </button>
-        <button class="tab-item active" onclick="switchTab('tracking', this)">
-            <span class="tab-icon">📊</span>Tracking
-        </button>
-        <button class="tab-item" onclick="switchTab('bro', this)">
-            <span class="tab-icon">🤜</span>Bro
-        </button>
+        <button class="tab-item" onclick="switchTab('exercises', this)"><span class="tab-icon">🏋️</span>Listen</button>
+        <button class="tab-item active" onclick="switchTab('tracking', this)"><span class="tab-icon">📊</span>Tracking</button>
+        <button class="tab-item" onclick="switchTab('bro', this)"><span class="tab-icon">🤜</span>Bro</button>
     </nav>
 </div>
 
@@ -263,24 +272,13 @@
     let myChart = null;
     let broCalDate = new Date();
 
-    // --- REPARIERTE NAVIGATION ---
-    window.switchTab = function(tabName, btn) {
-        // Alle Views verstecken
+    window.switchTab = function(tab, btn) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        // Gewünschte View zeigen
-        document.getElementById('view-' + tabName).classList.add('active');
-        
-        // Tab-Buttons updaten
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        document.getElementById('view-' + tab).classList.add('active');
         btn.classList.add('active');
-
-        // Zusatzlogik
-        if(tabName === 'bro') {
-            updateBroExerciseDropdown();
-            renderBroCalendar();
-            setTimeout(updateBroChart, 100);
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if(tab === 'bro') { updateBroExerciseDropdown(); renderBroCalendar(); setTimeout(updateBroChart, 100); }
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     window.toggleAccordion = function(element) {
@@ -289,13 +287,13 @@
 
     async function handleLogin() {
         try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-        catch(e) { alert("Anmeldung fehlgeschlagen."); }
+        catch(e) { alert("Login Error"); }
     }
     async function handleRegister() {
         try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-        catch(e) { alert("Fehler."); }
+        catch(e) { alert("Error"); }
     }
-    window.handleLogout = function() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
+    window.handleLogout = function() { if(confirm("Logout?")) window.authFuncs.signOut(window.auth); }
 
     async function initApp() {
         const user = window.auth.currentUser;
@@ -309,7 +307,7 @@
         const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.orderBy("date", "asc")));
         allSessionsRaw = []; tSnap.forEach(d => allSessionsRaw.push({id: d.id, ...d.data()}));
         logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
-        renderHistory();
+        renderHistory(); updateBroExerciseDropdown();
     }
 
     async function addExerciseDefinition() {
@@ -324,18 +322,18 @@
         exerciseDefinitions.sort((a,b)=>a.name.localeCompare(b.name)).forEach(ex => {
             const div = document.createElement('div'); div.className = "list-item";
             div.style.display="flex"; div.style.justifyContent="space-between";
-            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" class="btn-red-text">×</button>`;
+            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" class="btn-red-text">Löschen</button>`;
             list.appendChild(div);
         });
     }
 
-    async function deleteExDef(id) { if(confirm("Löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); } }
+    async function deleteExDef(id) { if(confirm("Übung entfernen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); } }
 
     window.addTemplateExerciseSelector = function() {
         const container = document.getElementById('tpl-exercise-selector');
         const select = document.createElement('select'); select.className = "tpl-ex-item";
         let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
-        select.innerHTML = `<option value="">-- Wählen --</option>${opts}`;
+        select.innerHTML = `<option value="">-- Übung --</option>${opts}`;
         container.appendChild(select);
     };
 
@@ -348,16 +346,16 @@
     }
 
     function renderWorkoutTemplates() {
-        const list = document.getElementById('workout-templates-list'); list.innerHTML = "<h3 style='margin-left:4px'>Meine Vorlagen</h3>";
+        const list = document.getElementById('workout-templates-list'); list.innerHTML = "<div class='section-header' style='margin-top:20px'>Vorlagen</div>";
         workoutTemplates.forEach(t => {
-            const div = document.createElement('div'); div.className = "list-item card";
-            div.innerHTML = `<b>${t.title}</b><br><small style='color:var(--text-secondary)'>${t.exerciseNames.join(', ')}</small><button onclick="deleteTpl('${t.id}')" class="btn-red-text" style="float:right;">×</button>`;
+            const div = document.createElement('div'); div.className = "card";
+            div.innerHTML = `<b>${t.title}</b><br><small style='color:var(--text-dim)'>${t.exerciseNames.join(', ')}</small><button onclick="deleteTpl('${t.id}')" class="btn-red-text" style="float:right;">×</button>`;
             list.appendChild(div);
         });
     }
 
     function updateTemplateDropdown() {
-        const sel = document.getElementById('load-tpl-select'); sel.innerHTML = '<option value="">Vorlage wählen...</option>';
+        const sel = document.getElementById('load-tpl-select'); sel.innerHTML = '<option value="">Vorlage laden...</option>';
         workoutTemplates.forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.innerText = t.title; sel.appendChild(opt); });
     }
 
@@ -369,13 +367,13 @@
 
     window.addTrackingExercise = function(name = "", sets = []) {
         const container = document.getElementById('tracking-exercises');
-        const div = document.createElement('div'); div.className = "card"; div.style.backgroundColor = "var(--tertiary-bg)";
+        const div = document.createElement('div'); div.className = "card"; div.style.background = "rgba(255,255,255,0.03)"; div.style.marginBottom = "10px";
         let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('');
         div.innerHTML = `
-            <select class="ex-select" style="font-weight:600;"><option value="">Übung wählen...</option>${opts}</select>
+            <select class="ex-select" style="font-weight:700;"><option value="">-- Übung --</option>${opts}</select>
             <div class="sets-list"></div>
-            <button onclick="addSetRow(this.previousElementSibling)" class="btn-text" style="font-size:14px;">+ Satz</button>
-            <button onclick="this.parentElement.remove()" class="btn-red-text" style="float:right; font-size:24px;">×</button>`;
+            <button onclick="addSetRow(this.previousElementSibling)" class="btn-text">+ Satz</button>
+            <button onclick="this.parentElement.remove()" class="btn-red-text" style="float:right; font-size:20px;">×</button>`;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
         if(sets.length > 0) sets.forEach(s => addSetRow(list, s.reps, s.kg)); else addSetRow(list);
@@ -383,7 +381,7 @@
 
     window.addSetRow = function(container, reps="", kg="") {
         const row = document.createElement('div'); row.style.display = "grid"; row.style.gridTemplateColumns = "1fr 1fr 30px"; row.style.gap = "8px"; row.style.marginTop = "8px";
-        row.innerHTML = `<input type="number" class="s-reps" placeholder="Wdh" value="${reps}" style="margin:0;"><input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;"><button onclick="this.parentElement.remove()" class="btn-red-text">×</button>`;
+        row.innerHTML = `<input type="number" class="s-reps" placeholder="Reps" value="${reps}" style="margin:0;"><input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;"><button onclick="this.parentElement.remove()" class="btn-red-text">×</button>`;
         container.appendChild(row);
     };
 
@@ -396,20 +394,20 @@
             let sets = []; for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
             if(n) ex.push({name: n, sets: sets});
         });
-        const data = { userId: u.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Gym", exercises: ex };
+        const data = { userId: u.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Training", exercises: ex };
         if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), data);
         else await window.fs.addDoc(window.fs.collection(window.db, "sessions"), data);
         resetForm(); initApp();
     }
 
-    async function deleteCurrentSession() { if(editId && confirm("Löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); resetForm(); initApp(); } }
+    async function deleteCurrentSession() { if(editId && confirm("Wirklich löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); resetForm(); initApp(); } }
 
     function renderHistory() {
         const h = document.getElementById('history'); h.innerHTML = "";
         logs.forEach(s => {
             const item = document.createElement('div'); item.className = "list-item";
             let exHtml = s.exercises.map(ex => `<div class="ex-line"><span class="ex-name-label">${ex.name}:</span> ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
-            item.innerHTML = `<div class="history-header" onclick="toggleAccordion(this)"><span class="chevron"></span><div style="flex-grow:1;"><div style="font-weight:600; font-size:17px;">${s.title}</div><small style="color:var(--text-secondary)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div><button onclick="event.stopPropagation(); loadEdit('${s.id}')" class="btn-text">Edit</button></div><div class="details">${exHtml}</div>`;
+            item.innerHTML = `<div class="history-header" onclick="toggleAccordion(this)"><span class="chevron"></span><div style="flex-grow:1;"><div style="font-weight:600; font-size:17px;">${s.title}</div><small style="color:var(--text-dim)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div><button onclick="event.stopPropagation(); loadEdit('${s.id}')" class="btn-text">Edit</button></div><div class="details">${exHtml}</div>`;
             h.appendChild(item);
         });
     }
@@ -425,7 +423,7 @@
     window.resetForm = function() {
         editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
-        document.getElementById('form-title').innerText = "Loggen"; document.getElementById('edit-controls').style.display = "none";
+        document.getElementById('form-title').innerText = "Gym loggen"; document.getElementById('edit-controls').style.display = "none";
     };
 
     function updateBroExerciseDropdown() {
@@ -447,10 +445,20 @@
                 if(s.userId === uid) myD.push({x:s.date, y:max}); else broD.push({x:s.date, y:max});
             }
         });
-        const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true }];
-        if(compare && broD.length>0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true });
+        const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true, pointRadius: 2 }];
+        if(compare && broD.length>0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true, pointRadius: 2 });
         if(myChart) myChart.destroy();
-        myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { type: 'line', data: { datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } }, y: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } } }, plugins: { legend: { display: false } } } });
+        myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { 
+            type: 'line', data: { datasets: ds }, 
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { 
+                    x: { grid: { display: false }, ticks: { color: '#636366' } }, 
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#636366' } } 
+                }, 
+                plugins: { legend: { display: false } } 
+            } 
+        });
     }
 
     window.changeBroMonth = (v) => { broCalDate.setMonth(broCalDate.getMonth() + v); renderBroCalendar(); }
