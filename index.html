@@ -50,68 +50,137 @@
     </script>
 
     <style>
+        /* APPLE SYSTEM COLORS DARK MODE */
         :root {
-            --bg-color: #000000; --card-bg: #1c1c1e; --input-bg: #2c2c2e;
-            --text-main: #ffffff; --text-dim: #8e8e93; --accent-blue: #0a84ff;
-            --accent-red: #ff453a; --border-color: #38383a;
+            --bg-color: #000000;
+            --secondary-bg: #1C1C1E; /* Grouped Background */
+            --tertiary-bg: #2C2C2E;
+            --system-blue: #0A84FF;
+            --system-red: #FF453A;
+            --system-gray: #8E8E93;
+            --separator: #38383A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
         }
-        body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 500px; margin: auto; padding: 20px 15px 120px 15px; }
-        
-        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(28, 28, 30, 0.95); border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 1000; backdrop-filter: blur(10px); }
-        .tab-item { color: var(--text-dim); text-align: center; font-size: 11px; background: none; border: none; flex: 1; cursor: pointer; padding: 5px; }
-        .tab-item.active { color: var(--accent-blue); }
-        .tab-icon { font-size: 22px; display: block; margin-bottom: 4px; }
 
-        .card { background: var(--card-bg); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); }
-        input, select { background: var(--input-bg); border: none; border-radius: 10px; padding: 14px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; }
-        button { border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; min-height: 44px; }
-        .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
-        
-        .view { display: none; }
-        .view.active { display: block; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); 
+            color: var(--text-primary); 
+            margin: 0; 
+            padding: 0; 
+            -webkit-font-smoothing: antialiased; 
+        }
 
-        .list-item { border-bottom: 0.5px solid var(--border-color); padding: 15px 0; -webkit-tap-highlight-color: transparent; }
-        .history-header { display: flex; align-items: center; cursor: pointer; position: relative; width: 100%; }
-        .chevron { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid var(--accent-blue); margin-right: 15px; transition: 0.3s; flex-shrink: 0; }
-        .list-item.is-open .chevron { transform: rotate(90deg); }
-        .details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; margin-left: 22px; font-size: 14px; }
-        .list-item.is-open .details { max-height: 2000px; padding-top: 10px; }
-        
-        /* Kalender Styles */
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .cal-day { aspect-ratio: 1/1; border-radius: 8px; background: #2c2c2e; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; position: relative; }
-        .day-label { color: var(--text-dim); font-size: 10px; text-align: center; margin-bottom: 5px; text-transform: uppercase; }
-        
-        /* Kalender Markierungen */
-        .day-me { background: var(--accent-blue) !important; color: white; }
-        .day-bro { background: var(--accent-red) !important; color: white; }
-        .day-both { background: linear-gradient(135deg, var(--accent-blue) 50%, var(--accent-red) 50%) !important; color: white; }
+        .container { max-width: 500px; margin: auto; padding: 40px 16px 140px 16px; }
 
-        .switch-container { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 5px 0; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--accent-blue); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        /* TYPOGRAPHY */
+        h2 { font-size: 34px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px; }
+        h3 { font-size: 20px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; color: var(--text-primary); }
+        .section-label { font-size: 13px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; margin-left: 16px; }
 
-        #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        /* CARDS (APPLE CELL STYLE) */
+        .card { 
+            background-color: var(--secondary-bg); 
+            border-radius: 12px; 
+            padding: 16px; 
+            margin-bottom: 24px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* INPUTS & SELECTS */
+        input, select { 
+            background-color: var(--tertiary-bg); 
+            border: none; 
+            border-radius: 10px; 
+            padding: 12px 16px; 
+            color: white; 
+            font-size: 17px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 12px; 
+            outline: none;
+        }
+
+        /* BUTTONS */
+        button { 
+            border-radius: 12px; 
+            font-weight: 600; 
+            font-size: 17px;
+            cursor: pointer; 
+            border: none; 
+            transition: all 0.2s ease; 
+            min-height: 50px; 
+        }
+        button:active { opacity: 0.7; transform: scale(0.98); }
+        .btn-blue { background-color: var(--system-blue); color: white; width: 100%; }
+        .btn-text { background: none; color: var(--system-blue); font-size: 15px; min-height: auto; padding: 5px; width: auto; }
+        .btn-red-text { background: none; color: var(--system-red); font-size: 15px; min-height: auto; width: auto; }
+
+        /* TAB BAR */
+        .tab-bar { 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: rgba(28, 28, 30, 0.94); 
+            border-top: 0.5px solid var(--separator); 
+            display: flex; justify-content: space-around; 
+            padding: 8px 0 calc(12px + env(safe-area-inset-bottom)); 
+            z-index: 1000; 
+            backdrop-filter: saturate(180%) blur(20px); 
+        }
+        .tab-item { color: var(--text-secondary); text-align: center; font-size: 10px; background: none; border: none; flex: 1; cursor: pointer; }
+        .tab-item.active { color: var(--system-blue); }
+        .tab-icon { font-size: 24px; display: block; margin-bottom: 2px; }
+
+        /* LISTS & ACCORDION */
+        .list-item { border-bottom: 0.5px solid var(--separator); padding: 14px 0; }
+        .list-item:last-child { border-bottom: none; }
+        .history-header { display: flex; align-items: center; cursor: pointer; }
+        .chevron { 
+            width: 10px; height: 10px; 
+            border-top: 2px solid var(--system-blue); 
+            border-right: 2px solid var(--system-blue);
+            transform: rotate(45deg);
+            margin-right: 18px; margin-left: 4px;
+            transition: 0.3s ease; flex-shrink: 0;
+        }
+        .list-item.is-open .chevron { transform: rotate(135deg); }
+        .details { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; margin-left: 32px; font-size: 15px; color: var(--text-secondary); }
+        .list-item.is-open .details { max-height: 2000px; padding-top: 12px; }
+        .ex-line { margin-bottom: 6px; }
+        .ex-name-label { color: var(--text-primary); font-weight: 500; }
+
+        /* BRO CALENDAR */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
+        .cal-day { aspect-ratio: 1/1; border-radius: 6px; background: var(--tertiary-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; }
+        .day-label { color: var(--text-secondary); font-size: 11px; text-align: center; margin-bottom: 4px; font-weight: 600; }
+        .day-me { background-color: var(--system-blue); color: white; }
+        .day-bro { background-color: var(--system-red); color: white; }
+        .day-both { background: linear-gradient(135deg, var(--system-blue) 50%, var(--system-red) 50%); color: white; }
+
+        #loading-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .spinner { width: 32px; height: 32px; border: 3px solid #333; border-top-color: var(--system-blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .switch-container { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 0.5px solid var(--separator); margin-top: 12px; }
+        .switch { position: relative; width: 51px; height: 31px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; inset: 0; background-color: #39393d; transition: .3s; border-radius: 34px; cursor: pointer; }
+        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+        input:checked + .slider { background-color: #34c759; } /* iOS Green for toggle */
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
 
 <div id="loading-screen"><div class="spinner"></div></div>
 
-<div id="login-section" class="container" style="display:none; margin-top: 60px;">
-    <div class="card" style="text-align: center;">
-        <h2>GymLog Pro</h2>
+<div id="login-section" class="container" style="display:none; text-align: center;">
+    <h2 style="margin-top: 100px;">GymLog Pro</h2>
+    <div class="card">
         <input type="email" id="email" placeholder="E-Mail">
         <input type="password" id="pass" placeholder="Passwort">
-        <button class="btn-blue" onclick="handleLogin()">Einloggen</button>
-        <button onclick="handleRegister()" style="background:none; color:var(--text-dim); margin-top:15px; width:100%;">Account erstellen</button>
+        <button class="btn-blue" onclick="handleLogin()">Anmelden</button>
+        <button onclick="handleRegister()" class="btn-text" style="margin-top: 20px;">Neuen Account erstellen</button>
     </div>
 </div>
 
@@ -119,87 +188,97 @@
     <div class="container">
         
         <div id="view-exercises" class="view">
-            <h2>Übungskatalog</h2>
+            <h2>Übungen</h2>
+            <div class="section-label">Übungskatalog</div>
             <div class="card">
-                <h3>+ Neue Übung</h3>
-                <input type="text" id="new-ex-name" placeholder="Übung (z.B. Bankdrücken)">
-                <button class="btn-blue" onclick="addExerciseDefinition()">Speichern</button>
+                <input type="text" id="new-ex-name" placeholder="Name der Übung">
+                <button class="btn-blue" onclick="addExerciseDefinition()">Hinzufügen</button>
             </div>
+
+            <div class="section-label">Workouts planen</div>
             <div class="card">
-                <h3>+ Workout Vorlage</h3>
-                <input type="text" id="tpl-title" placeholder="Name (z.B. Push Day)">
+                <input type="text" id="tpl-title" placeholder="Titel (z.B. Push)">
                 <div id="tpl-exercise-selector"></div>
-                <button onclick="addTemplateExerciseSelector()" style="background:none; color:var(--accent-blue); width:100%; margin-bottom:10px;">+ Übung hinzufügen</button>
-                <button class="btn-blue" onclick="saveWorkoutTemplate()">Template speichern</button>
+                <button onclick="addTemplateExerciseSelector()" class="btn-text" style="width:100%; text-align:center;">+ Übung hinzufügen</button>
+                <button class="btn-blue" style="margin-top:15px;" onclick="saveWorkoutTemplate()">Vorlage speichern</button>
             </div>
+            
             <div id="exercise-definitions-list"></div>
             <div id="workout-templates-list"></div>
         </div>
 
         <div id="view-tracking" class="view active">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Tracking</h2>
-                <button onclick="handleLogout()" style="background:none; color:var(--accent-red); font-size:12px; width:auto; min-height:auto;">Logout</button>
+            <div style="display:flex; justify-content:space-between; align-items: baseline;">
+                <h2>Aktivität</h2>
+                <button onclick="handleLogout()" class="btn-red-text">Abmelden</button>
             </div>
+            
             <div class="card">
-                <h3 id="form-title">Training loggen</h3>
+                <h3 id="form-title" style="margin-top:0;">Training loggen</h3>
                 <select id="load-tpl-select" onchange="applyTemplate(this.value)">
-                    <option value="">-- Vorlage laden? --</option>
+                    <option value="">Vorlage wählen...</option>
                 </select>
                 <div style="display:flex; gap:10px;">
                     <input type="date" id="session-date">
-                    <input type="text" id="session-name" placeholder="Titel">
+                    <input type="text" id="session-name" placeholder="Trainingstitel">
                 </div>
                 <div id="tracking-exercises"></div>
-                <button onclick="addTrackingExercise()" style="background:#3a3a3c; color:var(--accent-blue); width:100%; margin-bottom:10px;">+ Übung hinzufügen</button>
+                <button onclick="addTrackingExercise()" class="btn-text" style="width:100%; margin-bottom:10px;">+ Übung hinzufügen</button>
                 <button class="btn-blue" onclick="saveSession()">Session speichern</button>
+                
                 <div id="edit-controls" style="display:none;">
-                    <button onclick="resetForm()" style="background:none; color:var(--text-dim); width:100%; margin-top:10px;">Abbrechen</button>
-                    <button onclick="deleteCurrentSession()" style="background:none; color:var(--accent-red); width:100%; margin-top:15px; border: 1px solid var(--accent-red);">Löschen</button>
+                    <button onclick="resetForm()" class="btn-text" style="width:100%; margin-top:10px;">Abbrechen</button>
+                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:15px; border: 1px solid var(--system-red); border-radius:12px; padding:10px;">Löschen</button>
                 </div>
             </div>
-            <div class="card"><h3>Verlauf</h3><div id="history">Lade...</div></div>
+
+            <div class="section-label">Verlauf</div>
+            <div class="card" id="history">Lade Verlauf...</div>
         </div>
 
         <div id="view-bro" class="view">
             <h2>Bro Progress</h2>
             
+            <div class="section-label">Analyse</div>
             <div class="card">
                 <select id="bro-exercise-select" onchange="updateBroChart()">
-                    <option value="">-- Übung wählen --</option>
+                    <option value="">Übung wählen...</option>
                 </select>
                 <div class="switch-container">
-                    <span>Vergleich mit Bruder</span>
+                    <span style="font-size: 17px;">Mit Bruder vergleichen</span>
                     <label class="switch">
                         <input type="checkbox" id="compare-bro-toggle" onchange="updateBroChart(); renderBroCalendar();">
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div style="height: 250px; margin-top:15px;"><canvas id="progressChart"></canvas></div>
+                <div style="height: 250px; margin-top:20px;"><canvas id="progressChart"></canvas></div>
             </div>
 
+            <div class="section-label">Gemeinsame Tage</div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h3 id="bro-cal-month" style="margin:0; font-size:16px;">Monat</h3>
-                    <div style="display:flex; gap:10px;">
-                        <button onclick="changeBroMonth(-1)" style="min-height:30px; padding:0 10px; background:#333;">‹</button>
-                        <button onclick="changeBroMonth(1)" style="min-height:30px; padding:0 10px; background:#333;">›</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 id="bro-cal-month" style="margin:0; font-size:17px;">Monat</h3>
+                    <div style="display:flex; gap:16px;">
+                        <button onclick="changeBroMonth(-1)" class="btn-text" style="font-size:20px;">‹</button>
+                        <button onclick="changeBroMonth(1)" class="btn-text" style="font-size:20px;">›</button>
                     </div>
                 </div>
                 <div class="cal-grid" id="bro-calendar-days"></div>
-                <div style="margin-top:15px; display:flex; gap:10px; font-size:10px; justify-content:center;">
-                    <span style="display:flex; align-items:center; gap:4px;"><div style="width:10px; height:10px; background:var(--accent-blue); border-radius:2px;"></div> Ich</span>
-                    <span id="legend-bro" style="display:none; align-items:center; gap:4px;"><div style="width:10px; height:10px; background:var(--accent-red); border-radius:2px;"></div> Bruder</span>
-                </div>
             </div>
         </div>
 
     </div>
 
     <nav class="tab-bar">
-        <button class="tab-item" id="tab-exercises" onclick="switchTab('exercises')"><span class="tab-icon">🏋️</span>Übungen</button>
-        <button class="tab-item active" id="tab-tracking" onclick="switchTab('tracking')"><span class="tab-icon">📊</span>Tracking</button>
-        <button class="tab-item" id="tab-bro" onclick="switchTab('bro')"><span class="tab-icon">🤜</span>Bro</button>
+        <button class="tab-item" id="tab-exercises" onclick="switchTab('exercises')">
+            <span class="tab-icon">􀉌</span>Übungen
+        </button>
+        <button class="tab-item active" id="tab-tracking" onclick="switchTab('tracking')">
+            <span class="tab-icon">􀄩</span>Tracking
+        </button>
+        <button class="tab-item" id="tab-bro" onclick="switchTab('bro')">
+            <span class="tab-icon">􀉯</span>Bro
+        </button>
     </nav>
 </div>
 
@@ -231,21 +310,22 @@
 
     async function handleLogin() {
         try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-        catch(e) { alert("Fehler!"); }
+        catch(e) { alert("Anmeldung fehlgeschlagen."); }
     }
     async function handleRegister() {
         try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value, document.getElementById('pass').value); }
-        catch(e) { alert("Fehler!"); }
+        catch(e) { alert("Registrierung fehlgeschlagen."); }
     }
-    window.handleLogout = function() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
+    window.handleLogout = function() { if(confirm("Möchtest du dich wirklich abmelden?")) window.authFuncs.signOut(window.auth); }
 
     async function initApp() {
         const user = window.auth.currentUser;
         if(!user) return;
+        
         const exSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid)));
         exerciseDefinitions = []; exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
         renderExerciseDefinitions();
-        
+
         const tplSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "workoutTemplates"), window.fs.where("userId", "==", user.uid)));
         workoutTemplates = []; tplSnap.forEach(d => workoutTemplates.push({id: d.id, ...d.data()}));
         renderWorkoutTemplates(); updateTemplateDropdown();
@@ -269,18 +349,18 @@
         exerciseDefinitions.sort((a,b) => a.name.localeCompare(b.name)).forEach(ex => {
             const div = document.createElement('div'); div.className = "list-item";
             div.style.display="flex"; div.style.justifyContent="space-between";
-            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" style="background:none; color:red; min-height:auto; width:auto;">×</button>`;
+            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" class="btn-red-text" style="font-weight:400;">Entfernen</button>`;
             list.appendChild(div);
         });
     }
 
-    async function deleteExDef(id) { if(confirm("Löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); } }
+    async function deleteExDef(id) { if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); } }
 
     window.addTemplateExerciseSelector = function() {
         const container = document.getElementById('tpl-exercise-selector');
         const select = document.createElement('select'); select.className = "tpl-ex-item";
         let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
-        select.innerHTML = `<option value="">-- wählen --</option>${opts}`;
+        select.innerHTML = `<option value="">Übung wählen...</option>${opts}`;
         container.appendChild(select);
     };
 
@@ -293,16 +373,16 @@
     }
 
     function renderWorkoutTemplates() {
-        const list = document.getElementById('workout-templates-list'); list.innerHTML = "<h4>Vorlagen</h4>";
+        const list = document.getElementById('workout-templates-list'); list.innerHTML = "<h3 style='margin-left:16px'>Meine Vorlagen</h3>";
         workoutTemplates.forEach(t => {
-            const div = document.createElement('div'); div.className = "list-item";
-            div.innerHTML = `<b>${t.title}</b><br><small>${t.exerciseNames.join(', ')}</small><button onclick="deleteTpl('${t.id}')" style="background:none; color:red; min-height:auto; float:right; width:auto;">×</button>`;
+            const div = document.createElement('div'); div.className = "list-item card";
+            div.innerHTML = `<b>${t.title}</b><br><small style='color:var(--text-secondary)'>${t.exerciseNames.join(', ')}</small><button onclick="deleteTpl('${t.id}')" class="btn-red-text" style="float:right;">×</button>`;
             list.appendChild(div);
         });
     }
 
     function updateTemplateDropdown() {
-        const sel = document.getElementById('load-tpl-select'); sel.innerHTML = '<option value="">-- Vorlage laden? --</option>';
+        const sel = document.getElementById('load-tpl-select'); sel.innerHTML = '<option value="">Vorlage wählen...</option>';
         workoutTemplates.forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.innerText = t.title; sel.appendChild(opt); });
     }
 
@@ -315,21 +395,21 @@
     // Tracking
     window.addTrackingExercise = function(name = "", sets = []) {
         const container = document.getElementById('tracking-exercises');
-        const div = document.createElement('div'); div.className = "card"; div.style.padding = "15px"; div.style.marginBottom = "10px";
+        const div = document.createElement('div'); div.className = "card"; div.style.backgroundColor = "var(--tertiary-bg)"; div.style.marginBottom = "12px";
         let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('');
         div.innerHTML = `
-            <select class="ex-select" style="margin-bottom:10px; font-weight:700;"><option value="">-- wählen --</option>${opts}</select>
+            <select class="ex-select" style="font-weight:600;"><option value="">Übung wählen...</option>${opts}</select>
             <div class="sets-list"></div>
-            <button onclick="addSetRow(this.previousElementSibling)" style="width:auto; font-size:12px; padding:6px 12px; background:#3a3a3c; margin-top:5px;">+ Satz</button>
-            <button onclick="this.parentElement.remove()" style="float:right; background:none; color:red; font-size:24px; margin-top:-5px; width:auto;">×</button>`;
+            <button onclick="addSetRow(this.previousElementSibling)" class="btn-text" style="font-size:14px;">+ Satz hinzufügen</button>
+            <button onclick="this.parentElement.remove()" class="btn-red-text" style="float:right; font-size:20px;">×</button>`;
         container.appendChild(div);
         const list = div.querySelector('.sets-list');
         if(sets.length > 0) sets.forEach(s => addSetRow(list, s.reps, s.kg)); else addSetRow(list);
     };
 
     window.addSetRow = function(container, reps="", kg="") {
-        const row = document.createElement('div'); row.style.display = "grid"; row.style.gridTemplateColumns = "1fr 1fr 30px"; row.style.gap = "8px"; row.style.marginTop = "5px";
-        row.innerHTML = `<input type="number" class="s-reps" placeholder="R" value="${reps}" style="margin:0;"><input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;"><button onclick="this.parentElement.remove()" style="background:none; color:red; width:auto;">×</button>`;
+        const row = document.createElement('div'); row.style.display = "grid"; row.style.gridTemplateColumns = "1fr 1fr 30px"; row.style.gap = "8px"; row.style.marginTop = "8px";
+        row.innerHTML = `<input type="number" class="s-reps" placeholder="Wdh" value="${reps}" style="margin:0;"><input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0;"><button onclick="this.parentElement.remove()" class="btn-red-text">×</button>`;
         container.appendChild(row);
     };
 
@@ -348,14 +428,14 @@
         resetForm(); initApp();
     }
 
-    async function deleteCurrentSession() { if(editId && confirm("Löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); resetForm(); initApp(); } }
+    async function deleteCurrentSession() { if(editId && confirm("Training unwiderruflich löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); resetForm(); initApp(); } }
 
     function renderHistory() {
         const h = document.getElementById('history'); h.innerHTML = "";
         logs.forEach(s => {
             const item = document.createElement('div'); item.className = "list-item";
             let exHtml = s.exercises.map(ex => `<div class="ex-line"><span class="ex-name-label">${ex.name}:</span> ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('');
-            item.innerHTML = `<div class="history-header" onclick="toggleAccordion(this)"><span class="chevron"></span><div style="flex-grow:1;"><b>${s.title}</b> <br><small style="color:var(--text-dim)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div><button onclick="event.stopPropagation(); loadEdit('${s.id}')" style="background:none; color:var(--accent-blue); font-size:12px; width:auto; min-height:auto; padding:10px;">Edit</button></div><div class="details">${exHtml}</div>`;
+            item.innerHTML = `<div class="history-header" onclick="toggleAccordion(this)"><span class="chevron"></span><div style="flex-grow:1;"><div style="font-weight:600; font-size:17px;">${s.title}</div><small style="color:var(--text-secondary)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div><button onclick="event.stopPropagation(); loadEdit('${s.id}')" class="btn-text">Bearbeiten</button></div><div class="details">${exHtml}</div>`;
             h.appendChild(item);
         });
     }
@@ -364,20 +444,20 @@
         const s = logs.find(l => l.id === id); editId = id; 
         document.getElementById('session-date').value = s.date; document.getElementById('session-name').value = s.title;
         document.getElementById('tracking-exercises').innerHTML = ""; s.exercises.forEach(ex => addTrackingExercise(ex.name, ex.sets));
-        document.getElementById('form-title').innerText = "Bearbeiten"; document.getElementById('edit-controls').style.display = "block";
+        document.getElementById('form-title').innerText = "Training bearbeiten"; document.getElementById('edit-controls').style.display = "block";
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     window.resetForm = function() {
         editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
-        document.getElementById('form-title').innerText = "Gym loggen"; document.getElementById('edit-controls').style.display = "none";
+        document.getElementById('form-title').innerText = "Training loggen"; document.getElementById('edit-controls').style.display = "none";
     };
 
     // BRO LOGIK
     function updateBroExerciseDropdown() {
         const sel = document.getElementById('bro-exercise-select');
-        const cur = sel.value; sel.innerHTML = '<option value="">-- Übung wählen --</option>';
+        const cur = sel.value; sel.innerHTML = '<option value="">Übung wählen...</option>';
         exerciseDefinitions.sort((a,b)=>a.name.localeCompare(b.name)).forEach(ex=>{ const opt=document.createElement('option'); opt.value=ex.name; opt.innerText=ex.name; sel.appendChild(opt); });
         sel.value = cur;
     }
@@ -394,20 +474,18 @@
                 if(s.userId === uid) myD.push({x:s.date, y:max}); else broD.push({x:s.date, y:max});
             }
         });
-        const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true }];
-        if(compare && broD.length>0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true });
+        const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true, pointRadius: 4 }];
+        if(compare && broD.length>0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true, pointRadius: 4 });
         if(myChart) myChart.destroy();
-        myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { type: 'line', data: { datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } }, y: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } } }, plugins: { legend: { labels: { color: '#fff' } } } } });
+        myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { type: 'line', data: { datasets: ds }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } }, y: { grid: { color: '#333' }, ticks: { color: '#8e8e93' } } }, plugins: { legend: { display: false } } } });
     }
 
-    // NEU: BRO KALENDER
     window.changeBroMonth = (v) => { broCalDate.setMonth(broCalDate.getMonth() + v); renderBroCalendar(); }
 
     window.renderBroCalendar = function() {
         const grid = document.getElementById('bro-calendar-days'); grid.innerHTML = "";
         const compare = document.getElementById('compare-bro-toggle').checked;
         const uid = window.auth.currentUser.uid;
-        document.getElementById('legend-bro').style.display = compare ? 'flex' : 'none';
         
         const myDates = allSessionsRaw.filter(s => s.userId === uid).map(s => s.date);
         const broDates = allSessionsRaw.filter(s => s.userId !== uid).map(s => s.date);
@@ -416,7 +494,6 @@
         const last = new Date(broCalDate.getFullYear(), broCalDate.getMonth() + 1, 0);
         document.getElementById('bro-cal-month').innerText = broCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
 
-        // Wochentage Header
         ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
             const el = document.createElement('div'); el.className="day-label"; el.innerText=d; grid.appendChild(el);
         });
