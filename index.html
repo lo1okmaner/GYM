@@ -67,12 +67,7 @@
                 <p id="today-status-text" style="color:var(--text-dim); font-size:15px; margin-bottom:20px;"></p>
                 <button onclick="window.resetMorningStatus()" class="btn-text" style="font-size:14px;">Eintrag ändern</button>
             </div>
-
-            <div class="card" style="text-align: center;">
-                <p style="font-size: 13px; color: var(--text-dim); margin-top:0;">Erinnerungen aktivieren, um deine Streak nicht zu verlieren.</p>
-                <button onclick="window.requestNotifications()" class="btn-text" style="font-weight: 600;">🔔 Push-Nachrichten erlauben</button>
             </div>
-        </div>
 
         <div id="view-exercises" class="view">
             <h2>Listen</h2>
@@ -121,6 +116,13 @@
 
         <div id="view-settings" class="view">
             <h2>Einstellungen</h2>
+            
+            <div class="card">
+                <h3 style="margin-top:0; color:var(--text-main); font-size: 17px;">Benachrichtigungen</h3>
+                <p style="font-size: 14px; color: var(--text-dim); margin-top:5px; margin-bottom: 15px;">Aktiviere Erinnerungen, damit du keinen Check-In vergisst und deine Streak hältst.</p>
+                <button onclick="window.requestNotifications()" class="btn-blue" style="min-height: 44px; padding: 12px; font-size: 16px;">🔔 Push erlauben</button>
+            </div>
+
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
                     <span style="font-size:17px; font-weight:500;">Helles Design</span>
