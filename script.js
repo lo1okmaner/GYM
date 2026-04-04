@@ -147,19 +147,68 @@ window.applyTemplate = function(tplId) {
 };
 
 
-// --- AKTIVITÄT & TRACKING ---
 window.addTrackingExercise = function(name = "", sets = []) {
     const container = document.getElementById('tracking-exercises');
-    const div = document.createElement('div'); div.className = "card"; div.style.background = "var(--input-bg)"; div.style.marginBottom = "10px";
+    const div = document.createElement('div'); 
+    div.className = "card"; 
+    div.style.background = "var(--input-bg)"; 
+    div.style.marginBottom = "10px";
+    
+    // SMART: Letzte Performance suchen
+    let lastInfoHtml = "";
+    if (name !== "") {
+        const lastSessionWithEx = allSessionsRaw
+            .filter(s => s.userId === window.auth.currentUser.uid)
+            .reverse()
+            .find(s => s.exercises.some(e => e.name === name));
+            
+        if (lastSessionWithEx) {
+            const lastExData = lastSessionWithEx.exercises.find(e => e.name === name);
+            const lastWeights = lastExData.sets.map(st => st.kg + "kg").join(" | ");
+            lastInfoHtml = `<div class="last-perf-badge">Letztes Mal: ${lastWeights}</div>`;
+        }
+    }
+
     let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('');
+    
     div.innerHTML = `
-        <select class="ex-select" style="font-weight:700; background: var(--card-bg);"><option value="">-- Übung --</option>${opts}</select>
+        <select class="ex-select" style="font-weight:700; background: var(--card-bg);" onchange="window.refreshExerciseBadge(this)">
+            <option value="">-- Übung --</option>${opts}
+        </select>
+        ${lastInfoHtml}
         <div class="sets-list"></div>
         <button onclick="window.addSetRow(this.previousElementSibling)" class="btn-text" style="font-size:14px;">+ Satz</button>
         <button onclick="this.parentElement.remove()" class="btn-red-text" style="float:right; font-size:24px; min-height:30px;">×</button>`;
+    
     container.appendChild(div);
     const list = div.querySelector('.sets-list');
-    if(sets.length > 0) sets.forEach(s => window.addSetRow(list, s.reps, s.kg)); else window.addSetRow(list);
+    if(sets.length > 0) sets.forEach(s => window.addSetRow(list, s.reps, s.kg)); 
+    else window.addSetRow(list);
+};
+
+// Hilfsfunktion, um das Badge zu aktualisieren, wenn man die Übung im Dropdown ändert
+window.refreshExerciseBadge = function(selectEl) {
+    const name = selectEl.value;
+    const card = selectEl.parentElement;
+    // Entferne altes Badge falls vorhanden
+    const oldBadge = card.querySelector('.last-perf-badge');
+    if(oldBadge) oldBadge.remove();
+
+    if(name) {
+        const lastSessionWithEx = allSessionsRaw
+            .filter(s => s.userId === window.auth.currentUser.uid)
+            .reverse()
+            .find(s => s.exercises.some(e => e.name === name));
+            
+        if (lastSessionWithEx) {
+            const lastExData = lastSessionWithEx.exercises.find(e => e.name === name);
+            const lastWeights = lastExData.sets.map(st => st.kg + "kg").join(" | ");
+            const badge = document.createElement('div');
+            badge.className = "last-perf-badge";
+            badge.innerText = `Letztes Mal: ${lastWeights}`;
+            selectEl.after(badge);
+        }
+    }
 };
 
 window.addSetRow = function(container, reps="", kg="") {
