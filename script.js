@@ -220,18 +220,36 @@ window.addSetRow = function(container, reps="", kg="") {
 window.saveSession = async function() {
     const u = window.auth.currentUser;
     const b = document.querySelectorAll('#tracking-exercises .card');
-    let ex = []; b.forEach(x => {
+    
+    // Check-In Daten sammeln
+    const checkInData = {
+        sleep: document.getElementById('checkin-sleep').value,
+        energy: document.getElementById('checkin-energy').value,
+        soreness: document.getElementById('checkin-soreness').value
+    };
+
+    let ex = []; 
+    b.forEach(x => {
         const n = x.querySelector('.ex-select').value;
         const rs = x.querySelectorAll('.s-reps'), ws = x.querySelectorAll('.s-weight');
         let sets = []; for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
         if(n) ex.push({name: n, sets: sets});
     });
-    const data = { userId: u.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Training", exercises: ex };
+
+    const data = { 
+        userId: u.uid, 
+        date: document.getElementById('session-date').value, 
+        title: document.getElementById('session-name').value || "Training", 
+        exercises: ex,
+        checkIn: checkInData // Neu dabei!
+    };
+
     if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), data);
     else await window.fs.addDoc(window.fs.collection(window.db, "sessions"), data);
-    window.resetForm(); initApp();
+    
+    window.resetForm(); 
+    initApp();
 };
-
 window.deleteCurrentSession = async function() { 
     if(editId && confirm("Wirklich löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); window.resetForm(); await initApp(); } 
 };
