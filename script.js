@@ -86,18 +86,18 @@ async function initApp() {
     if(document.getElementById('view-bro').classList.contains('active')) window.updateBroChart();
 }
 
-// --- DASHBOARD: MORGEN CHECK-IN ---
+// --- DASHBOARD: MORGEN CHECK-IN & STREAK ---
 window.checkMorningStatus = async function() {
     const uid = window.auth.currentUser.uid;
-    const dateStr = new Date().toLocaleDateString('en-CA'); // Gibt lokales YYYY-MM-DD
+    const dateStr = new Date().toLocaleDateString('en-CA');
     
+    // 1. Heutigen Status laden
     const q = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid), window.fs.where("date", "==", dateStr));
     const snap = await window.fs.getDocs(q);
     
     if(!snap.empty) {
         todayStatus = snap.docs[0].data();
         todayStatus.id = snap.docs[0].id;
-        
         document.getElementById('card-morning-checkin').style.display = 'none';
         document.getElementById('card-status-done').style.display = 'block';
 
@@ -105,13 +105,48 @@ window.checkMorningStatus = async function() {
         if(todayStatus.status === 'gym') text = "Du gehst heute ins Gym! Zerstör die Gewichte! 💪";
         if(todayStatus.status === 'rest') text = "Heute ist Rest Day. Erhole dich gut! 🛋️";
         if(todayStatus.status === 'sick') text = "Du bist krank. Kurier dich richtig aus! 🤒";
-        
         document.getElementById('today-status-text').innerText = text;
     } else {
         document.getElementById('card-morning-checkin').style.display = 'block';
         document.getElementById('card-status-done').style.display = 'none';
         todayStatus = null;
     }
+
+    // 2. STREAK BERECHNEN
+    const allLogsQ = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid));
+    const allLogsSnap = await window.fs.getDocs(allLogsQ);
+    
+    let logsMap = {};
+    allLogsSnap.forEach(doc => { logsMap[doc.data().date] = doc.data().status; });
+
+    let currentStreak = 0;
+    
+    // Gehe bis zu 365 Tage rückwärts in die Vergangenheit
+    for(let i=0; i<365; i++) {
+        let checkDate = new Date();
+        checkDate.setDate(checkDate.getDate() - i);
+        let checkDateStr = checkDate.toLocaleDateString('en-CA');
+        
+        let status = logsMap[checkDateStr];
+        
+        if(i === 0 && !status) {
+            // Heute wurde noch nichts eingetragen? Das ist okay, die Streak bricht erst um Mitternacht ab.
+            continue; 
+        }
+        
+        if(status === 'gym') {
+            currentStreak++; // Gym = Streak + 1
+        } else if(status === 'rest' || status === 'sick') {
+            // Rest/Krank = Streak bleibt bestehen, friert aber ein
+            continue;
+        } else {
+            // Kein Eintrag gefunden = Streak gebrochen! Schleife stoppen.
+            break;
+        }
+    }
+    
+    // HTML updaten
+    document.getElementById('streak-counter').innerText = currentStreak;
 };
 
 window.saveMorningStatus = async function(statusType) {
@@ -138,6 +173,23 @@ window.resetMorningStatus = async function() {
             window.checkMorningStatus();
         }
     }
+};
+
+// --- PUSH BENACHRICHTIGUNGEN ---
+window.requestNotifications = function() {
+    if (!("Notification" in window)) {
+        alert("Dein Browser unterstützt leider keine Benachrichtigungen.");
+        return;
+    }
+    
+    Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+            alert("Erfolgreich! Ab jetzt darf dir die App Erinnerungen schicken.");
+            // Hier kommt später der Service Worker für den echten 8:00 Uhr Alarm hin
+        } else {
+            alert("Benachrichtigungen wurden blockiert. Du kannst sie in deinen Browser-Einstellungen wieder aktivieren.");
+        }
+    });
 };
 
 
