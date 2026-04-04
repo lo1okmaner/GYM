@@ -2,138 +2,88 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GymLog Pro</title>
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GymLog Pro">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2964/2964082.png">
-    
-    <script>if(localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode');</script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Health Style App</title>
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="script.js"></script>
 </head>
 <body>
 
-<div id="offline-banner">⚠️ Keine Internetverbindung</div>
-<div id="loading-screen"><div class="spinner"></div></div>
+    <header class="app-header">
+        <h1 id="header-title">Home</h1>
+    </header>
 
-<div class="top-nav" id="main-top-nav" style="display:none;">
-    <h1 id="nav-title">Übersicht</h1>
-</div>
-
-<div id="login-section" class="container" style="display:none; text-align: center;">
-    <h2 style="margin-top: 40px; margin-bottom: 30px;">GymLog Pro</h2>
-    <div class="card">
-        <input type="email" id="email" placeholder="E-Mail" autocomplete="email">
-        <input type="password" id="pass" placeholder="Passwort">
-        <button class="btn-blue" onclick="window.handleLogin()" style="margin-top: 10px;">Anmelden</button>
-        <button onclick="window.handleRegister()" class="btn-text" style="margin-top: 20px; width: 100%;">Account erstellen</button>
-    </div>
-</div>
-
-<div id="main-wrapper" style="display:none;">
-    <div class="container">
+    <main class="app-content">
         
-        <div id="view-dashboard" class="view active">
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px;">
-                <span style="font-weight:600; font-size:17px;">Aktuelle Streak</span>
-                <div style="background:var(--input-bg); padding:6px 12px; border-radius:12px; font-weight:700; color:var(--system-red); font-size:17px;">
-                    🔥 <span id="streak-counter">0</span>
-                </div>
-            </div>
-            
-            <div class="card" id="card-morning-checkin">
-                <h3 style="margin-top:0; color:var(--system-blue);">Guten Morgen! ☀️</h3>
-                <p style="color:var(--text-dim); font-size:14px; margin-bottom:15px; line-height:1.4;">Wie hast du geschlafen und was ist dein Plan für heute?</p>
-                <label style="font-size: 13px; display: block; margin-bottom: 8px; font-weight:600;">Schlafqualität</label>
-                <select id="dash-sleep" style="margin-bottom:20px;">
-                    <option value="3">Gut geschlafen</option>
-                    <option value="2">Mittelmäßig</option>
-                    <option value="1">Schlecht geschlafen</option>
-                </select>
-                <button class="btn-blue" onclick="window.saveMorningStatus('gym')" style="margin-bottom:12px;">Ab ins Gym 💪</button>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <button class="btn-blue" style="background-color: var(--separator); font-size: 15px;" onclick="window.saveMorningStatus('rest')">Rest Day 🛋️</button>
-                    <button class="btn-blue" style="background-color: var(--system-red); font-size: 15px;" onclick="window.saveMorningStatus('sick')">Krank 🤒</button>
-                </div>
-            </div>
-
-            <div class="card" id="card-status-done" style="display:none; text-align:center; padding:30px 20px;">
-                <h3 style="margin-top:0;">Status erfasst! ✅</h3>
-                <p id="today-status-text" style="color:var(--text-dim); font-size:15px; margin-bottom:20px; line-height:1.4;"></p>
-                <button onclick="window.resetMorningStatus()" class="btn-text" style="font-size:15px;">Eintrag ändern</button>
-            </div>
-        </div>
-
-        <div id="view-exercises" class="view">
-            <div class="card"><button class="accordion-header" onclick="window.toggleAccordion(this)"><h3>+ Übung erstellen</h3><div class="chevron-icon"></div></button><div class="collapsible-area"><input type="text" id="new-ex-name" placeholder="Name der Übung"><button class="btn-blue" onclick="window.addExerciseDefinition()">Hinzufügen</button></div></div>
-            <div class="card"><button class="accordion-header" onclick="window.toggleAccordion(this)"><h3>+ Workout Vorlage</h3><div class="chevron-icon"></div></button><div class="collapsible-area"><input type="text" id="tpl-title" placeholder="Workout Name"><div id="tpl-exercise-selector"></div><button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:14px; margin-bottom:12px; min-height: 48px;">+ Übung wählen</button><button class="btn-blue" onclick="window.saveWorkoutTemplate()">Vorlage speichern</button></div></div>
-            <div class="card"><button class="accordion-header" onclick="window.toggleAccordion(this)"><h3>Übungskatalog</h3><div class="chevron-icon"></div></button><div class="collapsible-area" id="exercise-definitions-list"></div></div>
-            <div class="card"><button class="accordion-header" onclick="window.toggleAccordion(this)"><h3>Workout Vorlagen</h3><div class="chevron-icon"></div></button><div class="collapsible-area" id="workout-templates-list"></div></div>
-        </div>
-
-        <div id="view-tracking" class="view">
-            <div class="card" style="padding: 0;">
-                <button class="accordion-header" onclick="window.toggleHistoryView()" style="padding: 18px 20px;">
-                    <h3 style="color: var(--text-main);">📅 Trainingsverlauf</h3>
-                    <div class="chevron-icon" id="history-chevron"></div>
-                </button>
-                <div id="history-container" style="display: none; padding: 0 20px 20px 20px;">
-                    <div id="history" style="margin-top: 10px;"></div>
-                </div>
-            </div>
-
+        <section id="view-home" class="view active">
+            <h2 class="section-title">Übersicht</h2>
             <div class="card">
-                <h3 id="form-title" style="color:var(--system-blue); margin-top:0; margin-bottom:20px; font-weight:600;">Neue Session</h3>
-                <div id="smart-checkin" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 0.5px solid var(--separator);">
-                    <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 12px; font-weight:500;">Pre-Workout Check-In:</p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                        <div><label style="font-size: 12px; display: block; margin-bottom: 6px; font-weight:500;">Energielevel</label><select id="checkin-energy" style="font-size: 15px; padding: 10px;"><option value="3">Voll da</option><option value="2">Geht so</option><option value="1">Müde</option></select></div>
-                        <div><label style="font-size: 12px; display: block; margin-bottom: 6px; font-weight:500;">Muskelkater</label><select id="checkin-soreness" style="font-size: 15px; padding: 10px;"><option value="0">Keiner</option><option value="1">Leicht</option><option value="2">Stark</option></select></div>
-                    </div>
+                <div class="card-header">
+                    <span class="icon-orange">Schritte</span>
+                    <span class="time">Heute</span>
                 </div>
-                <select id="load-tpl-select" onchange="window.applyTemplate(this.value)"><option value="">Vorlage laden...</option></select>
-                <div style="display:flex; gap:12px;"><input type="date" id="session-date"><input type="text" id="session-name" placeholder="Titel"></div>
-                <div id="tracking-exercises"></div>
-                <button onclick="window.addTrackingExercise()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:14px; margin-bottom:12px; min-height: 48px;">+ Übung hinzufügen</button>
-                <button class="btn-blue" onclick="window.saveSession()">Loggen</button>
-                <div id="edit-controls" style="display:none;"><button onclick="window.resetForm()" class="btn-text" style="width:100%; margin-top: 15px;">Abbrechen</button><button onclick="window.deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:10px; border:1px solid var(--system-red); border-radius:14px; min-height: 48px;">Training löschen</button></div>
-            </div>
-        </div>
-
-        <div id="view-bro" class="view">
-            <div class="card"><select id="bro-exercise-select" onchange="window.updateBroChart()"><option value="">Übung wählen...</option></select><div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px;"><span style="font-size:16px; font-weight:500;">Bruder einblenden</span><label class="switch"><input type="checkbox" id="compare-bro-toggle" onchange="window.updateBroChart(); window.renderBroCalendar();"><span class="slider"></span></label></div><div style="height: 280px; margin-top:25px; position:relative;"><canvas id="progressChart"></canvas></div></div>
-            <div class="card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 id="bro-cal-month" style="margin:0; font-weight:600;">Monat</h3><div style="display:flex; gap:15px;"><button onclick="window.changeBroMonth(-1)" class="btn-text" style="font-size:24px; padding: 0 10px;">‹</button><button onclick="window.changeBroMonth(1)" class="btn-text" style="font-size:24px; padding: 0 10px;">›</button></div></div><div class="cal-grid" id="bro-calendar-days"></div></div>
-        </div>
-
-        <div id="view-settings" class="view">
-            <div class="card">
-                <h3 style="margin-top:0; color:var(--text-main); font-size: 18px;">Benachrichtigungen</h3>
-                <p style="font-size: 14px; color: var(--text-dim); margin-top:5px; margin-bottom: 20px; line-height:1.4;">Aktiviere Erinnerungen, damit du keinen Check-In vergisst und deine Streak hältst.</p>
-                <button onclick="window.requestNotifications()" class="btn-blue" style="min-height: 48px; font-size: 16px;">🔔 Push erlauben</button>
+                <div class="card-value">
+                    <span class="number">5.432</span>
+                    <span class="unit">Schritte</span>
+                </div>
             </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                    <span style="font-size:17px; font-weight:500;">Helles Design</span>
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle" onchange="window.toggleTheme()">
-                        <span class="slider"></span>
-                    </label>
+                <div class="card-header">
+                    <span class="icon-red">Herzfrequenz</span>
+                    <span class="time">Vor 2 Min.</span>
                 </div>
-                <hr style="border: none; border-top: 0.5px solid var(--separator); margin: 18px -20px;">
-                <button onclick="window.handleLogout()" class="btn-text" style="color: var(--system-red); width: 100%; text-align: left; font-size: 17px; font-weight: 500; padding: 5px 0;">Abmelden</button>
+                <div class="card-value">
+                    <span class="number">68</span>
+                    <span class="unit">S/Min</span>
+                </div>
             </div>
-        </div>
+            <div class="card empty-card"></div>
+            <div class="card empty-card"></div>
+        </section>
 
-    </div>
+        <section id="view-listen" class="view">
+            <h2 class="section-title">Deine Listen</h2>
+            <div class="card">
+                <p>Hier stehen deine Listen-Einträge.</p>
+            </div>
+        </section>
+
+        <section id="view-loggen" class="view">
+            <h2 class="section-title">Neuer Eintrag</h2>
+            <div class="card">
+                <p>Formular zum Loggen von Daten...</p>
+            </div>
+        </section>
+
+        <section id="view-menu" class="view">
+            <h2 class="section-title">Einstellungen</h2>
+            <div class="card">
+                <p>Profil, Account und mehr.</p>
+            </div>
+        </section>
+
+    </main>
 
     <nav class="tab-bar">
-        <button class="tab-item active" onclick="window.switchTab('dashboard', this, 'Übersicht')"><svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/></svg>Home</button>
-        <button class="tab-item" onclick="window.switchTab('exercises', this, 'Listen')"><svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L18.43 17L20.57 14.86M3.43 14.86L2 13.43L3.43 12L7 15.57L5.57 17L3.43 14.86M12 2C6.47 2 2 6.47 2 12S6.47 22 12 22 22 17.53 22 12 17.53 2 12 2M12 20C7.58 20 4 16.42 4 12S7.58 4 12 4 20 7.58 20 12 16.42 20 12 20M12 11V13H14V11H12M8 11V13H10V11H8M16 11V13H18V11H16Z"/></svg>Listen</button>
-        <button class="tab-item" onclick="window.switchTab('tracking', this, 'Loggen')"><svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M7,10H9V17H7V10M11,7H13V17H11V7M15,13H17V17H15V13Z"/></svg>Loggen</button>
-        <button class="tab-item" onclick="window.switchTab('bro', this, 'Bro Progress')"><svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M16 13C17.66 13 19 11.66 19 10S17.66 7 16 7 13 8.34 13 10 14.34 13 16 13M8 13C9.66 13 11 11.66 11 10S9.66 7 8 7 5 8.34 5 10 6.34 13 8 13M16 15C13.67 15 9 16.17 9 18.5V21H23V18.5C23 16.17 18.33 15 16 15M8 15C5.67 15 1 16.17 1 18.5V21H7V18.5C7 17.55 7.77 16.36 9 15.56C8.67 15.5 8.34 15 8 15Z"/></svg>Bro</button>
-        <button class="tab-item" onclick="window.switchTab('settings', this, 'Einstellungen')"><svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M
+        <ul class="tab-list">
+            <li class="tab-item active" data-target="view-home" data-title="Home">
+                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+                <span>Home</span>
+            </li>
+            <li class="tab-item" data-target="view-listen" data-title="Listen">
+                <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                <span>Listen</span>
+            </li>
+            <li class="tab-item" data-target="view-loggen" data-title="Loggen">
+                <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                <span>Loggen</span>
+            </li>
+            <li class="tab-item" data-target="view-menu" data-title="Menü">
+                <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                <span>Menü</span>
+            </li>
+        </ul>
+    </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>
