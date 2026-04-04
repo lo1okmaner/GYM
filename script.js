@@ -35,12 +35,24 @@ let myChart = null;
 let broCalDate = new Date();
 let todayStatus = null;
 
-// Design Toggle Check beim Starten
+// Design Toggle Check beim Starten & Event-Listener für Navigation
 window.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('theme') === 'light') {
         const toggle = document.getElementById('theme-toggle');
         if(toggle) toggle.checked = true;
     }
+
+    // --- NEU: Navigation Event Listener (Health Design) ---
+    const tabItems = document.querySelectorAll('.tab-item');
+    tabItems.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            // Hier nutzen wir deine schon vorhandene Funktion switchTab!
+            // Wir schneiden nur das "view-" ab, da switchTab das wieder anhängt.
+            const tabName = targetId.replace('view-', ''); 
+            window.switchTab(tabName, this);
+        });
+    });
 });
 
 // --- AUTHENTIFIZIERUNG ---
@@ -48,7 +60,7 @@ onAuthStateChanged(auth, (user) => {
     const ls = document.getElementById('loading-screen');
     if (user) {
         document.getElementById('login-section').style.display = 'none';
-        document.getElementById('main-wrapper').style.display = 'block';
+        document.getElementById('main-wrapper').style.display = 'block'; // Achtung: in index.html ggf anpassen (App-Shell)
         initApp();
     } else {
         document.getElementById('login-section').style.display = 'block';
@@ -97,7 +109,9 @@ async function initApp() {
     logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
     renderHistory(); updateBroExerciseDropdown();
     
-    if(document.getElementById('view-bro').classList.contains('active')) window.updateBroChart();
+    // Hinweis: Falls view-bro nicht im neuen HTML existiert, knallt es hier. Sicherstellen, dass das HTML passt.
+    const viewBro = document.getElementById('view-bro');
+    if(viewBro && viewBro.classList.contains('active')) window.updateBroChart();
 }
 
 // --- DASHBOARD: MORGEN CHECK-IN & STREAK ---
@@ -180,7 +194,6 @@ window.requestNotifications = async function() {
     try {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
-            // Offiziellen Briefkasten-Schlüssel holen
             const currentToken = await getToken(messaging, { vapidKey: 'BHdfIhXEgwNgluSJbT_raqa4D50MoMGLRTSodojmEgo_h30SLjBMV7ChMAReILaAAeX73CtLbx6Ip9PqDysY39Q' });
             
             if (currentToken) {
@@ -402,15 +415,16 @@ window.resetForm = function() {
 // --- BRO PROGRESS ---
 function updateBroExerciseDropdown() {
     const sel = document.getElementById('bro-exercise-select');
+    if (!sel) return;
     const cur = sel.value; sel.innerHTML = '<option value="">Übung wählen...</option>';
     exerciseDefinitions.sort((a,b)=>a.name.localeCompare(b.name)).forEach(ex=>{ const opt=document.createElement('option'); opt.value=ex.name; opt.innerText=ex.name; sel.appendChild(opt); });
     sel.value = cur;
 }
 
 window.updateBroChart = function() {
-    const exName = document.getElementById('bro-exercise-select').value; 
+    const exName = document.getElementById('bro-exercise-select')?.value; 
     if(!exName) { if(myChart) myChart.destroy(); return; }
-    const compare = document.getElementById('compare-bro-toggle').checked;
+    const compare = document.getElementById('compare-bro-toggle')?.checked;
     const uid = window.auth.currentUser.uid;
     const myD = [], broD = [];
     allSessionsRaw.forEach(s => {
@@ -426,23 +440,28 @@ window.updateBroChart = function() {
     const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true, pointRadius: 4 }];
     if(compare && broD.length > 0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true, pointRadius: 4 });
     if(myChart) myChart.destroy();
-    myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { 
-        type: 'line', data: { datasets: ds }, 
-        options: { 
-            responsive: true, maintainAspectRatio: false, 
-            scales: { 
-                x: { display: false }, 
-                y: { min: minY - offset, max: maxY + offset, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8E8E93' } } 
-            }, 
-            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { title: (items) => new Date(items[0].raw.x).toLocaleDateString('de-DE') } } }
-        } 
-    });
+    const ctx = document.getElementById('progressChart')?.getContext('2d');
+    if (ctx) {
+        myChart = new Chart(ctx, { 
+            type: 'line', data: { datasets: ds }, 
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { 
+                    x: { display: false }, 
+                    y: { min: minY - offset, max: maxY + offset, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8E8E93' } } 
+                }, 
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { title: (items) => new Date(items[0].raw.x).toLocaleDateString('de-DE') } } }
+            } 
+        });
+    }
 };
 
 window.changeBroMonth = function(v) { broCalDate.setMonth(broCalDate.getMonth() + v); window.renderBroCalendar(); };
 
 window.renderBroCalendar = function() {
-    const grid = document.getElementById('bro-calendar-days'); grid.innerHTML = "";
+    const grid = document.getElementById('bro-calendar-days');
+    if (!grid) return;
+    grid.innerHTML = "";
     const compare = document.getElementById('compare-bro-toggle').checked;
     const uid = window.auth.currentUser.uid;
     const myDates = allSessionsRaw.filter(s => s.userId === uid).map(s => s.date);
@@ -464,12 +483,36 @@ window.renderBroCalendar = function() {
 
 // --- UI & HELPER ---
 window.switchTab = function(tab, btn) {
+    // 1. Alle Views verstecken
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    // 2. Alle Tabs un-markieren
     document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-    document.getElementById('view-' + tab).classList.add('active');
-    btn.classList.add('active');
+    
+    // 3. View anzeigen, falls vorhanden
+    const targetView = document.getElementById('view-' + tab);
+    if(targetView) {
+        targetView.classList.add('active');
+    }
+    
+    // 4. Button als aktiv markieren (falls übergeben)
+    if(btn) {
+        btn.classList.add('active');
+        // Header anpassen, wenn das Element existiert
+        const headerTitle = document.getElementById('header-title');
+        const newTitle = btn.getAttribute('data-title');
+        if (headerTitle && newTitle) {
+            headerTitle.textContent = newTitle;
+        }
+    }
+
     if(tab === 'bro') { updateBroExerciseDropdown(); window.renderBroCalendar(); setTimeout(window.updateBroChart, 150); }
-    window.scrollTo({top: 0, behavior: 'smooth'});
+    // Da wir jetzt scrollen im main (app-content) haben, müssen wir auch diesen scrollen, nicht mehr window
+    const appContent = document.querySelector('.app-content');
+    if (appContent) {
+        appContent.scrollTo({top: 0, behavior: 'smooth'});
+    } else {
+        window.scrollTo({top: 0, behavior: 'smooth'}); // Fallback
+    }
 };
 
 window.toggleAccordion = function(element) {
@@ -507,10 +550,11 @@ if (document.getElementById('session-date')) {
 }
 
 // --- OFFLINE / ONLINE ERKENNUNG ---
-if (!navigator.onLine) { document.getElementById('offline-banner').style.display = 'block'; }
-window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display = 'block'; });
+const offlineBanner = document.getElementById('offline-banner');
+if (offlineBanner && !navigator.onLine) { offlineBanner.style.display = 'block'; }
+window.addEventListener('offline', () => { if(offlineBanner) offlineBanner.style.display = 'block'; });
 window.addEventListener('online', () => {
-    document.getElementById('offline-banner').style.display = 'none';
+    if(offlineBanner) offlineBanner.style.display = 'none';
     if (window.auth && window.auth.currentUser) initApp();
 });
 
