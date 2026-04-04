@@ -1,8 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc } 
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBsOrvObL2dpbV6H4HFNnHjGk_iDVJKdhs",
@@ -17,12 +18,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
+const messaging = getMessaging(app); // Der Postbote für Push-Nachrichten wird aktiviert
 
 window.db = db; 
 window.auth = auth;
-window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc };
+window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc };
 window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
 
+// App-Status
 let logs = [];
 let allSessionsRaw = []; 
 let exerciseDefinitions = [];
@@ -76,8 +79,10 @@ async function initApp() {
     const user = window.auth.currentUser;
     if(!user) return;
     
+    // Check Tagesstatus fürs Dashboard
     await window.checkMorningStatus();
 
+    // Übungen & Vorlagen laden
     const exSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid)));
     exerciseDefinitions = []; exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
     renderExerciseDefinitions();
@@ -86,10 +91,12 @@ async function initApp() {
     workoutTemplates = []; tplSnap.forEach(d => workoutTemplates.push({id: d.id, ...d.data()}));
     renderWorkoutTemplates(); updateTemplateDropdown();
     
+    // Sessions laden
     const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.orderBy("date", "asc")));
     allSessionsRaw = []; tSnap.forEach(d => allSessionsRaw.push({id: d.id, ...d.data()}));
     logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
     renderHistory(); updateBroExerciseDropdown();
+    
     if(document.getElementById('view-bro').classList.contains('active')) window.updateBroChart();
 }
 
@@ -133,13 +140,13 @@ window.checkMorningStatus = async function() {
         
         let status = logsMap[checkDateStr];
         
-        if(i === 0 && !status) { continue; }
+        if(i === 0 && !status) { continue; } // Heute leer ist okay
         if(status === 'gym') {
             currentStreak++; 
         } else if(status === 'rest' || status === 'sick') {
-            continue;
+            continue; // Rest Day / Krank friert die Streak ein
         } else {
-            break;
+            break; // Streak gebrochen
         }
     }
     document.getElementById('streak-counter').innerText = currentStreak;
@@ -163,12 +170,36 @@ window.resetMorningStatus = async function() {
     }
 };
 
-window.requestNotifications = function() {
-    if (!("Notification" in window)) { alert("Dein Browser unterstützt leider keine Benachrichtigungen."); return; }
-    Notification.requestPermission().then(permission => {
-        if (permission === "granted") alert("Erfolgreich! Ab jetzt darf dir die App Erinnerungen schicken.");
-        else alert("Benachrichtigungen wurden blockiert. Du kannst sie in deinen Browser-Einstellungen wieder aktivieren.");
-    });
+// --- PUSH BENACHRICHTIGUNGEN ---
+window.requestNotifications = async function() {
+    if (!("Notification" in window)) { 
+        alert("Dein Browser unterstützt leider keine Benachrichtigungen."); 
+        return; 
+    }
+    
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+            // Offiziellen Briefkasten-Schlüssel holen
+            const currentToken = await getToken(messaging, { vapidKey: 'BHdfIhXEgwNgluSJbT_raqa4D50MoMGLRTSodojmEgo_h30SLjBMV7ChMAReILaAAeX73CtLbx6Ip9PqDysY39Q' });
+            
+            if (currentToken) {
+                const uid = window.auth.currentUser.uid;
+                await window.fs.setDoc(window.fs.doc(window.db, "userTokens", uid), {
+                    token: currentToken,
+                    updatedAt: new Date().toISOString()
+                });
+                alert("Erfolgreich! Ab jetzt darf dir die App Erinnerungen schicken.");
+            } else {
+                alert("Konnte keinen Push-Token generieren.");
+            }
+        } else {
+            alert("Benachrichtigungen wurden blockiert. Bitte erlaube sie in den Einstellungen deines Handys.");
+        }
+    } catch (error) {
+        console.error("Fehler bei Push-Aktivierung:", error);
+        alert("Fehler bei der Aktivierung: Du musst die Seite als App zum Home-Bildschirm hinzufügen!");
+    }
 };
 
 
@@ -337,7 +368,6 @@ window.deleteCurrentSession = async function() {
 
 function renderHistory() {
     const h = document.getElementById('history'); h.innerHTML = "";
-    // History absteigend anzeigen
     logs.forEach(s => {
         const item = document.createElement('div'); item.className = "card"; item.style.boxShadow = "none"; item.style.border = "1px solid var(--separator)";
         let exHtml = s.exercises.map(ex => `<div class="ex-line" style="padding-top: 5px;"><span class="ex-name-label" style="font-weight: 500;">${ex.name}:</span> <span style="color: var(--text-dim);">${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</span></div>`).join('');
@@ -447,7 +477,6 @@ window.toggleAccordion = function(element) {
     if(card) card.classList.toggle('is-open');
 };
 
-// NEU: Verlauf im Loggen Tab auf/zuklappen
 window.toggleHistoryView = function() {
     const container = document.getElementById('history-container');
     const chevron = document.getElementById('history-chevron');
@@ -462,7 +491,6 @@ window.toggleHistoryView = function() {
     }
 };
 
-// NEU: Light Mode Toggle Speichern
 window.toggleTheme = function() {
     const isLight = document.getElementById('theme-toggle').checked;
     if(isLight) {
@@ -484,7 +512,6 @@ window.addEventListener('offline', () => { document.getElementById('offline-bann
 window.addEventListener('online', () => {
     document.getElementById('offline-banner').style.display = 'none';
     if (window.auth && window.auth.currentUser) initApp();
-    
 });
 
 // --- SERVICE WORKER (BUTLER) REGISTRIERUNG ---
