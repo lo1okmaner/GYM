@@ -12,108 +12,145 @@
     --text-dim: #8E8E93;
 }
 
-/* --- NEU: LIGHT MODE FARBEN --- */
 html.light-mode {
-    --system-blue: #007AFF; /* Etwas dunkleres Blau für Lesbarkeit */
+    --system-blue: #007AFF; 
     --system-red: #FF3B30;
     --system-green: #34C759;
-    --bg-black: #F2F2F7; /* Typischer iOS Hintergrund bei hellem Design */
-    --card-bg: #FFFFFF;  /* Weiße Karten */
-    --input-bg: #E5E5EA; /* Hellgraue Eingabefelder */
+    --bg-black: #F2F2F7; /* Typischer iOS Light Mode Background */
+    --card-bg: #FFFFFF;  
+    --input-bg: #E5E5EA; 
     --separator: #C6C6C8;
     --text-main: #000000;
     --text-dim: #8E8E93;
 }
 
-/* Helle Tab-Bar */
-html.light-mode .tab-bar { background: rgba(255, 255, 255, 0.85); }
-/* Leichter Schatten für weiße Karten, damit sie sich abheben */
-html.light-mode .card { box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: none; }
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-black);
     color: var(--text-main);
     margin: 0;
     padding: 0;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
-    transition: background-color 0.3s ease, color 0.3s ease; /* Weicher Übergang beim Wechseln */
+    transition: background-color 0.4s ease, color 0.4s ease;
+    display: flex;
+    justify-content: center; /* Zentriert die App auf dem Desktop */
+}
+
+/* Wrapper verhält sich auf dem PC wie ein Smartphone-Bildschirm */
+#main-wrapper, #login-section {
+    width: 100%;
+    max-width: 500px;
+    background-color: var(--bg-black);
+    min-height: 100vh;
+    position: relative;
+    transition: background-color 0.4s ease;
+}
+
+@media (min-width: 550px) {
+    body { background-color: #111; }
+    html.light-mode body { background-color: #e5e5e5; }
+    #main-wrapper, #login-section { box-shadow: 0 0 40px rgba(0,0,0,0.15); }
+}
+
+/* --- NEU: TOP NAVIGATION BAR --- */
+.top-nav {
+    position: fixed; top: 0; left: 0; width: 100%; height: 50px;
+    background: rgba(28, 28, 30, 0.75);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid var(--separator);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000; padding-top: env(safe-area-inset-top);
+    transition: background 0.4s ease, border-color 0.4s ease;
+}
+html.light-mode .top-nav { background: rgba(255, 255, 255, 0.75); }
+.top-nav h1 { font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.5px; }
+
+/* Desktop-Anpassung für die feste Navigation */
+@media (min-width: 550px) {
+    .top-nav, .tab-bar, #offline-banner { max-width: 500px; left: 50%; transform: translateX(-50%); }
 }
 
 /* OFFLINE BANNER */
 #offline-banner {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; 
+    display: none; position: fixed; top: 0; width: 100%; 
     background: var(--system-red); color: white; text-align: center; 
-    padding: 12px; z-index: 10000; font-weight: 600; font-size: 14px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    padding: 12px; z-index: 10001; font-weight: 600; font-size: 14px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); padding-top: calc(env(safe-area-inset-top) + 12px);
 }
 
-.view { display: none !important; }
+.view { display: none !important; opacity: 0; animation: fadeIn 0.3s forwards; }
 .view.active { display: block !important; }
+@keyframes fadeIn { to { opacity: 1; } }
 
-.container { max-width: 500px; margin: auto; padding: 40px 20px 140px 20px; }
-h2 { font-size: 34px; font-weight: 700; letter-spacing: -1px; margin-top: 0; margin-bottom: 20px; }
+.container { padding: 70px 20px 110px 20px; } /* Angepasst für Top-Nav */
 
+/* iOS Karten-Design */
 .card { 
-    background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px;
+    background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 16px;
     border: none; overflow: hidden; -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.05); transition: background 0.3s ease;
+    transition: background 0.4s ease, box-shadow 0.4s ease;
 }
+/* Sanfte Schatten im Light Mode */
+html.light-mode .card { box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
 
 .accordion-header { 
     display: flex; justify-content: space-between; align-items: center; 
     cursor: pointer; width: 100%; background: none; border: none; padding: 0; color: var(--text-main);
-    text-align: left;
+    text-align: left; transition: opacity 0.2s;
 }
-.accordion-header h3 { margin: 0; font-size: 19px; font-weight: 600; pointer-events: none; }
+.accordion-header:active { opacity: 0.6; }
+.accordion-header h3 { margin: 0; font-size: 18px; font-weight: 600; pointer-events: none; }
 
 input, select { 
-    background: var(--input-bg); color: var(--text-main); border: none; border-radius: 12px; 
-    padding: 14px 12px; font-size: 17px; width: 100%; box-sizing: border-box; margin-bottom: 10px; 
-    outline: none; -webkit-appearance: none; transition: background 0.3s ease, color 0.3s ease;
+    background: var(--input-bg); color: var(--text-main); border: none; border-radius: 14px; 
+    padding: 14px 16px; font-size: 17px; width: 100%; box-sizing: border-box; margin-bottom: 12px; 
+    outline: none; -webkit-appearance: none; transition: background 0.4s ease, color 0.4s ease;
 }
 
-button { cursor: pointer; border: none; transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; }
-.btn-blue { background-color: var(--system-blue); color: white; font-weight: 600; font-size: 17px; padding: 16px; border-radius: 14px; border: none; width: 100%; min-height: 50px; }
-.btn-blue:active, .btn-text:active, .btn-red-text:active { transform: scale(0.97); opacity: 0.8; }
-.btn-text { background: none; color: var(--system-blue); font-size: 16px; padding: 5px 0; }
-.btn-red-text { background: none; color: var(--system-red); font-size: 16px; padding: 5px 0; }
+button { cursor: pointer; border: none; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); -webkit-tap-highlight-color: transparent; }
+.btn-blue { background-color: var(--system-blue); color: white; font-weight: 600; font-size: 17px; padding: 16px; border-radius: 14px; width: 100%; min-height: 52px; }
+.btn-blue:active, .btn-text:active, .btn-red-text:active { transform: scale(0.96); opacity: 0.8; }
+.btn-text { background: none; color: var(--system-blue); font-size: 16px; padding: 5px 0; font-weight: 500; }
+.btn-red-text { background: none; color: var(--system-red); font-size: 16px; padding: 5px 0; font-weight: 500; }
 
 .tab-bar { 
-    position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(28, 28, 30, 0.85); 
+    position: fixed; bottom: 0; width: 100%; background: rgba(28, 28, 30, 0.75); 
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-top: 0.5px solid var(--separator); display: flex; justify-content: space-around;
-    padding-top: 10px; padding-bottom: env(safe-area-inset-bottom); z-index: 1000;
-    transition: background 0.3s ease;
+    padding-top: 12px; padding-bottom: calc(env(safe-area-inset-bottom) + 8px); z-index: 1000;
+    transition: background 0.4s ease, border-color 0.4s ease;
 }
-.tab-item { color: var(--text-dim); text-align: center; font-size: 10px; background: none; border: none; flex: 1; outline: none; padding-bottom: 5px; }
+html.light-mode .tab-bar { background: rgba(255, 255, 255, 0.75); }
+.tab-item { color: var(--text-dim); text-align: center; font-size: 10px; font-weight: 500; background: none; border: none; flex: 1; outline: none; padding-bottom: 5px; transition: color 0.3s ease; }
 .tab-item.active { color: var(--system-blue); }
-.tab-icon-svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
+.tab-icon-svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; transition: transform 0.2s; }
+.tab-item:active .tab-icon-svg { transform: scale(0.9); }
 
-.last-perf-badge { display: inline-block; background: var(--input-bg); color: var(--system-blue); font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 8px; font-weight: 500; transition: background 0.3s ease; }
-.advice-box { background: rgba(48, 209, 88, 0.1); color: var(--system-green); padding: 10px; border-radius: 10px; border-left: 4px solid var(--system-green); }
+.last-perf-badge { display: inline-block; background: var(--input-bg); color: var(--system-blue); font-size: 12px; padding: 4px 10px; border-radius: 8px; margin-bottom: 10px; font-weight: 500; transition: background 0.4s ease; }
+.advice-box { background: rgba(48, 209, 88, 0.1); color: var(--system-green); padding: 12px; border-radius: 12px; border-left: 4px solid var(--system-green); margin-bottom: 10px;}
 
-.chevron-icon { width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray); transform: rotate(45deg); transition: 0.3s ease; flex-shrink: 0; }
+.chevron-icon { width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray); transform: rotate(45deg); transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); flex-shrink: 0; }
 .is-open .chevron-icon { transform: rotate(135deg); border-color: var(--system-blue); }
-.collapsible-area { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.collapsible-area { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
 .is-open .collapsible-area { max-height: 2000px; padding-top: 15px; }
-.list-item { border-bottom: 0.5px solid var(--separator); padding: 12px 0; color: var(--text-main); }
+.list-item { border-bottom: 0.5px solid var(--separator); padding: 14px 0; color: var(--text-main); font-size: 16px; }
 .list-item:last-child { border-bottom: none; }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal-day { aspect-ratio: 1/1; border-radius: 8px; background: var(--input-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--text-main); transition: background 0.3s ease;}
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-day { aspect-ratio: 1/1; border-radius: 8px; background: var(--input-bg); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--text-main); transition: background 0.3s ease;}
 .day-me { background: var(--system-blue); color: white; }
 .day-bro { background: var(--system-red); color: white; }
 .day-both { background: linear-gradient(135deg, var(--system-blue) 50%, var(--system-red) 50%); color: white; }
 
-#loading-screen { position: fixed; inset: 0; background: var(--bg-black); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
-.spinner { width: 28px; height: 28px; border: 2px solid var(--separator); border-top-color: var(--system-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+/* LADEANIMATION (Eleganter Ring) */
+#loading-screen { position: fixed; inset: 0; background: var(--bg-black); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease, background 0.4s ease; }
+.spinner { width: 34px; height: 34px; border: 3px solid var(--separator); border-top-color: var(--system-blue); border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .switch { position: relative; width: 51px; height: 31px; display: inline-block; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; inset: 0; background-color: var(--separator); transition: .3s; border-radius: 34px; }
-.slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
+.slider { position: absolute; inset: 0; background-color: var(--separator); transition: .3s cubic-bezier(0.25, 0.8, 0.25, 1); border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s cubic-bezier(0.25, 0.8, 0.25, 1); border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 input:checked + .slider { background-color: var(--system-green); }
 input:checked + .slider:before { transform: translateX(20px); }
