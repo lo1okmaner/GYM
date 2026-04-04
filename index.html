@@ -12,195 +12,13 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc } 
-        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } 
-        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    <link rel="stylesheet" href="style.css">
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBsOrvObL2dpbV6H4HFNnHjGk_iDVJKdhs",
-            authDomain: "my-gym-d5b6e.firebaseapp.com",
-            projectId: "my-gym-d5b6e",
-            storageBucket: "my-gym-d5b6e.firebasestorage.app",
-            messagingSenderId: "262633382169",
-            appId: "1:262633382169:web:13d6fc201eda300889e588"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        setPersistence(auth, browserLocalPersistence);
-
-        window.db = db; window.auth = auth;
-        window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc };
-        window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
-
-        onAuthStateChanged(auth, (user) => {
-            const ls = document.getElementById('loading-screen');
-            if (user) {
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('main-wrapper').style.display = 'block';
-                initApp();
-            } else {
-                document.getElementById('login-section').style.display = 'block';
-                document.getElementById('main-wrapper').style.display = 'none';
-            }
-            if(ls) { ls.style.opacity = '0'; setTimeout(() => ls.style.display = 'none', 500); }
-        });
-    </script>
-
-    <style>
-        :root {
-            /* Original Apple System Farben (Dunkelmodus) */
-            --system-blue: #0A84FF;
-            --system-red: #FF453A;
-            --system-gray: #8E8E93;
-            --bg-black: #000000;
-            --card-bg: #1C1C1E; /* iOS Secondary System Background */
-            --input-bg: #2C2C2E; /* iOS Tertiary System Background */
-            --separator: #38383A;
-            --text-main: #FFFFFF;
-            --text-dim: #8E8E93;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-black);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* NAVIGATION LOGIK */
-        .view { display: none !important; }
-        .view.active { display: block !important; }
-
-        .container { 
-            max-width: 500px; 
-            margin: auto; 
-            padding: 40px 20px 140px 20px; 
-        }
-
-        h2 { 
-            font-size: 34px; 
-            font-weight: 700; 
-            letter-spacing: -1px; 
-            margin-top: 0;
-            margin-bottom: 20px; 
-        }
-
-        /* iOS Karten-Design */
-        .card { 
-            background: var(--card-bg); 
-            border-radius: 12px; 
-            padding: 16px; 
-            margin-bottom: 15px;
-            border: none;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* AKKORDEON HEADER */
-        .accordion-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; width: 100%; background: none; border: none; padding: 0; color: white;
-            text-align: left;
-        }
-        .accordion-header h3 { margin: 0; font-size: 19px; font-weight: 600; pointer-events: none; }
-
-        /* iOS Eingabefelder */
-        input, select { 
-            background: var(--input-bg); 
-            color: white; 
-            border: none; 
-            border-radius: 10px; 
-            padding: 12px; 
-            font-size: 17px; 
-            width: 100%; 
-            box-sizing: border-box; 
-            margin-bottom: 10px; 
-            outline: none;
-            -webkit-appearance: none; /* Entfernt Standard iOS Styling */
-        }
-
-        /* iOS Buttons */
-        button { 
-            cursor: pointer; border: none; transition: opacity 0.2s; 
-            -webkit-tap-highlight-color: transparent;
-        }
-        button:active { opacity: 0.7; }
-        
-        .btn-blue { 
-            background-color: var(--system-blue); 
-            color: white; 
-            font-weight: 600; 
-            font-size: 17px; 
-            padding: 14px; 
-            border-radius: 12px; 
-            border: none; 
-            width: 100%; 
-            min-height: 50px;
-        }
-        .btn-text { background: none; color: var(--system-blue); font-size: 16px; padding: 5px 0; }
-        .btn-red-text { background: none; color: var(--system-red); font-size: 16px; padding: 5px 0; }
-
-        /* TAB BAR */
-        .tab-bar { 
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            background: rgba(28, 28, 30, 0.9); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid var(--separator); 
-            display: flex; justify-content: space-around;
-            padding-top: 10px; 
-            padding-bottom: env(safe-area-inset-bottom);
-            z-index: 1000;
-        }
-        .tab-item { 
-            color: var(--text-dim); text-align: center; font-size: 10px; 
-            background: none; border: none; flex: 1; outline: none; padding-bottom: 5px;
-        }
-        .tab-item.active { color: var(--system-blue); }
-        .tab-icon-svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
-
-        /* AKKORDEON CSS */
-        .chevron-icon { 
-            width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray);
-            transform: rotate(45deg); transition: 0.3s ease; flex-shrink: 0;
-        }
-        .is-open .chevron-icon { transform: rotate(135deg); border-color: var(--system-blue); }
-        .collapsible-area { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .is-open .collapsible-area { max-height: 2000px; padding-top: 15px; }
-
-        .list-item { border-bottom: 0.5px solid var(--separator); padding: 12px 0; }
-        .list-item:last-child { border-bottom: none; }
-
-        /* CALENDAR GRID */
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cal-day { aspect-ratio: 1/1; border-radius: 8px; background: var(--input-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white;}
-        .day-me { background: var(--system-blue); }
-        .day-bro { background: var(--system-red); }
-        .day-both { background: linear-gradient(135deg, var(--system-blue) 50%, var(--system-red) 50%); }
-
-        /* LOADING & SWITCH */
-        #loading-screen { position: fixed; inset: 0; background: var(--bg-black); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .spinner { width: 28px; height: 28px; border: 2px solid var(--separator); border-top-color: var(--system-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .switch { position: relative; width: 51px; height: 31px; display: inline-block; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; inset: 0; background-color: var(--separator); transition: .3s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
-        input:checked + .slider { background-color: #34c759; } /* iOS Green */
-        input:checked + .slider:before { transform: translateX(20px); }
-    </style>
+    <script type="module" src="script.js"></script>
 </head>
 <body>
 
-<div id="offline-banner" style="display:none; position:fixed; top:0; left:0; width:100%; background:var(--system-red); color:white; text-align:center; padding:12px; z-index:10000; font-weight:600; font-size:14px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+<div id="offline-banner">
     ⚠️ Keine Internetverbindung
 </div>
 
@@ -211,8 +29,8 @@
     <div class="card">
         <input type="email" id="email" placeholder="E-Mail" autocomplete="email">
         <input type="password" id="pass" placeholder="Passwort">
-        <button class="btn-blue" onclick="handleLogin()">Anmelden</button>
-        <button onclick="handleRegister()" class="btn-text" style="margin-top: 20px; width: 100%;">Account erstellen</button>
+        <button class="btn-blue" onclick="window.handleLogin()">Anmelden</button>
+        <button onclick="window.handleRegister()" class="btn-text" style="margin-top: 20px; width: 100%;">Account erstellen</button>
     </div>
 </div>
 
@@ -222,36 +40,36 @@
         <div id="view-exercises" class="view">
             <h2>Listen</h2>
             <div class="card">
-                <button class="accordion-header" onclick="toggleAccordion(this)">
+                <button class="accordion-header" onclick="window.toggleAccordion(this)">
                     <h3>+ Übung erstellen</h3>
                     <div class="chevron-icon"></div>
                 </button>
                 <div class="collapsible-area">
                     <input type="text" id="new-ex-name" placeholder="Name der Übung">
-                    <button class="btn-blue" onclick="addExerciseDefinition()">Hinzufügen</button>
+                    <button class="btn-blue" onclick="window.addExerciseDefinition()">Hinzufügen</button>
                 </div>
             </div>
             <div class="card">
-                <button class="accordion-header" onclick="toggleAccordion(this)">
+                <button class="accordion-header" onclick="window.toggleAccordion(this)">
                     <h3>+ Workout Vorlage</h3>
                     <div class="chevron-icon"></div>
                 </button>
                 <div class="collapsible-area">
                     <input type="text" id="tpl-title" placeholder="Workout Name">
                     <div id="tpl-exercise-selector"></div>
-                    <button onclick="addTemplateExerciseSelector()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:10px; margin-bottom:10px; min-height: 44px;">+ Übung wählen</button>
-                    <button class="btn-blue" onclick="saveWorkoutTemplate()">Vorlage speichern</button>
+                    <button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:10px; margin-bottom:10px; min-height: 44px;">+ Übung wählen</button>
+                    <button class="btn-blue" onclick="window.saveWorkoutTemplate()">Vorlage speichern</button>
                 </div>
             </div>
             <div class="card">
-                <button class="accordion-header" onclick="toggleAccordion(this)">
+                <button class="accordion-header" onclick="window.toggleAccordion(this)">
                     <h3>Übungskatalog</h3>
                     <div class="chevron-icon"></div>
                 </button>
                 <div class="collapsible-area" id="exercise-definitions-list"></div>
             </div>
             <div class="card">
-                <button class="accordion-header" onclick="toggleAccordion(this)">
+                <button class="accordion-header" onclick="window.toggleAccordion(this)">
                     <h3>Workout Vorlagen</h3>
                     <div class="chevron-icon"></div>
                 </button>
@@ -262,11 +80,11 @@
         <div id="view-tracking" class="view active">
             <div style="display:flex; justify-content:space-between; align-items: baseline;">
                 <h2>Aktivität</h2>
-                <button onclick="handleLogout()" class="btn-red-text" style="font-size:16px;">Logout</button>
+                <button onclick="window.handleLogout()" class="btn-red-text" style="font-size:16px;">Logout</button>
             </div>
             <div class="card">
                 <h3 id="form-title" style="color:var(--system-blue); margin-top:0; margin-bottom:15px; font-weight:600;">Session loggen</h3>
-                <select id="load-tpl-select" onchange="applyTemplate(this.value)">
+                <select id="load-tpl-select" onchange="window.applyTemplate(this.value)">
                     <option value="">Vorlage laden...</option>
                 </select>
                 <div style="display:flex; gap:10px;">
@@ -274,11 +92,11 @@
                     <input type="text" id="session-name" placeholder="Titel">
                 </div>
                 <div id="tracking-exercises"></div>
-                <button onclick="addTrackingExercise()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:12px; margin-bottom:10px; min-height: 44px;">+ Übung</button>
-                <button class="btn-blue" onclick="saveSession()">Loggen</button>
+                <button onclick="window.addTrackingExercise()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:12px; margin-bottom:10px; min-height: 44px;">+ Übung</button>
+                <button class="btn-blue" onclick="window.saveSession()">Loggen</button>
                 <div id="edit-controls" style="display:none;">
-                    <button onclick="resetForm()" class="btn-text" style="width:100%; margin-top: 10px;">Abbrechen</button>
-                    <button onclick="deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:10px; border:1px solid var(--system-red); border-radius:14px; min-height: 44px;">Training löschen</button>
+                    <button onclick="window.resetForm()" class="btn-text" style="width:100%; margin-top: 10px;">Abbrechen</button>
+                    <button onclick="window.deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:10px; border:1px solid var(--system-red); border-radius:14px; min-height: 44px;">Training löschen</button>
                 </div>
             </div>
             <div id="history"></div>
@@ -287,13 +105,13 @@
         <div id="view-bro" class="view">
             <h2>Bro Progress</h2>
             <div class="card">
-                <select id="bro-exercise-select" onchange="updateBroChart()">
+                <select id="bro-exercise-select" onchange="window.updateBroChart()">
                     <option value="">Übung wählen...</option>
                 </select>
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-top:5px;">
                     <span style="font-size:16px; font-weight:500;">Bruder einblenden</span>
                     <label class="switch">
-                        <input type="checkbox" id="compare-bro-toggle" onchange="updateBroChart(); renderBroCalendar();">
+                        <input type="checkbox" id="compare-bro-toggle" onchange="window.updateBroChart(); window.renderBroCalendar();">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -303,8 +121,8 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <h3 id="bro-cal-month" style="margin:0; font-weight:600;">Monat</h3>
                     <div style="display:flex; gap:15px;">
-                        <button onclick="changeBroMonth(-1)" class="btn-text" style="font-size:24px; padding: 0 10px;">‹</button>
-                        <button onclick="changeBroMonth(1)" class="btn-text" style="font-size:24px; padding: 0 10px;">›</button>
+                        <button onclick="window.changeBroMonth(-1)" class="btn-text" style="font-size:24px; padding: 0 10px;">‹</button>
+                        <button onclick="window.changeBroMonth(1)" class="btn-text" style="font-size:24px; padding: 0 10px;">›</button>
                     </div>
                 </div>
                 <div class="cal-grid" id="bro-calendar-days"></div>
@@ -314,280 +132,20 @@
     </div>
 
     <nav class="tab-bar">
-        <button class="tab-item" onclick="switchTab('exercises', this)">
+        <button class="tab-item" onclick="window.switchTab('exercises', this)">
             <svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43L20.57 12L17 15.57L18.43 17L20.57 14.86M3.43 14.86L2 13.43L3.43 12L7 15.57L5.57 17L3.43 14.86M12 2C6.47 2 2 6.47 2 12S6.47 22 12 22 22 17.53 22 12 17.53 2 12 2M12 20C7.58 20 4 16.42 4 12S7.58 4 12 4 20 7.58 20 12 16.42 20 12 20M12 11V13H14V11H12M8 11V13H10V11H8M16 11V13H18V11H16Z"/></svg>
             Listen
         </button>
-        <button class="tab-item active" onclick="switchTab('tracking', this)">
+        <button class="tab-item active" onclick="window.switchTab('tracking', this)">
             <svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M7,10H9V17H7V10M11,7H13V17H11V7M15,13H17V17H15V13Z"/></svg>
             Aktivität
         </button>
-        <button class="tab-item" onclick="switchTab('bro', this)">
+        <button class="tab-item" onclick="window.switchTab('bro', this)">
             <svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M16 13C17.66 13 19 11.66 19 10S17.66 7 16 7 13 8.34 13 10 14.34 13 16 13M8 13C9.66 13 11 11.66 11 10S9.66 7 8 7 5 8.34 5 10 6.34 13 8 13M16 15C13.67 15 9 16.17 9 18.5V21H23V18.5C23 16.17 18.33 15 16 15M8 15C5.67 15 1 16.17 1 18.5V21H7V18.5C7 17.55 7.77 16.36 9 15.56C8.67 15.5 8.34 15 8 15Z"/></svg>
             Bro
         </button>
     </nav>
 </div>
 
-<script>
-    let logs = [];
-    let allSessionsRaw = []; 
-    let exerciseDefinitions = [];
-    let workoutTemplates = [];
-    let editId = null;
-    let myChart = null;
-    let broCalDate = new Date();
-
-    window.switchTab = function(tab, btn) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        document.getElementById('view-' + tab).classList.add('active');
-        btn.classList.add('active');
-        if(tab === 'bro') { updateBroExerciseDropdown(); renderBroCalendar(); setTimeout(updateBroChart, 150); }
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    // iOS SAFE ACCORDION
-    window.toggleAccordion = function(element) {
-        const card = element.closest('.card');
-        if(card) card.classList.toggle('is-open');
-    }
-
-    async function handleLogin() {
-        try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value.trim(), document.getElementById('pass').value); }
-        catch(e) { alert("Fehler: " + e.message); }
-    }
-    async function handleRegister() {
-        if(confirm("Konto erstellen?")) {
-            try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value.trim(), document.getElementById('pass').value); }
-            catch(e) { alert("Fehler: " + e.message); }
-        }
-    }
-    window.handleLogout = function() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); }
-
-    async function initApp() {
-        const user = window.auth.currentUser;
-        if(!user) return;
-        const exSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid)));
-        exerciseDefinitions = []; exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
-        renderExerciseDefinitions();
-        const tplSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "workoutTemplates"), window.fs.where("userId", "==", user.uid)));
-        workoutTemplates = []; tplSnap.forEach(d => workoutTemplates.push({id: d.id, ...d.data()}));
-        renderWorkoutTemplates(); updateTemplateDropdown();
-        
-        const tSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "sessions"), window.fs.orderBy("date", "asc")));
-        allSessionsRaw = []; tSnap.forEach(d => allSessionsRaw.push({id: d.id, ...d.data()}));
-        logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
-        renderHistory(); updateBroExerciseDropdown();
-        if(document.getElementById('view-bro').classList.contains('active')) updateBroChart();
-    }
-
-    async function addExerciseDefinition() {
-        const n = document.getElementById('new-ex-name').value;
-        if(!n) return;
-        await window.fs.addDoc(window.fs.collection(window.db, "exerciseDefs"), { userId: window.auth.currentUser.uid, name: n });
-        document.getElementById('new-ex-name').value = ""; initApp();
-    }
-
-    function renderExerciseDefinitions() {
-        const list = document.getElementById('exercise-definitions-list'); list.innerHTML = "";
-        exerciseDefinitions.sort((a,b)=>a.name.localeCompare(b.name)).forEach(ex => {
-            const div = document.createElement('div'); div.className = "list-item";
-            div.style.display="flex"; div.style.justifyContent="space-between"; div.style.alignItems="center";
-            div.innerHTML = `<span>${ex.name}</span><button onclick="deleteExDef('${ex.id}')" class="btn-red-text" style="min-height:30px;">Löschen</button>`;
-            list.appendChild(div);
-        });
-    }
-
-    async function deleteExDef(id) { if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); } }
-
-    window.addTemplateExerciseSelector = function() {
-        const container = document.getElementById('tpl-exercise-selector');
-        const select = document.createElement('select'); select.className = "tpl-ex-item";
-        let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}">${ex.name}</option>`).join('');
-        select.innerHTML = `<option value="">-- Übung --</option>${opts}`;
-        container.appendChild(select);
-    };
-
-    async function saveWorkoutTemplate() {
-        const t = document.getElementById('tpl-title').value;
-        const s = document.querySelectorAll('.tpl-ex-item');
-        let n = []; s.forEach(x => { if(x.value) n.push(x.value); });
-        await window.fs.addDoc(window.fs.collection(window.db, "workoutTemplates"), { userId: window.auth.currentUser.uid, title: t, exerciseNames: n });
-        document.getElementById('tpl-title').value = ""; document.getElementById('tpl-exercise-selector').innerHTML = ""; initApp();
-    }
-
-    function renderWorkoutTemplates() {
-        const list = document.getElementById('workout-templates-list'); list.innerHTML = "";
-        workoutTemplates.forEach(t => {
-            const div = document.createElement('div'); div.className = "list-item";
-            div.innerHTML = `<b>${t.title}</b><br><small style='color:var(--text-dim)'>${t.exerciseNames.join(', ')}</small><button onclick="deleteTpl('${t.id}')" class="btn-red-text" style="float:right; min-height:30px;">×</button>`;
-            list.appendChild(div);
-        });
-    }
-
-    async function deleteTpl(id) { if(confirm("Vorlage löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "workoutTemplates", id)); initApp(); } }
-
-    function updateTemplateDropdown() {
-        const sel = document.getElementById('load-tpl-select'); sel.innerHTML = '<option value="">Vorlage laden...</option>';
-        workoutTemplates.forEach(t => { const opt = document.createElement('option'); opt.value = t.id; opt.innerText = t.title; sel.appendChild(opt); });
-    }
-
-    window.applyTemplate = function(tplId) {
-        if(!tplId) return; const tpl = workoutTemplates.find(t => t.id === tplId);
-        document.getElementById('session-name').value = tpl.title; document.getElementById('tracking-exercises').innerHTML = "";
-        tpl.exerciseNames.forEach(name => addTrackingExercise(name)); document.getElementById('load-tpl-select').value = "";
-    };
-
-    window.addTrackingExercise = function(name = "", sets = []) {
-        const container = document.getElementById('tracking-exercises');
-        const div = document.createElement('div'); div.className = "card"; div.style.background = "var(--input-bg)"; div.style.marginBottom = "10px";
-        let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('');
-        div.innerHTML = `
-            <select class="ex-select" style="font-weight:700; background: var(--card-bg);"><option value="">-- Übung --</option>${opts}</select>
-            <div class="sets-list"></div>
-            <button onclick="addSetRow(this.previousElementSibling)" class="btn-text" style="font-size:14px;">+ Satz</button>
-            <button onclick="this.parentElement.remove()" class="btn-red-text" style="float:right; font-size:24px; min-height:30px;">×</button>`;
-        container.appendChild(div);
-        const list = div.querySelector('.sets-list');
-        if(sets.length > 0) sets.forEach(s => addSetRow(list, s.reps, s.kg)); else addSetRow(list);
-    };
-
-    window.addSetRow = function(container, reps="", kg="") {
-        const row = document.createElement('div'); row.style.display = "grid"; row.style.gridTemplateColumns = "1fr 1fr 30px"; row.style.gap = "8px"; row.style.marginTop = "8px";
-        row.innerHTML = `<input type="number" class="s-reps" placeholder="Reps" value="${reps}" style="margin:0; background: var(--card-bg);"><input type="number" class="s-weight" placeholder="kg" value="${kg}" style="margin:0; background: var(--card-bg);"><button onclick="this.parentElement.remove()" class="btn-red-text" style="min-height:30px;">×</button>`;
-        container.appendChild(row);
-    };
-
-    async function saveSession() {
-        const u = window.auth.currentUser;
-        const b = document.querySelectorAll('#tracking-exercises .card');
-        let ex = []; b.forEach(x => {
-            const n = x.querySelector('.ex-select').value;
-            const rs = x.querySelectorAll('.s-reps'), ws = x.querySelectorAll('.s-weight');
-            let sets = []; for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
-            if(n) ex.push({name: n, sets: sets});
-        });
-        const data = { userId: u.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Training", exercises: ex };
-        if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), data);
-        else await window.fs.addDoc(window.fs.collection(window.db, "sessions"), data);
-        resetForm(); initApp();
-    }
-
-    async function deleteCurrentSession() { if(editId && confirm("Wirklich löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); resetForm(); await initApp(); } }
-
-    function renderHistory() {
-        const h = document.getElementById('history'); h.innerHTML = "";
-        logs.forEach(s => {
-            const item = document.createElement('div'); item.className = "card";
-            let exHtml = s.exercises.map(ex => `<div class="ex-line" style="padding-top: 5px;"><span class="ex-name-label" style="font-weight: 500;">${ex.name}:</span> <span style="color: var(--text-dim);">${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</span></div>`).join('');
-            item.innerHTML = `
-                <button class="accordion-header" onclick="toggleAccordion(this)">
-                    <div><div style="font-weight:600; font-size:17px;">${s.title}</div><small style="color:var(--text-dim)">${new Date(s.date).toLocaleDateString('de-DE')}</small></div>
-                    <div style="display:flex; align-items:center;">
-                        <div onclick="event.stopPropagation(); loadEdit('${s.id}')" class="btn-text" style="padding:10px;">Edit</div>
-                        <div class="chevron-icon"></div>
-                    </div>
-                </button>
-                <div class="collapsible-area">${exHtml}</div>`;
-            h.appendChild(item);
-        });
-    }
-
-    window.loadEdit = function(id) {
-        const s = logs.find(l => l.id === id); editId = id; 
-        document.getElementById('session-date').value = s.date; document.getElementById('session-name').value = s.title;
-        document.getElementById('tracking-exercises').innerHTML = ""; s.exercises.forEach(ex => addTrackingExercise(ex.name, ex.sets));
-        document.getElementById('form-title').innerText = "Bearbeiten"; document.getElementById('edit-controls').style.display = "block";
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    window.resetForm = function() {
-        editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
-        document.getElementById('form-title').innerText = "Session loggen"; document.getElementById('edit-controls').style.display = "none";
-    };
-
-    function updateBroExerciseDropdown() {
-        const sel = document.getElementById('bro-exercise-select');
-        const cur = sel.value; sel.innerHTML = '<option value="">Übung wählen...</option>';
-        exerciseDefinitions.sort((a,b)=>a.name.localeCompare(b.name)).forEach(ex=>{ const opt=document.createElement('option'); opt.value=ex.name; opt.innerText=ex.name; sel.appendChild(opt); });
-        sel.value = cur;
-    }
-
-    window.updateBroChart = function() {
-        const exName = document.getElementById('bro-exercise-select').value; 
-        if(!exName) { if(myChart) myChart.destroy(); return; }
-        const compare = document.getElementById('compare-bro-toggle').checked;
-        const uid = window.auth.currentUser.uid;
-        const myD = [], broD = [];
-        allSessionsRaw.forEach(s => {
-            const ex = s.exercises.find(e => e.name === exName);
-            if(ex) {
-                const max = Math.max(...ex.sets.map(st => parseFloat(st.kg) || 0));
-                if(s.userId === uid) myD.push({x: s.date, y: max}); else if(compare) broD.push({x: s.date, y: max});
-            }
-        });
-        const allY = [...myD.map(p=>p.y), ...broD.map(p=>p.y)];
-        const minY = Math.min(...allY), maxY = Math.max(...allY);
-        const range = maxY - minY, offset = range === 0 ? 10 : range * 0.25;
-        const ds = [{ label: 'Ich', data: myD, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true, pointRadius: 4 }];
-        if(compare && broD.length > 0) ds.push({ label: 'Bruder', data: broD, borderColor: '#ff453a', backgroundColor: 'rgba(255, 69, 58, 0.1)', tension: 0.3, fill: true, pointRadius: 4 });
-        if(myChart) myChart.destroy();
-        myChart = new Chart(document.getElementById('progressChart').getContext('2d'), { 
-            type: 'line', data: { datasets: ds }, 
-            options: { 
-                responsive: true, maintainAspectRatio: false, 
-                scales: { 
-                    x: { display: false }, 
-                    y: { min: minY - offset, max: maxY + offset, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8E8E93' } } 
-                }, 
-                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { title: (items) => new Date(items[0].raw.x).toLocaleDateString('de-DE') } } }
-            } 
-        });
-    }
-
-    window.changeBroMonth = (v) => { broCalDate.setMonth(broCalDate.getMonth() + v); renderBroCalendar(); }
-
-    window.renderBroCalendar = function() {
-        const grid = document.getElementById('bro-calendar-days'); grid.innerHTML = "";
-        const compare = document.getElementById('compare-bro-toggle').checked;
-        const uid = window.auth.currentUser.uid;
-        const myDates = allSessionsRaw.filter(s => s.userId === uid).map(s => s.date);
-        const broDates = allSessionsRaw.filter(s => s.userId !== uid).map(s => s.date);
-        const first = new Date(broCalDate.getFullYear(), broCalDate.getMonth(), 1);
-        const last = new Date(broCalDate.getFullYear(), broCalDate.getMonth() + 1, 0);
-        document.getElementById('bro-cal-month').innerText = broCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
-        ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => { const el = document.createElement('div'); el.className="day-label"; el.style.color = "var(--text-dim)"; el.style.fontSize = "12px"; el.style.textAlign = "center"; el.innerText=d; grid.appendChild(el); });
-        let start = (first.getDay() + 6) % 7;
-        for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
-        for (let d = 1; d <= last.getDate(); d++) {
-            const ds = `${broCalDate.getFullYear()}-${String(broCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const div = document.createElement('div'); div.className = "cal-day"; div.innerText = d;
-            const isMe = myDates.includes(ds), isBro = compare && broDates.includes(ds);
-            if(isMe && isBro) div.classList.add('day-both'); else if(isMe) div.classList.add('day-me'); else if(isBro) div.classList.add('day-bro');
-            grid.appendChild(div);
-        }
-    }
-    document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
-
-    // --- NEU: OFFLINE / ONLINE ERKENNUNG ---
-    if (!navigator.onLine) {
-        document.getElementById('offline-banner').style.display = 'block';
-    }
-
-    window.addEventListener('offline', () => {
-        document.getElementById('offline-banner').style.display = 'block';
-    });
-
-    window.addEventListener('online', () => {
-        document.getElementById('offline-banner').style.display = 'none';
-        // Aktualisiert die App-Daten automatisch, wenn das Internet wieder da ist
-        if (window.auth && window.auth.currentUser) {
-            initApp();
-        }
-    });
-</script>
 </body>
 </html>
-
