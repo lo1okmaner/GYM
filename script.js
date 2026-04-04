@@ -18,13 +18,11 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);
 
-// Globale Variablen für Firebase-Zugriff innerhalb von anderen Funktionen
 window.db = db; 
 window.auth = auth;
 window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc };
 window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
 
-// App-Status
 let logs = [];
 let allSessionsRaw = []; 
 let exerciseDefinitions = [];
@@ -32,6 +30,7 @@ let workoutTemplates = [];
 let editId = null;
 let myChart = null;
 let broCalDate = new Date();
+let todayStatus = null; // NEU: Speichert den Tagesstatus
 
 // --- AUTHENTIFIZIERUNG ---
 onAuthStateChanged(auth, (user) => {
@@ -68,6 +67,10 @@ window.handleLogout = function() {
 async function initApp() {
     const user = window.auth.currentUser;
     if(!user) return;
+    
+    // Check Tagesstatus fürs Dashboard
+    await window.checkMorningStatus();
+
     const exSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid)));
     exerciseDefinitions = []; exSnap.forEach(d => exerciseDefinitions.push({id: d.id, ...d.data()}));
     renderExerciseDefinitions();
@@ -82,6 +85,60 @@ async function initApp() {
     renderHistory(); updateBroExerciseDropdown();
     if(document.getElementById('view-bro').classList.contains('active')) window.updateBroChart();
 }
+
+// --- DASHBOARD: MORGEN CHECK-IN ---
+window.checkMorningStatus = async function() {
+    const uid = window.auth.currentUser.uid;
+    const dateStr = new Date().toLocaleDateString('en-CA'); // Gibt lokales YYYY-MM-DD
+    
+    const q = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid), window.fs.where("date", "==", dateStr));
+    const snap = await window.fs.getDocs(q);
+    
+    if(!snap.empty) {
+        todayStatus = snap.docs[0].data();
+        todayStatus.id = snap.docs[0].id;
+        
+        document.getElementById('card-morning-checkin').style.display = 'none';
+        document.getElementById('card-status-done').style.display = 'block';
+
+        let text = "";
+        if(todayStatus.status === 'gym') text = "Du gehst heute ins Gym! Zerstör die Gewichte! 💪";
+        if(todayStatus.status === 'rest') text = "Heute ist Rest Day. Erhole dich gut! 🛋️";
+        if(todayStatus.status === 'sick') text = "Du bist krank. Kurier dich richtig aus! 🤒";
+        
+        document.getElementById('today-status-text').innerText = text;
+    } else {
+        document.getElementById('card-morning-checkin').style.display = 'block';
+        document.getElementById('card-status-done').style.display = 'none';
+        todayStatus = null;
+    }
+};
+
+window.saveMorningStatus = async function(statusType) {
+    const uid = window.auth.currentUser.uid;
+    const dateStr = new Date().toLocaleDateString('en-CA');
+    const sleepVal = document.getElementById('dash-sleep').value;
+
+    const data = {
+        userId: uid,
+        date: dateStr,
+        sleep: sleepVal,
+        status: statusType, 
+        timestamp: new Date().toISOString()
+    };
+
+    await window.fs.addDoc(window.fs.collection(window.db, "dailyLogs"), data);
+    window.checkMorningStatus(); 
+};
+
+window.resetMorningStatus = async function() {
+    if(todayStatus && todayStatus.id) {
+        if(confirm("Möchtest du deinen Tagesplan ändern?")) {
+            await window.fs.deleteDoc(window.fs.doc(window.db, "dailyLogs", todayStatus.id));
+            window.checkMorningStatus();
+        }
+    }
+};
 
 
 // --- LISTEN & VORLAGEN ---
@@ -147,6 +204,7 @@ window.applyTemplate = function(tplId) {
 };
 
 
+// --- AKTIVITÄT & TRACKING ---
 window.addTrackingExercise = function(name = "", sets = []) {
     const container = document.getElementById('tracking-exercises');
     const div = document.createElement('div'); 
@@ -186,11 +244,9 @@ window.addTrackingExercise = function(name = "", sets = []) {
     else window.addSetRow(list);
 };
 
-// Hilfsfunktion, um das Badge zu aktualisieren, wenn man die Übung im Dropdown ändert
 window.refreshExerciseBadge = function(selectEl) {
     const name = selectEl.value;
     const card = selectEl.parentElement;
-    // Entferne altes Badge falls vorhanden
     const oldBadge = card.querySelector('.last-perf-badge');
     if(oldBadge) oldBadge.remove();
 
@@ -221,9 +277,8 @@ window.saveSession = async function() {
     const u = window.auth.currentUser;
     const b = document.querySelectorAll('#tracking-exercises .card');
     
-    // Check-In Daten sammeln
+    // Check-In Daten sammeln (ohne Schlaf, der wurde morgens gespeichert)
     const checkInData = {
-        sleep: document.getElementById('checkin-sleep').value,
         energy: document.getElementById('checkin-energy').value,
         soreness: document.getElementById('checkin-soreness').value
     };
@@ -241,7 +296,7 @@ window.saveSession = async function() {
         date: document.getElementById('session-date').value, 
         title: document.getElementById('session-name').value || "Training", 
         exercises: ex,
-        checkIn: checkInData // Neu dabei!
+        checkIn: checkInData
     };
 
     if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), data);
@@ -367,24 +422,14 @@ window.toggleAccordion = function(element) {
     if(card) card.classList.toggle('is-open');
 };
 
-// Init Datum setzen, falls das DOM schon bereit ist
 if (document.getElementById('session-date')) {
     document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
 }
 
-
 // --- OFFLINE / ONLINE ERKENNUNG ---
-if (!navigator.onLine) {
-    document.getElementById('offline-banner').style.display = 'block';
-}
-
-window.addEventListener('offline', () => {
-    document.getElementById('offline-banner').style.display = 'block';
-});
-
+if (!navigator.onLine) { document.getElementById('offline-banner').style.display = 'block'; }
+window.addEventListener('offline', () => { document.getElementById('offline-banner').style.display = 'block'; });
 window.addEventListener('online', () => {
     document.getElementById('offline-banner').style.display = 'none';
-    if (window.auth && window.auth.currentUser) {
-        initApp();
-    }
+    if (window.auth && window.auth.currentUser) initApp();
 });
