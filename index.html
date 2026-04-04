@@ -16,9 +16,13 @@
         
         <section id="view-home" class="view active">
             <h2 class="section-title">Übersicht</h2>
+            
             <div class="card">
                 <div class="card-header">
-                    <span class="icon-orange">Schritte</span>
+                    <div class="icon-title">
+                        <svg class="icon icon-orange" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"/></svg>
+                        <span>Schritte</span>
+                    </div>
                     <span class="time">Heute</span>
                 </div>
                 <div class="card-value">
@@ -26,9 +30,13 @@
                     <span class="unit">Schritte</span>
                 </div>
             </div>
+
             <div class="card">
                 <div class="card-header">
-                    <span class="icon-red">Herzfrequenz</span>
+                    <div class="icon-title">
+                        <svg class="icon icon-red" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+                        <span>Herzfrequenz</span>
+                    </div>
                     <span class="time">Vor 2 Min.</span>
                 </div>
                 <div class="card-value">
@@ -36,6 +44,7 @@
                     <span class="unit">S/Min</span>
                 </div>
             </div>
+            
             <div class="card empty-card"></div>
             <div class="card empty-card"></div>
         </section>
@@ -43,21 +52,21 @@
         <section id="view-listen" class="view">
             <h2 class="section-title">Deine Listen</h2>
             <div class="card">
-                <p>Hier stehen deine Listen-Einträge.</p>
+                <p class="text-muted">Hier stehen deine Einträge.</p>
             </div>
         </section>
 
         <section id="view-loggen" class="view">
             <h2 class="section-title">Neuer Eintrag</h2>
             <div class="card">
-                <p>Formular zum Loggen von Daten...</p>
+                <p class="text-muted">Formular zum Loggen von Daten.</p>
             </div>
         </section>
 
         <section id="view-menu" class="view">
             <h2 class="section-title">Einstellungen</h2>
             <div class="card">
-                <p>Profil, Account und mehr.</p>
+                <p class="text-muted">Profil und Account.</p>
             </div>
         </section>
 
