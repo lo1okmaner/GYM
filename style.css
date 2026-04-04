@@ -1,16 +1,34 @@
 :root {
-    /* Original Apple System Farben (Dunkelmodus) */
+    /* Original Apple System Farben (Dunkelmodus - Standard) */
     --system-blue: #0A84FF;
     --system-red: #FF453A;
     --system-green: #30D158;
     --system-gray: #8E8E93;
     --bg-black: #000000;
-    --card-bg: #1C1C1E; /* iOS Secondary System Background */
-    --input-bg: #2C2C2E; /* iOS Tertiary System Background */
+    --card-bg: #1C1C1E; 
+    --input-bg: #2C2C2E; 
     --separator: #38383A;
     --text-main: #FFFFFF;
     --text-dim: #8E8E93;
 }
+
+/* --- NEU: LIGHT MODE FARBEN --- */
+html.light-mode {
+    --system-blue: #007AFF; /* Etwas dunkleres Blau für Lesbarkeit */
+    --system-red: #FF3B30;
+    --system-green: #34C759;
+    --bg-black: #F2F2F7; /* Typischer iOS Hintergrund bei hellem Design */
+    --card-bg: #FFFFFF;  /* Weiße Karten */
+    --input-bg: #E5E5EA; /* Hellgraue Eingabefelder */
+    --separator: #C6C6C8;
+    --text-main: #000000;
+    --text-dim: #8E8E93;
+}
+
+/* Helle Tab-Bar */
+html.light-mode .tab-bar { background: rgba(255, 255, 255, 0.85); }
+/* Leichter Schatten für weiße Karten, damit sie sich abheben */
+html.light-mode .card { box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: none; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -20,165 +38,75 @@ body {
     padding: 0;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Weicher Übergang beim Wechseln */
 }
 
 /* OFFLINE BANNER */
 #offline-banner {
-    display: none; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    background: var(--system-red); 
-    color: white; 
-    text-align: center; 
-    padding: 12px; 
-    z-index: 10000; 
-    font-weight: 600; 
-    font-size: 14px; 
+    display: none; position: fixed; top: 0; left: 0; width: 100%; 
+    background: var(--system-red); color: white; text-align: center; 
+    padding: 12px; z-index: 10000; font-weight: 600; font-size: 14px; 
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
-/* NAVIGATION LOGIK */
 .view { display: none !important; }
 .view.active { display: block !important; }
 
-.container { 
-    max-width: 500px; 
-    margin: auto; 
-    padding: 40px 20px 140px 20px; 
-}
+.container { max-width: 500px; margin: auto; padding: 40px 20px 140px 20px; }
+h2 { font-size: 34px; font-weight: 700; letter-spacing: -1px; margin-top: 0; margin-bottom: 20px; }
 
-h2 { 
-    font-size: 34px; 
-    font-weight: 700; 
-    letter-spacing: -1px; 
-    margin-top: 0;
-    margin-bottom: 20px; 
-}
-
-/* iOS Karten-Design */
 .card { 
-    background: var(--card-bg); 
-    border-radius: 16px; 
-    padding: 20px; 
-    margin-bottom: 16px;
-    border: none;
-    overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.05); /* Feiner Rand, der die Karte vom Hintergrund abhebt */
+    background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px;
+    border: none; overflow: hidden; -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05); transition: background 0.3s ease;
 }
 
-/* AKKORDEON HEADER */
 .accordion-header { 
     display: flex; justify-content: space-between; align-items: center; 
-    cursor: pointer; width: 100%; background: none; border: none; padding: 0; color: white;
+    cursor: pointer; width: 100%; background: none; border: none; padding: 0; color: var(--text-main);
     text-align: left;
 }
 .accordion-header h3 { margin: 0; font-size: 19px; font-weight: 600; pointer-events: none; }
 
-/* iOS Eingabefelder */
 input, select { 
-    background: var(--input-bg); 
-    color: white; 
-    border: none; 
-    border-radius: 12px; 
-    padding: 14px 12px; 
-    font-size: 17px; 
-    width: 100%; 
-    box-sizing: border-box; 
-    margin-bottom: 10px; 
-    outline: none;
-    -webkit-appearance: none; /* Entfernt Standard iOS Styling */
+    background: var(--input-bg); color: var(--text-main); border: none; border-radius: 12px; 
+    padding: 14px 12px; font-size: 17px; width: 100%; box-sizing: border-box; margin-bottom: 10px; 
+    outline: none; -webkit-appearance: none; transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* iOS Buttons */
-button { 
-    cursor: pointer; 
-    border: none; 
-    transition: all 0.2s ease; 
-    -webkit-tap-highlight-color: transparent;
-}
-
-.btn-blue { 
-    background-color: var(--system-blue); 
-    color: white; 
-    font-weight: 600; 
-    font-size: 17px; 
-    padding: 16px; 
-    border-radius: 14px; 
-    border: none; 
-    width: 100%; 
-    min-height: 50px;
-}
-
-/* Touch-Feedback (Klick-Effekt auf dem Handy) */
-.btn-blue:active, .btn-text:active, .btn-red-text:active { 
-    transform: scale(0.97); 
-    opacity: 0.8; 
-}
-
+button { cursor: pointer; border: none; transition: all 0.2s ease; -webkit-tap-highlight-color: transparent; }
+.btn-blue { background-color: var(--system-blue); color: white; font-weight: 600; font-size: 17px; padding: 16px; border-radius: 14px; border: none; width: 100%; min-height: 50px; }
+.btn-blue:active, .btn-text:active, .btn-red-text:active { transform: scale(0.97); opacity: 0.8; }
 .btn-text { background: none; color: var(--system-blue); font-size: 16px; padding: 5px 0; }
 .btn-red-text { background: none; color: var(--system-red); font-size: 16px; padding: 5px 0; }
 
-/* TAB BAR */
 .tab-bar { 
-    position: fixed; bottom: 0; left: 0; width: 100%; 
-    background: rgba(28, 28, 30, 0.85); 
+    position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(28, 28, 30, 0.85); 
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-top: 0.5px solid var(--separator); 
-    display: flex; justify-content: space-around;
-    padding-top: 10px; 
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 1000;
+    border-top: 0.5px solid var(--separator); display: flex; justify-content: space-around;
+    padding-top: 10px; padding-bottom: env(safe-area-inset-bottom); z-index: 1000;
+    transition: background 0.3s ease;
 }
-.tab-item { 
-    color: var(--text-dim); text-align: center; font-size: 10px; 
-    background: none; border: none; flex: 1; outline: none; padding-bottom: 5px;
-}
+.tab-item { color: var(--text-dim); text-align: center; font-size: 10px; background: none; border: none; flex: 1; outline: none; padding-bottom: 5px; }
 .tab-item.active { color: var(--system-blue); }
 .tab-icon-svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
 
-/* Badge für das letzte Gewicht */
-.last-perf-badge {
-    display: inline-block;
-    background: var(--input-bg);
-    color: var(--system-blue);
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    font-weight: 500;
-}
+.last-perf-badge { display: inline-block; background: var(--input-bg); color: var(--system-blue); font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 8px; font-weight: 500; transition: background 0.3s ease; }
+.advice-box { background: rgba(48, 209, 88, 0.1); color: var(--system-green); padding: 10px; border-radius: 10px; border-left: 4px solid var(--system-green); }
 
-.advice-box {
-    background: rgba(48, 209, 88, 0.1);
-    color: var(--system-green);
-    padding: 10px;
-    border-radius: 10px;
-    border-left: 4px solid var(--system-green);
-}
-
-/* AKKORDEON CSS */
-.chevron-icon { 
-    width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray);
-    transform: rotate(45deg); transition: 0.3s ease; flex-shrink: 0;
-}
+.chevron-icon { width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray); transform: rotate(45deg); transition: 0.3s ease; flex-shrink: 0; }
 .is-open .chevron-icon { transform: rotate(135deg); border-color: var(--system-blue); }
 .collapsible-area { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 .is-open .collapsible-area { max-height: 2000px; padding-top: 15px; }
-
-.list-item { border-bottom: 0.5px solid var(--separator); padding: 12px 0; }
+.list-item { border-bottom: 0.5px solid var(--separator); padding: 12px 0; color: var(--text-main); }
 .list-item:last-child { border-bottom: none; }
 
-/* CALENDAR GRID */
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal-day { aspect-ratio: 1/1; border-radius: 8px; background: var(--input-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white;}
-.day-me { background: var(--system-blue); }
-.day-bro { background: var(--system-red); }
-.day-both { background: linear-gradient(135deg, var(--system-blue) 50%, var(--system-red) 50%); }
+.cal-day { aspect-ratio: 1/1; border-radius: 8px; background: var(--input-bg); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--text-main); transition: background 0.3s ease;}
+.day-me { background: var(--system-blue); color: white; }
+.day-bro { background: var(--system-red); color: white; }
+.day-both { background: linear-gradient(135deg, var(--system-blue) 50%, var(--system-red) 50%); color: white; }
 
-/* LOADING & SWITCH */
 #loading-screen { position: fixed; inset: 0; background: var(--bg-black); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
 .spinner { width: 28px; height: 28px; border: 2px solid var(--separator); border-top-color: var(--system-blue); border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -187,5 +115,5 @@ button {
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; inset: 0; background-color: var(--separator); transition: .3s; border-radius: 34px; }
 .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--system-green); } /* Nutzt jetzt das originale Apple Grün */
+input:checked + .slider { background-color: var(--system-green); }
 input:checked + .slider:before { transform: translateX(20px); }
