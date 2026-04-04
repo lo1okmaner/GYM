@@ -82,53 +82,58 @@
                 <h2>Aktivität</h2>
                 <button onclick="window.handleLogout()" class="btn-red-text" style="font-size:16px;">Logout</button>
             </div>
+            
             <div class="card">
-    <h3 id="form-title" style="color:var(--system-blue); margin-top:0; margin-bottom:15px; font-weight:600;">Session loggen</h3>
-    
-    <div id="smart-checkin" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 0.5px solid var(--separator);">
-        <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 10px;">Tagesform Check-In:</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-            <div>
-                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Schlaf</label>
-                <select id="checkin-sleep" style="font-size: 14px; padding: 8px;">
-                    <option value="3">Gut</option>
-                    <option value="2">Mittel</option>
-                    <option value="1">Schlecht</option>
-                </select>
-            </div>
-            <div>
-                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Energie</label>
-                <select id="checkin-energy" style="font-size: 14px; padding: 8px;">
-                    <option value="3">Voll da</option>
-                    <option value="2">Geht so</option>
-                    <option value="1">Müde</option>
-                </select>
-            </div>
-            <div>
-                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Kater</label>
-                <select id="checkin-soreness" style="font-size: 14px; padding: 8px;">
-                    <option value="0">Keiner</option>
-                    <option value="1">Leicht</option>
-                    <option value="2">Viel</option>
-                </select>
-            </div>
-        </div>
-        <div id="smart-advice" style="font-size: 12px; color: var(--system-green); margin-top: 8px; display: none;">
-            </div>
-    </div>
+                <h3 id="form-title" style="color:var(--system-blue); margin-top:0; margin-bottom:15px; font-weight:600;">Session loggen</h3>
+                
+                <div id="smart-checkin" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 0.5px solid var(--separator);">
+                    <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 10px;">Tagesform Check-In:</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <div>
+                            <label style="font-size: 11px; display: block; margin-bottom: 4px;">Schlaf</label>
+                            <select id="checkin-sleep" style="font-size: 14px; padding: 8px;">
+                                <option value="3">Gut</option>
+                                <option value="2">Mittel</option>
+                                <option value="1">Schlecht</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; display: block; margin-bottom: 4px;">Energie</label>
+                            <select id="checkin-energy" style="font-size: 14px; padding: 8px;">
+                                <option value="3">Voll da</option>
+                                <option value="2">Geht so</option>
+                                <option value="1">Müde</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; display: block; margin-bottom: 4px;">Kater</label>
+                            <select id="checkin-soreness" style="font-size: 14px; padding: 8px;">
+                                <option value="0">Keiner</option>
+                                <option value="1">Leicht</option>
+                                <option value="2">Viel</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="smart-advice" style="font-size: 12px; color: var(--system-green); margin-top: 8px; display: none;"></div>
+                </div>
 
-    <select id="load-tpl-select" onchange="window.applyTemplate(this.value)">
-        <option value="">Vorlage laden...</option>
-    </select>
-    <div style="display:flex; gap:10px;">
-        <input type="date" id="session-date">
-        <input type="text" id="session-name" placeholder="Titel">
-    </div>
-    <div id="tracking-exercises"></div>
-    <button onclick="window.addTrackingExercise()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:12px; margin-bottom:10px; min-height: 44px;">+ Übung</button>
-    <button class="btn-blue" onclick="window.saveSession()">Loggen</button>
-    </div>
+                <select id="load-tpl-select" onchange="window.applyTemplate(this.value)">
+                    <option value="">Vorlage laden...</option>
+                </select>
+                <div style="display:flex; gap:10px;">
+                    <input type="date" id="session-date">
+                    <input type="text" id="session-name" placeholder="Titel">
+                </div>
+                <div id="tracking-exercises"></div>
+                <button onclick="window.addTrackingExercise()" class="btn-text" style="width:100%; border:1px dashed var(--separator); border-radius:12px; margin-bottom:10px; min-height: 44px;">+ Übung</button>
+                <button class="btn-blue" onclick="window.saveSession()">Loggen</button>
+                
+                <div id="edit-controls" style="display:none;">
+                    <button onclick="window.resetForm()" class="btn-text" style="width:100%; margin-top: 10px;">Abbrechen</button>
+                    <button onclick="window.deleteCurrentSession()" class="btn-red-text" style="width:100%; margin-top:10px; border:1px solid var(--system-red); border-radius:14px; min-height: 44px;">Training löschen</button>
+                </div>
             </div>
+            
             <div id="history"></div>
         </div>
 
