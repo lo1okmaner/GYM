@@ -30,7 +30,15 @@ let workoutTemplates = [];
 let editId = null;
 let myChart = null;
 let broCalDate = new Date();
-let todayStatus = null; // NEU: Speichert den Tagesstatus
+let todayStatus = null;
+
+// Design Toggle Check beim Starten
+window.addEventListener('DOMContentLoaded', () => {
+    if(localStorage.getItem('theme') === 'light') {
+        const toggle = document.getElementById('theme-toggle');
+        if(toggle) toggle.checked = true;
+    }
+});
 
 // --- AUTHENTIFIZIERUNG ---
 onAuthStateChanged(auth, (user) => {
@@ -59,7 +67,7 @@ window.handleRegister = async function() {
 };
 
 window.handleLogout = function() { 
-    if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); 
+    if(confirm("Wirklich abmelden?")) window.authFuncs.signOut(window.auth); 
 };
 
 
@@ -68,7 +76,6 @@ async function initApp() {
     const user = window.auth.currentUser;
     if(!user) return;
     
-    // Check Tagesstatus fürs Dashboard
     await window.checkMorningStatus();
 
     const exSnap = await window.fs.getDocs(window.fs.query(window.fs.collection(window.db, "exerciseDefs"), window.fs.where("userId", "==", user.uid)));
@@ -91,7 +98,6 @@ window.checkMorningStatus = async function() {
     const uid = window.auth.currentUser.uid;
     const dateStr = new Date().toLocaleDateString('en-CA');
     
-    // 1. Heutigen Status laden
     const q = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid), window.fs.where("date", "==", dateStr));
     const snap = await window.fs.getDocs(q);
     
@@ -112,7 +118,6 @@ window.checkMorningStatus = async function() {
         todayStatus = null;
     }
 
-    // 2. STREAK BERECHNEN
     const allLogsQ = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid));
     const allLogsSnap = await window.fs.getDocs(allLogsQ);
     
@@ -121,7 +126,6 @@ window.checkMorningStatus = async function() {
 
     let currentStreak = 0;
     
-    // Gehe bis zu 365 Tage rückwärts in die Vergangenheit
     for(let i=0; i<365; i++) {
         let checkDate = new Date();
         checkDate.setDate(checkDate.getDate() - i);
@@ -129,23 +133,15 @@ window.checkMorningStatus = async function() {
         
         let status = logsMap[checkDateStr];
         
-        if(i === 0 && !status) {
-            // Heute wurde noch nichts eingetragen? Das ist okay, die Streak bricht erst um Mitternacht ab.
-            continue; 
-        }
-        
+        if(i === 0 && !status) { continue; }
         if(status === 'gym') {
-            currentStreak++; // Gym = Streak + 1
+            currentStreak++; 
         } else if(status === 'rest' || status === 'sick') {
-            // Rest/Krank = Streak bleibt bestehen, friert aber ein
             continue;
         } else {
-            // Kein Eintrag gefunden = Streak gebrochen! Schleife stoppen.
             break;
         }
     }
-    
-    // HTML updaten
     document.getElementById('streak-counter').innerText = currentStreak;
 };
 
@@ -153,15 +149,7 @@ window.saveMorningStatus = async function(statusType) {
     const uid = window.auth.currentUser.uid;
     const dateStr = new Date().toLocaleDateString('en-CA');
     const sleepVal = document.getElementById('dash-sleep').value;
-
-    const data = {
-        userId: uid,
-        date: dateStr,
-        sleep: sleepVal,
-        status: statusType, 
-        timestamp: new Date().toISOString()
-    };
-
+    const data = { userId: uid, date: dateStr, sleep: sleepVal, status: statusType, timestamp: new Date().toISOString() };
     await window.fs.addDoc(window.fs.collection(window.db, "dailyLogs"), data);
     window.checkMorningStatus(); 
 };
@@ -175,20 +163,11 @@ window.resetMorningStatus = async function() {
     }
 };
 
-// --- PUSH BENACHRICHTIGUNGEN ---
 window.requestNotifications = function() {
-    if (!("Notification" in window)) {
-        alert("Dein Browser unterstützt leider keine Benachrichtigungen.");
-        return;
-    }
-    
+    if (!("Notification" in window)) { alert("Dein Browser unterstützt leider keine Benachrichtigungen."); return; }
     Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-            alert("Erfolgreich! Ab jetzt darf dir die App Erinnerungen schicken.");
-            // Hier kommt später der Service Worker für den echten 8:00 Uhr Alarm hin
-        } else {
-            alert("Benachrichtigungen wurden blockiert. Du kannst sie in deinen Browser-Einstellungen wieder aktivieren.");
-        }
+        if (permission === "granted") alert("Erfolgreich! Ab jetzt darf dir die App Erinnerungen schicken.");
+        else alert("Benachrichtigungen wurden blockiert. Du kannst sie in deinen Browser-Einstellungen wieder aktivieren.");
     });
 };
 
@@ -211,9 +190,7 @@ function renderExerciseDefinitions() {
     });
 }
 
-window.deleteExDef = async function(id) { 
-    if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); } 
-};
+window.deleteExDef = async function(id) { if(confirm("Übung löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "exerciseDefs", id)); initApp(); } };
 
 window.addTemplateExerciseSelector = function() {
     const container = document.getElementById('tpl-exercise-selector');
@@ -240,9 +217,7 @@ function renderWorkoutTemplates() {
     });
 }
 
-window.deleteTpl = async function(id) { 
-    if(confirm("Vorlage löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "workoutTemplates", id)); initApp(); } 
-};
+window.deleteTpl = async function(id) { if(confirm("Vorlage löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "workoutTemplates", id)); initApp(); } };
 
 function updateTemplateDropdown() {
     const sel = document.getElementById('load-tpl-select'); sel.innerHTML = '<option value="">Vorlage laden...</option>';
@@ -264,7 +239,6 @@ window.addTrackingExercise = function(name = "", sets = []) {
     div.style.background = "var(--input-bg)"; 
     div.style.marginBottom = "10px";
     
-    // SMART: Letzte Performance suchen
     let lastInfoHtml = "";
     if (name !== "") {
         const lastSessionWithEx = allSessionsRaw
@@ -329,7 +303,6 @@ window.saveSession = async function() {
     const u = window.auth.currentUser;
     const b = document.querySelectorAll('#tracking-exercises .card');
     
-    // Check-In Daten sammeln (ohne Schlaf, der wurde morgens gespeichert)
     const checkInData = {
         energy: document.getElementById('checkin-energy').value,
         soreness: document.getElementById('checkin-soreness').value
@@ -357,14 +330,16 @@ window.saveSession = async function() {
     window.resetForm(); 
     initApp();
 };
+
 window.deleteCurrentSession = async function() { 
     if(editId && confirm("Wirklich löschen?")) { await window.fs.deleteDoc(window.fs.doc(window.db, "sessions", editId)); window.resetForm(); await initApp(); } 
 };
 
 function renderHistory() {
     const h = document.getElementById('history'); h.innerHTML = "";
+    // History absteigend anzeigen
     logs.forEach(s => {
-        const item = document.createElement('div'); item.className = "card";
+        const item = document.createElement('div'); item.className = "card"; item.style.boxShadow = "none"; item.style.border = "1px solid var(--separator)";
         let exHtml = s.exercises.map(ex => `<div class="ex-line" style="padding-top: 5px;"><span class="ex-name-label" style="font-weight: 500;">${ex.name}:</span> <span style="color: var(--text-dim);">${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</span></div>`).join('');
         item.innerHTML = `
             <button class="accordion-header" onclick="window.toggleAccordion(this)">
@@ -390,7 +365,7 @@ window.loadEdit = function(id) {
 window.resetForm = function() {
     editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = "";
-    document.getElementById('form-title').innerText = "Session loggen"; document.getElementById('edit-controls').style.display = "none";
+    document.getElementById('form-title').innerText = "Neue Session"; document.getElementById('edit-controls').style.display = "none";
 };
 
 
@@ -434,9 +409,7 @@ window.updateBroChart = function() {
     });
 };
 
-window.changeBroMonth = function(v) { 
-    broCalDate.setMonth(broCalDate.getMonth() + v); window.renderBroCalendar(); 
-};
+window.changeBroMonth = function(v) { broCalDate.setMonth(broCalDate.getMonth() + v); window.renderBroCalendar(); };
 
 window.renderBroCalendar = function() {
     const grid = document.getElementById('bro-calendar-days'); grid.innerHTML = "";
@@ -472,6 +445,33 @@ window.switchTab = function(tab, btn) {
 window.toggleAccordion = function(element) {
     const card = element.closest('.card');
     if(card) card.classList.toggle('is-open');
+};
+
+// NEU: Verlauf im Loggen Tab auf/zuklappen
+window.toggleHistoryView = function() {
+    const container = document.getElementById('history-container');
+    const chevron = document.getElementById('history-chevron');
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        chevron.style.transform = 'rotate(135deg)';
+        chevron.style.borderColor = 'var(--system-blue)';
+    } else {
+        container.style.display = 'none';
+        chevron.style.transform = 'rotate(45deg)';
+        chevron.style.borderColor = 'var(--system-gray)';
+    }
+};
+
+// NEU: Light Mode Toggle Speichern
+window.toggleTheme = function() {
+    const isLight = document.getElementById('theme-toggle').checked;
+    if(isLight) {
+        document.documentElement.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+    } else {
+        document.documentElement.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+    }
 };
 
 if (document.getElementById('session-date')) {
