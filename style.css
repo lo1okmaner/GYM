@@ -1,7 +1,7 @@
 /* --- BASIS & VARIABLEN --- */
 :root {
-    --ios-bg: #F2F2F7;
-    --ios-blue: #007AFF;
+    --ios-bg: #F2F2F7;         /* System Gray 6 */
+    --ios-blue: #007AFF;       /* Apple Primary Blue */
     --ios-text: #000000;
     --ios-gray-text: #8E8E93;
     --card-bg: #FFFFFF;
@@ -22,21 +22,21 @@ body {
     background-color: var(--ios-bg);
     color: var(--ios-text);
     
-    /* Der Trick gegen "fliegende" Elemente */
-    height: 100dvh; /* Nutzt exakt die dynamische Bildschirmhöhe */
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Verhindert, dass das ganze Fenster scrollt */
+    /* --- HIER WIRD DAS "FLIEGEN" VERHINDERT --- */
+    height: 100dvh;             /* Erzwingt exakt 100% der Bildschirmhöhe */
+    width: 100vw;
+    display: flex;              /* Aktiviert das Flexbox-Layout */
+    flex-direction: column;     /* Elemente werden von oben nach unten gestapelt */
+    overflow: hidden;           /* Der Body selbst scrollt nicht mehr */
 }
 
 /* --- HEADER --- */
 .app-header {
-    background-color: rgba(242, 242, 247, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background-color: rgba(242, 242, 247, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     padding: calc(var(--safe-top) + 20px) 20px 10px 20px;
-    flex-shrink: 0;
+    flex-shrink: 0;             /* Verhindert, dass der Header schrumpft */
     z-index: 40;
 }
 
@@ -48,9 +48,9 @@ body {
 
 /* --- HAUPTINHALT (SCROLLBAR) --- */
 .app-content {
-    flex: 1; /* Nimmt den restlichen Platz ein */
-    overflow-y: auto; /* Erlaubt Scrollen nur hier */
-    -webkit-overflow-scrolling: touch; /* Weiches iOS-Scrollen */
+    flex: 1;                    /* Nimmt den gesamten restlichen Platz in der Mitte ein */
+    overflow-y: auto;           /* Nur dieser Bereich darf scrollen */
+    -webkit-overflow-scrolling: touch; /* Butterweiches Scrollen auf iOS */
     padding: 10px 20px 30px 20px;
 }
 
@@ -60,25 +60,25 @@ body {
 }
 .view.active {
     display: block;
-    animation: fadeIn 0.2s ease-in-out;
+    animation: fadeIn 0.25s ease-out;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .section-title {
     font-size: 22px;
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     letter-spacing: -0.3px;
 }
 
 /* --- KARTEN (HEALTH STYLE) --- */
 .card {
     background-color: var(--card-bg);
-    border-radius: 20px; /* Typische iOS-Rundung */
+    border-radius: 20px;
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
@@ -86,11 +86,16 @@ body {
 }
 
 .card:active {
-    transform: scale(0.98); /* Microinteraction beim Antippen */
+    transform: scale(0.98);
 }
 
 .empty-card {
-    height: 150px;
+    height: 180px;
+}
+
+.text-muted {
+    color: var(--ios-gray-text);
+    font-size: 14px;
 }
 
 .card-header {
@@ -98,8 +103,19 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
+}
+
+.icon-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 14px;
     font-weight: 600;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
 }
 
 .icon-orange { color: #FF9500; }
@@ -120,6 +136,7 @@ body {
 .card-value .number {
     font-size: 32px;
     font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .card-value .unit {
@@ -135,7 +152,7 @@ body {
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     padding-bottom: var(--safe-bottom);
-    flex-shrink: 0; /* Verhindert das Quetschen durch den Inhalt */
+    flex-shrink: 0;             /* Verhindert das Quetschen durch den Inhalt, bleibt fest unten */
     z-index: 50;
 }
 
@@ -155,6 +172,7 @@ body {
     color: var(--ios-gray-text);
     cursor: pointer;
     width: 25%;
+    transition: color 0.2s ease;
 }
 
 .tab-icon {
@@ -168,7 +186,6 @@ body {
     font-weight: 500;
 }
 
-/* Aktiver Tab-Zustand */
 .tab-item.active {
     color: var(--ios-blue);
 }
