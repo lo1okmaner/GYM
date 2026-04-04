@@ -484,4 +484,14 @@ window.addEventListener('offline', () => { document.getElementById('offline-bann
 window.addEventListener('online', () => {
     document.getElementById('offline-banner').style.display = 'none';
     if (window.auth && window.auth.currentUser) initApp();
+    
 });
+
+// --- SERVICE WORKER (BUTLER) REGISTRIERUNG ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Butler (Service Worker) erfolgreich eingestellt!', reg))
+            .catch(err => console.error('Butler hat gestreikt:', err));
+    });
+}
