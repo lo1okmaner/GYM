@@ -139,6 +139,26 @@ button {
 .tab-item.active { color: var(--system-blue); }
 .tab-icon-svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; fill: currentColor; }
 
+/* Badge für das letzte Gewicht */
+.last-perf-badge {
+    display: inline-block;
+    background: var(--input-bg);
+    color: var(--system-blue);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.advice-box {
+    background: rgba(48, 209, 88, 0.1);
+    color: var(--system-green);
+    padding: 10px;
+    border-radius: 10px;
+    border-left: 4px solid var(--system-green);
+}
+
 /* AKKORDEON CSS */
 .chevron-icon { 
     width: 8px; height: 8px; border-top: 2px solid var(--system-gray); border-right: 2px solid var(--system-gray);
