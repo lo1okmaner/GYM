@@ -29,7 +29,7 @@
                     <h1 id="header-title">Übersicht</h1>
                 </div>
                 <div class="profile-avatar" onclick="window.handleLogout()" id="user-avatar-text">
-                    </div>
+                </div>
             </div>
         </header>
 
@@ -95,7 +95,6 @@
             </section>
 
             <section id="view-training" class="view">
-                
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <h2 class="section-title" id="form-title" style="margin: 0;">Workout Loggen</h2>
                     <select id="load-tpl-select" class="premium-input" style="width: auto; margin: 0; padding: 6px 12px;" onchange="window.applyTemplate(this.value)"></select>
@@ -103,7 +102,7 @@
                 
                 <div class="card">
                     <input type="date" id="session-date" class="premium-input" style="margin-bottom: 12px;">
-                    <input type="text" id="session-name" class="premium-input" placeholder="Titel (z.B. Brust & Trizeps)" style="margin-bottom: 0;">
+                    <input type="text" id="session-name" class="premium-input" placeholder="Titel (z.B. Push Day)" style="margin-bottom: 0;">
                 </div>
 
                 <div id="tracking-exercises"></div>
@@ -140,7 +139,7 @@
                     </button>
                     <div class="collapsible-area">
                         <div style="margin-top: 12px;">
-                            <input type="text" id="tpl-title" class="premium-input" placeholder="Name der Vorlage" style="margin-bottom: 12px;">
+                            <input type="text" id="tpl-title" class="premium-input" placeholder="Name" style="margin-bottom: 12px;">
                             <div id="tpl-exercise-selector" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
                             <button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="margin-bottom: 16px;">+ Übung hinzufügen</button>
                             <button onclick="window.saveWorkoutTemplate()" class="premium-btn btn-outline" style="width: 100%;">Vorlage speichern</button>
@@ -178,7 +177,6 @@
             </section>
 
             <section id="view-bro" class="view">
-                
                 <h2 class="section-title">Status Kalender</h2>
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
@@ -196,7 +194,7 @@
                     </div>
                 </div>
 
-                <h2 class="section-title" style="margin-top: 24px;">Kraft Progress (Bro-Vergleich)</h2>
+                <h2 class="section-title" style="margin-top: 24px;">Kraft Progress</h2>
                 <div class="card">
                     <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                         <select id="bro-exercise-select" class="premium-input" style="flex: 1; margin: 0;" onchange="window.updateBroChart()"></select>
@@ -212,13 +210,11 @@
                         <canvas id="progressChart"></canvas>
                     </div>
                 </div>
-
                 <div class="card empty-card"></div>
             </section>
 
             <section id="view-settings" class="view">
                 <h2 class="section-title">App Einstellungen</h2>
-                
                 <div class="card" style="padding: 0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 0.5px solid var(--ios-separator);">
                         <span style="font-weight: 500;">Push-Benachrichtigungen</span>
@@ -232,7 +228,6 @@
                         </label>
                     </div>
                 </div>
-
                 <div class="card empty-card"></div>
             </section>
 
