@@ -27,6 +27,7 @@ window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAnd
 
 let logs = [];
 let allSessionsRaw = []; 
+let dailyLogsRaw = []; // Speichert die Check-Ins für den Kalender
 let exerciseDefinitions = [];
 let workoutTemplates = [];
 let editId = null;
@@ -35,12 +36,10 @@ let myWeightChart = null;
 let broCalDate = new Date();
 let todayStatus = null;
 
-// Dynamisches Datum & Theme Setup
 window.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('dynamic-date');
     if(dateEl) dateEl.innerText = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
 
-    // Theme (Light/Dark) aus dem Cache laden
     if(localStorage.getItem('theme') === 'light') {
         document.documentElement.classList.add('light-mode');
         const toggle = document.getElementById('theme-toggle');
@@ -72,6 +71,13 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('main-wrapper').style.display = 'flex';
+        
+        // Initialen-Avatar setzen
+        const avatarEl = document.getElementById('user-avatar-text');
+        if (avatarEl && user.email) {
+            avatarEl.innerText = user.email.charAt(0).toUpperCase();
+        }
+
         initApp();
     } else {
         document.getElementById('login-section').style.display = 'block';
@@ -112,7 +118,6 @@ async function initApp() {
     logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
     renderHistory(); updateBroExerciseDropdown();
 
-    // Stats initialisieren (ohne direkt zum Tab zu springen)
     window.renderBroCalendar();
     window.updateWeightChart();
 }
@@ -122,12 +127,20 @@ window.checkMorningStatus = async function() {
     const uid = window.auth.currentUser.uid;
     const dateStr = new Date().toLocaleDateString('en-CA');
     
-    const q = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid), window.fs.where("date", "==", dateStr));
-    const snap = await window.fs.getDocs(q);
+    const allLogsQ = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid));
+    const allLogsSnap = await window.fs.getDocs(allLogsQ);
     
-    if(!snap.empty) {
-        todayStatus = snap.docs[0].data();
-        todayStatus.id = snap.docs[0].id;
+    dailyLogsRaw = [];
+    let logsMap = {};
+    allLogsSnap.forEach(doc => { 
+        const d = doc.data();
+        d.id = doc.id;
+        dailyLogsRaw.push(d);
+        logsMap[d.date] = d.status; 
+        if(d.date === dateStr) todayStatus = d;
+    });
+    
+    if(todayStatus) {
         document.getElementById('card-morning-checkin').style.display = 'none';
         document.getElementById('card-status-done').style.display = 'block';
 
@@ -141,11 +154,6 @@ window.checkMorningStatus = async function() {
         document.getElementById('card-status-done').style.display = 'none';
         todayStatus = null;
     }
-
-    const allLogsQ = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid));
-    const allLogsSnap = await window.fs.getDocs(allLogsQ);
-    let logsMap = {};
-    allLogsSnap.forEach(doc => { logsMap[doc.data().date] = doc.data().status; });
 
     let currentStreak = 0;
     for(let i=0; i<365; i++) {
@@ -166,19 +174,22 @@ window.saveMorningStatus = async function(statusType) {
     const uid = window.auth.currentUser.uid;
     const dateStr = new Date().toLocaleDateString('en-CA');
     const sleepVal = document.getElementById('dash-sleep').value;
-    const weightVal = document.getElementById('dash-weight').value; // Neues Gewicht tracken
+    const weightVal = document.getElementById('dash-weight').value; 
     
     const data = { userId: uid, date: dateStr, sleep: sleepVal, weight: weightVal, status: statusType, timestamp: new Date().toISOString() };
     await window.fs.addDoc(window.fs.collection(window.db, "dailyLogs"), data);
     
-    window.checkMorningStatus(); 
-    window.updateWeightChart(); // Graph aktualisieren
+    await window.checkMorningStatus(); 
+    window.renderBroCalendar();
+    window.updateWeightChart(); 
 };
 
 window.resetMorningStatus = async function() {
     if(todayStatus && todayStatus.id && confirm("Tagesplan ändern?")) {
         await window.fs.deleteDoc(window.fs.doc(window.db, "dailyLogs", todayStatus.id));
-        window.checkMorningStatus();
+        await window.checkMorningStatus();
+        window.renderBroCalendar();
+        window.updateWeightChart();
     }
 };
 
@@ -350,17 +361,21 @@ function renderHistory() {
     }
 
     logs.forEach(s => {
-        const item = document.createElement('div'); item.className = "card";
-        let exHtml = s.exercises.map(ex => `<div style="padding: 6px 0; border-bottom: 0.5px solid var(--ios-separator);"><span style="font-weight: 600; color:var(--ios-text);">${ex.name}</span><br><span style="color: var(--ios-label-dim); font-size: 14px;">${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</span></div>`).join('');
+        // Die Listenelemente brauchen keine eigene '.card'-Klasse mehr für den Hintergrund, nur Styling
+        const item = document.createElement('div');
+        item.style.padding = "10px 0";
+        item.style.borderBottom = "0.5px solid var(--ios-separator)";
+        
+        let exHtml = s.exercises.map(ex => `<div style="padding: 6px 0;"><span style="font-weight: 600; color:var(--ios-text);">${ex.name}</span><br><span style="color: var(--ios-label-dim); font-size: 14px;">${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</span></div>`).join('');
         item.innerHTML = `
-            <button class="accordion-header" onclick="window.toggleAccordion(this)">
+            <button class="accordion-header" style="margin-bottom: 4px;" onclick="const content = this.nextElementSibling; content.style.display = content.style.display === 'block' ? 'none' : 'block';">
                 <div><div style="font-weight:700; font-size:17px; letter-spacing:-0.3px;">${s.title}</div><small style="color:var(--ios-label-dim); font-weight:500;">${new Date(s.date).toLocaleDateString('de-DE')}</small></div>
                 <div style="display:flex; align-items:center; gap: 12px;">
                     <div onclick="event.stopPropagation(); window.loadEdit('${s.id}')" class="btn-text">Edit</div>
                     <div class="chevron-icon">›</div>
                 </div>
             </button>
-            <div class="collapsible-area">${exHtml}</div>`;
+            <div class="collapsible-area" style="border: none; padding-top: 0; margin-top: 0;">${exHtml}</div>`;
         h.appendChild(item);
     });
 }
@@ -386,10 +401,7 @@ window.changeBroMonth = function(v) { broCalDate.setMonth(broCalDate.getMonth() 
 window.renderBroCalendar = function() {
     const grid = document.getElementById('bro-calendar-days'); if (!grid) return;
     grid.innerHTML = "";
-    const compare = document.getElementById('compare-bro-toggle').checked;
-    const uid = window.auth.currentUser.uid;
-    const myDates = allSessionsRaw.filter(s => s.userId === uid).map(s => s.date);
-    const broDates = allSessionsRaw.filter(s => s.userId !== uid).map(s => s.date);
+    
     const first = new Date(broCalDate.getFullYear(), broCalDate.getMonth(), 1);
     const last = new Date(broCalDate.getFullYear(), broCalDate.getMonth() + 1, 0);
     
@@ -400,11 +412,19 @@ window.renderBroCalendar = function() {
     
     let start = (first.getDay() + 6) % 7;
     for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
+    
     for (let d = 1; d <= last.getDate(); d++) {
         const ds = `${broCalDate.getFullYear()}-${String(broCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const div = document.createElement('div'); div.className = "cal-day"; div.innerText = d;
-        const isMe = myDates.includes(ds), isBro = compare && broDates.includes(ds);
-        if(isMe && isBro) div.classList.add('day-both'); else if(isMe) div.classList.add('day-me'); else if(isBro) div.classList.add('day-bro');
+        
+        // Status aus dailyLogs suchen
+        const log = dailyLogsRaw.find(l => l.date === ds);
+        if(log) {
+            if(log.status === 'gym') div.classList.add('day-gym');
+            if(log.status === 'rest') div.classList.add('day-rest');
+            if(log.status === 'sick') div.classList.add('day-sick');
+        }
+        
         grid.appendChild(div);
     }
 };
@@ -433,9 +453,12 @@ window.updateBroChart = function() {
 
     const allY = [...myD.map(p=>p.y), ...broD.map(p=>p.y)];
     const minY = Math.min(...allY), maxY = Math.max(...allY);
-    const range = maxY - minY, offset = range === 0 ? 10 : range * 0.25;
+    let offset = (maxY - minY) === 0 ? 10 : (maxY - minY) * 0.25;
     
-    const ds = [{ label: 'Du', data: myD, borderColor: '#92E82A', backgroundColor: 'rgba(146, 232, 42, 0.1)', tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2 }];
+    // Falls nur 1 Punkt existiert, sorge dafür dass er groß gezeichnet wird
+    const pRadius = myD.length === 1 ? 6 : 4;
+
+    const ds = [{ label: 'Du', data: myD, borderColor: '#92E82A', backgroundColor: 'rgba(146, 232, 42, 0.1)', tension: 0.4, fill: true, pointRadius: pRadius, pointBackgroundColor: '#000', pointBorderWidth: 2 }];
     if(compare && broD.length > 0) ds.push({ label: 'Bro', data: broD, borderColor: '#FA114F', backgroundColor: 'transparent', tension: 0.4, fill: false, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2, borderDash: [5, 5] });
     
     if(myChart) myChart.destroy();
@@ -457,24 +480,24 @@ window.updateBroChart = function() {
 };
 
 window.updateWeightChart = async function() {
-    if(!window.auth.currentUser) return;
-    const uid = window.auth.currentUser.uid;
+    if(!window.auth || !window.auth.currentUser) return;
     
-    const q = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid), window.fs.orderBy("date", "asc"));
-    const snap = await window.fs.getDocs(q);
+    // Wir sortieren dailyLogs chronologisch fürs Chart
+    const sortedLogs = [...dailyLogsRaw].sort((a,b) => new Date(a.date) - new Date(b.date));
     
     const dataPts = [];
-    snap.forEach(doc => {
-        const d = doc.data();
+    sortedLogs.forEach(d => {
         if(d.weight && !isNaN(d.weight)) dataPts.push({ x: d.date, y: parseFloat(d.weight) });
     });
 
-    if(dataPts.length === 0) return; // Nichts zu zeichnen
+    if(dataPts.length === 0) return; 
     
     const allY = dataPts.map(p=>p.y);
     const minY = Math.min(...allY), maxY = Math.max(...allY);
-    const offset = 2; // +/- 2kg Padding
-    
+    // Bei nur einem Datenpunkt erweitern wir die Skala künstlich, damit der Punkt nicht am Rand klebt
+    const offset = (minY === maxY) ? 5 : 2; 
+    const pRadius = dataPts.length === 1 ? 6 : 4;
+
     if(myWeightChart) myWeightChart.destroy();
     const ctx = document.getElementById('weightChart')?.getContext('2d');
     if (ctx) {
@@ -485,9 +508,9 @@ window.updateWeightChart = async function() {
                 datasets: [{ 
                     label: 'Gewicht (kg)', 
                     data: dataPts, 
-                    borderColor: '#1FDAE1', /* Cyan/Blue Akzent */
+                    borderColor: '#1FDAE1', 
                     backgroundColor: 'rgba(31, 218, 225, 0.15)', 
-                    tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2 
+                    tension: 0.4, fill: true, pointRadius: pRadius, pointBackgroundColor: '#000', pointBorderWidth: 2 
                 }] 
             }, 
             options: { 
@@ -501,7 +524,6 @@ window.updateWeightChart = async function() {
         });
     }
 };
-
 
 // --- UI & HELPER ---
 window.switchTab = function(tab, btn) {
@@ -530,6 +552,7 @@ window.switchTab = function(tab, btn) {
 };
 
 window.toggleAccordion = function(element) {
+    // Sucht die nächstgelegene ".card" Hülle und toggled die "is-open" Klasse
     const card = element.closest('.card');
     if(card) card.classList.toggle('is-open');
 };
