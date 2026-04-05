@@ -31,29 +31,41 @@ let exerciseDefinitions = [];
 let workoutTemplates = [];
 let editId = null;
 let myChart = null;
+let myWeightChart = null;
+let broCalDate = new Date();
 let todayStatus = null;
 
-// Dynamisches Datum im Header setzen (z.B. "DIENSTAG, 1. APR.")
-function updateHeaderDate() {
-    const dateEl = document.getElementById('dynamic-date');
-    if(dateEl) {
-        const options = { weekday: 'long', day: 'numeric', month: 'short' };
-        dateEl.innerText = new Date().toLocaleDateString('de-DE', options).toUpperCase();
-    }
-}
-
+// Dynamisches Datum & Theme Setup
 window.addEventListener('DOMContentLoaded', () => {
-    updateHeaderDate();
+    const dateEl = document.getElementById('dynamic-date');
+    if(dateEl) dateEl.innerText = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase();
+
+    // Theme (Light/Dark) aus dem Cache laden
+    if(localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.add('light-mode');
+        const toggle = document.getElementById('theme-toggle');
+        if(toggle) toggle.checked = true;
+    }
 
     const tabItems = document.querySelectorAll('.tab-item');
     tabItems.forEach(tab => {
         tab.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const tabName = targetId.replace('view-', ''); 
+            const tabName = this.getAttribute('data-target').replace('view-', ''); 
             window.switchTab(tabName, this);
         });
     });
 });
+
+window.toggleTheme = function() {
+    const isLight = document.getElementById('theme-toggle').checked;
+    if(isLight) {
+        document.documentElement.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+    } else {
+        document.documentElement.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+    }
+};
 
 // --- AUTHENTIFIZIERUNG ---
 onAuthStateChanged(auth, (user) => {
@@ -71,17 +83,13 @@ window.handleLogin = async function() {
     try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value.trim(), document.getElementById('pass').value); }
     catch(e) { alert("Fehler: " + e.message); }
 };
-
 window.handleRegister = async function() {
     if(confirm("Konto erstellen?")) {
         try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value.trim(), document.getElementById('pass').value); }
         catch(e) { alert("Fehler: " + e.message); }
     }
 };
-
-window.handleLogout = function() { 
-    if(confirm("Wirklich abmelden?")) window.authFuncs.signOut(window.auth); 
-};
+window.handleLogout = function() { if(confirm("Wirklich abmelden?")) window.authFuncs.signOut(window.auth); };
 
 
 // --- INITIALISIERUNG ---
@@ -103,9 +111,13 @@ async function initApp() {
     allSessionsRaw = []; tSnap.forEach(d => allSessionsRaw.push({id: d.id, ...d.data()}));
     logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
     renderHistory(); updateBroExerciseDropdown();
+
+    // Stats initialisieren (ohne direkt zum Tab zu springen)
+    window.renderBroCalendar();
+    window.updateWeightChart();
 }
 
-// --- DASHBOARD: MORGEN CHECK-IN & STREAK ---
+// --- DASHBOARD: CHECK-IN & STREAK ---
 window.checkMorningStatus = async function() {
     const uid = window.auth.currentUser.uid;
     const dateStr = new Date().toLocaleDateString('en-CA');
@@ -120,9 +132,9 @@ window.checkMorningStatus = async function() {
         document.getElementById('card-status-done').style.display = 'block';
 
         let text = "";
-        if(todayStatus.status === 'gym') text = "Bereit fürs Gym! Zerstör die Gewichte! 💪";
-        if(todayStatus.status === 'rest') text = "Rest Day. Erhole dich gut! 🛋️";
-        if(todayStatus.status === 'sick') text = "Krank. Kurier dich richtig aus! 🤒";
+        if(todayStatus.status === 'gym') text = "Bereit fürs Gym! 💪";
+        if(todayStatus.status === 'rest') text = "Rest Day. Erhole dich! 🛋️";
+        if(todayStatus.status === 'sick') text = "Krank. Kurier dich aus! 🤒";
         document.getElementById('today-status-text').innerText = text;
     } else {
         document.getElementById('card-morning-checkin').style.display = 'block';
@@ -141,10 +153,10 @@ window.checkMorningStatus = async function() {
         let checkDateStr = checkDate.toLocaleDateString('en-CA');
         let status = logsMap[checkDateStr];
         
-        if(i === 0 && !status) { continue; } 
-        if(status === 'gym') { currentStreak++; } 
-        else if(status === 'rest' || status === 'sick') { continue; } 
-        else { break; }
+        if(i === 0 && !status) continue;
+        if(status === 'gym') currentStreak++; 
+        else if(status === 'rest' || status === 'sick') continue;
+        else break; 
     }
     const streakEl = document.getElementById('streak-counter');
     if(streakEl) streakEl.innerText = currentStreak;
@@ -154,9 +166,13 @@ window.saveMorningStatus = async function(statusType) {
     const uid = window.auth.currentUser.uid;
     const dateStr = new Date().toLocaleDateString('en-CA');
     const sleepVal = document.getElementById('dash-sleep').value;
-    const data = { userId: uid, date: dateStr, sleep: sleepVal, status: statusType, timestamp: new Date().toISOString() };
+    const weightVal = document.getElementById('dash-weight').value; // Neues Gewicht tracken
+    
+    const data = { userId: uid, date: dateStr, sleep: sleepVal, weight: weightVal, status: statusType, timestamp: new Date().toISOString() };
     await window.fs.addDoc(window.fs.collection(window.db, "dailyLogs"), data);
+    
     window.checkMorningStatus(); 
+    window.updateWeightChart(); // Graph aktualisieren
 };
 
 window.resetMorningStatus = async function() {
@@ -261,10 +277,9 @@ window.addTrackingExercise = function(name = "", sets = []) {
     }
 
     let opts = exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('');
-    
     div.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <select class="premium-input ex-select" style="font-weight:700; margin:0; flex:1; background:rgba(255,255,255,0.1);" onchange="window.refreshExerciseBadge(this)">
+            <select class="premium-input ex-select" style="font-weight:700; margin:0; flex:1;" onchange="window.refreshExerciseBadge(this)">
                 <option value="">-- Übung wählen --</option>${opts}
             </select>
             <button onclick="this.parentElement.parentElement.remove()" class="btn-red-text" style="font-size:24px; margin-left:12px;">×</button>
@@ -306,7 +321,6 @@ window.addSetRow = function(container, reps="", kg="") {
 window.saveSession = async function() {
     const u = window.auth.currentUser;
     const b = document.querySelectorAll('#tracking-exercises .card');
-    
     const checkInData = { energy: document.getElementById('checkin-energy').value, soreness: document.getElementById('checkin-soreness').value };
 
     let ex = []; 
@@ -331,6 +345,10 @@ window.deleteCurrentSession = async function() {
 
 function renderHistory() {
     const h = document.getElementById('history'); h.innerHTML = "";
+    if(logs.length > 0) {
+        document.getElementById('last-workout-date').innerText = new Date(logs[0].date).toLocaleDateString('de-DE');
+    }
+
     logs.forEach(s => {
         const item = document.createElement('div'); item.className = "card";
         let exHtml = s.exercises.map(ex => `<div style="padding: 6px 0; border-bottom: 0.5px solid var(--ios-separator);"><span style="font-weight: 600; color:var(--ios-text);">${ex.name}</span><br><span style="color: var(--ios-label-dim); font-size: 14px;">${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</span></div>`).join('');
@@ -353,9 +371,7 @@ window.loadEdit = function(id) {
     document.getElementById('tracking-exercises').innerHTML = ""; s.exercises.forEach(ex => window.addTrackingExercise(ex.name, ex.sets));
     document.getElementById('form-title').innerText = "Bearbeiten"; document.getElementById('edit-controls').style.display = "block";
     
-    // Automatisch zum Loggen-Tab wechseln
-    const logTab = document.querySelector('[data-target="view-loggen"]');
-    if(logTab) window.switchTab('loggen', logTab);
+    document.querySelector('.app-content').scrollTo({top: 0, behavior: 'smooth'});
 };
 
 window.resetForm = function() {
@@ -364,7 +380,35 @@ window.resetForm = function() {
     document.getElementById('form-title').innerText = "Workout Loggen"; document.getElementById('edit-controls').style.display = "none";
 };
 
-// --- BRO PROGRESS ---
+// --- BRO KALENDER & CHARTS ---
+window.changeBroMonth = function(v) { broCalDate.setMonth(broCalDate.getMonth() + v); window.renderBroCalendar(); };
+
+window.renderBroCalendar = function() {
+    const grid = document.getElementById('bro-calendar-days'); if (!grid) return;
+    grid.innerHTML = "";
+    const compare = document.getElementById('compare-bro-toggle').checked;
+    const uid = window.auth.currentUser.uid;
+    const myDates = allSessionsRaw.filter(s => s.userId === uid).map(s => s.date);
+    const broDates = allSessionsRaw.filter(s => s.userId !== uid).map(s => s.date);
+    const first = new Date(broCalDate.getFullYear(), broCalDate.getMonth(), 1);
+    const last = new Date(broCalDate.getFullYear(), broCalDate.getMonth() + 1, 0);
+    
+    document.getElementById('bro-cal-month').innerText = broCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
+    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => { 
+        const el = document.createElement('div'); el.style.color = "var(--ios-label-dim)"; el.style.fontSize = "12px"; el.style.textAlign = "center"; el.innerText=d; grid.appendChild(el); 
+    });
+    
+    let start = (first.getDay() + 6) % 7;
+    for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
+    for (let d = 1; d <= last.getDate(); d++) {
+        const ds = `${broCalDate.getFullYear()}-${String(broCalDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const div = document.createElement('div'); div.className = "cal-day"; div.innerText = d;
+        const isMe = myDates.includes(ds), isBro = compare && broDates.includes(ds);
+        if(isMe && isBro) div.classList.add('day-both'); else if(isMe) div.classList.add('day-me'); else if(isBro) div.classList.add('day-bro');
+        grid.appendChild(div);
+    }
+};
+
 function updateBroExerciseDropdown() {
     const sel = document.getElementById('bro-exercise-select'); if (!sel) return;
     const cur = sel.value; sel.innerHTML = '<option value="">Übung für Graph wählen...</option>';
@@ -375,38 +419,89 @@ function updateBroExerciseDropdown() {
 window.updateBroChart = function() {
     const exName = document.getElementById('bro-exercise-select')?.value; 
     if(!exName) { if(myChart) myChart.destroy(); return; }
+    
+    const compare = document.getElementById('compare-bro-toggle').checked;
     const uid = window.auth.currentUser.uid;
-    const myD = [];
+    const myD = [], broD = [];
     allSessionsRaw.forEach(s => {
         const ex = s.exercises.find(e => e.name === exName);
-        if(ex && s.userId === uid) {
+        if(ex) {
             const max = Math.max(...ex.sets.map(st => parseFloat(st.kg) || 0));
-            myD.push({x: s.date, y: max});
+            if(s.userId === uid) myD.push({x: s.date, y: max}); else if(compare) broD.push({x: s.date, y: max});
         }
     });
-    const allY = [...myD.map(p=>p.y)];
+
+    const allY = [...myD.map(p=>p.y), ...broD.map(p=>p.y)];
     const minY = Math.min(...allY), maxY = Math.max(...allY);
     const range = maxY - minY, offset = range === 0 ? 10 : range * 0.25;
     
-    // Premium Apple Fitness Chart Farben
-    const ds = [{ label: 'Max KG', data: myD, borderColor: '#92E82A', backgroundColor: 'rgba(146, 232, 42, 0.15)', tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2 }];
+    const ds = [{ label: 'Du', data: myD, borderColor: '#92E82A', backgroundColor: 'rgba(146, 232, 42, 0.1)', tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2 }];
+    if(compare && broD.length > 0) ds.push({ label: 'Bro', data: broD, borderColor: '#FA114F', backgroundColor: 'transparent', tension: 0.4, fill: false, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2, borderDash: [5, 5] });
     
     if(myChart) myChart.destroy();
     const ctx = document.getElementById('progressChart')?.getContext('2d');
     if (ctx) {
+        const textColor = document.documentElement.classList.contains('light-mode') ? '#000' : '#8E8E93';
         myChart = new Chart(ctx, { 
             type: 'line', data: { datasets: ds }, 
             options: { 
                 responsive: true, maintainAspectRatio: false, 
                 scales: { 
                     x: { display: false }, 
-                    y: { min: minY - offset, max: maxY + offset, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8E8E93' } } 
+                    y: { min: minY - offset, max: maxY + offset, grid: { color: 'rgba(150,150,150,0.1)' }, ticks: { color: textColor } } 
                 }, 
                 plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
             } 
         });
     }
 };
+
+window.updateWeightChart = async function() {
+    if(!window.auth.currentUser) return;
+    const uid = window.auth.currentUser.uid;
+    
+    const q = window.fs.query(window.fs.collection(window.db, "dailyLogs"), window.fs.where("userId", "==", uid), window.fs.orderBy("date", "asc"));
+    const snap = await window.fs.getDocs(q);
+    
+    const dataPts = [];
+    snap.forEach(doc => {
+        const d = doc.data();
+        if(d.weight && !isNaN(d.weight)) dataPts.push({ x: d.date, y: parseFloat(d.weight) });
+    });
+
+    if(dataPts.length === 0) return; // Nichts zu zeichnen
+    
+    const allY = dataPts.map(p=>p.y);
+    const minY = Math.min(...allY), maxY = Math.max(...allY);
+    const offset = 2; // +/- 2kg Padding
+    
+    if(myWeightChart) myWeightChart.destroy();
+    const ctx = document.getElementById('weightChart')?.getContext('2d');
+    if (ctx) {
+        const textColor = document.documentElement.classList.contains('light-mode') ? '#000' : '#8E8E93';
+        myWeightChart = new Chart(ctx, { 
+            type: 'line', 
+            data: { 
+                datasets: [{ 
+                    label: 'Gewicht (kg)', 
+                    data: dataPts, 
+                    borderColor: '#1FDAE1', /* Cyan/Blue Akzent */
+                    backgroundColor: 'rgba(31, 218, 225, 0.15)', 
+                    tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2 
+                }] 
+            }, 
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { 
+                    x: { display: false }, 
+                    y: { min: minY - offset, max: maxY + offset, grid: { color: 'rgba(150,150,150,0.1)' }, ticks: { color: textColor } } 
+                }, 
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
+            } 
+        });
+    }
+};
+
 
 // --- UI & HELPER ---
 window.switchTab = function(tab, btn) {
@@ -423,7 +518,12 @@ window.switchTab = function(tab, btn) {
         if (headerTitle && newTitle) headerTitle.textContent = newTitle;
     }
 
-    if(tab === 'menu') { setTimeout(window.updateBroChart, 150); }
+    if(tab === 'bro') { 
+        setTimeout(() => {
+            window.updateBroChart();
+            window.updateWeightChart();
+        }, 150); 
+    }
     
     const appContent = document.querySelector('.app-content');
     if (appContent) appContent.scrollTo({top: 0, behavior: 'smooth'});
