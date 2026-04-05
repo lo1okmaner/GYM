@@ -5,84 +5,188 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>MyGym Tracker</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <header class="app-header">
-        <div class="header-content">
-            <div class="header-titles">
-                <p class="header-date">DIENSTAG, 1. APR.</p>
-                <h1 id="header-title">Übersicht</h1>
-            </div>
-            <div class="profile-avatar">
-                <img src="https://via.placeholder.com/40/333/fff?text=US" alt="User Avatar">
-            </div>
-        </div>
-    </header>
-
-    <main class="app-content">
+    <div id="login-section" style="display: block; padding: calc(var(--safe-top) + 40px) 20px;">
+        <h1 style="font-size: 34px; font-weight: 700; letter-spacing: -1.2px; margin-bottom: 30px; text-align: center;">MyGym<br><span style="color: var(--ios-green);">Tracker</span></h1>
         
-        <section class="activity-rings-section">
-            <h2 class="section-title">Aktivität</h2>
-            <div class="card activity-card">
-                <div class="rings-wrapper">
-                    <div class="ring-track track-red"></div>
-                    <div class="ring-track track-green"></div>
-                    <div class="ring-track track-blue"></div>
-                    <div class="ring-active ring-red"></div>
-                    <div class="ring-active ring-green"></div>
-                    <div class="ring-active ring-blue"></div>
-                </div>
-                <div class="rings-data">
-                    <p class="data-line red"><span class="label">Bewegen</span> <span class="value">450/800</span> <span class="unit">CAL</span></p>
-                    <p class="data-line green"><span class="label">Trainieren</span> <span class="value">19/30</span> <span class="unit">MIN</span></p>
-                    <p class="data-line blue"><span class="label">Stehen</span> <span class="value">4/12</span> <span class="unit">STD</span></p>
-                </div>
-                <span class="chevron-icon">›</span>
-            </div>
-        </section>
+        <div class="card">
+            <input type="email" id="email" class="premium-input" placeholder="E-Mail" style="margin-bottom: 12px;">
+            <input type="password" id="pass" class="premium-input" placeholder="Passwort" style="margin-bottom: 24px;">
+            <button onclick="window.handleLogin()" class="premium-btn btn-green" style="width: 100%; margin-bottom: 12px;">Anmelden</button>
+            <button onclick="window.handleRegister()" class="premium-btn btn-outline" style="width: 100%;">Neues Konto erstellen</button>
+        </div>
+    </div>
 
-        <section class="data-cards-grid">
+    <div id="main-wrapper" style="display: none; height: 100dvh; width: 100vw; flex-direction: column;">
+        
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-titles">
+                    <p class="header-date" id="dynamic-date">HEUTE</p>
+                    <h1 id="header-title">Übersicht</h1>
+                </div>
+                <div class="profile-avatar" onclick="window.handleLogout()">
+                    <img src="https://via.placeholder.com/40/333/fff?text=US" alt="User Avatar">
+                </div>
+            </div>
+        </header>
+
+        <main class="app-content">
             
-            <div class="card data-card purple">
-                <div class="card-header">
-                    <h3 class="card-label">Schrittzahl</h3>
+            <section id="view-home" class="view active">
+                
+                <section class="activity-rings-section">
+                    <h2 class="section-title">Aktivität</h2>
+                    <div class="card activity-card">
+                        <div class="rings-wrapper">
+                            <div class="ring-track track-red"></div>
+                            <div class="ring-track track-green"></div>
+                            <div class="ring-track track-blue"></div>
+                            <div class="ring-active ring-red"></div>
+                            <div class="ring-active ring-green"></div>
+                            <div class="ring-active ring-blue"></div>
+                        </div>
+                        <div class="rings-data">
+                            <p class="data-line red"><span class="label">Bewegen</span> <span class="value">450/800</span> <span class="unit">CAL</span></p>
+                            <p class="data-line green"><span class="label">Trainieren</span> <span class="value">19/30</span> <span class="unit">MIN</span></p>
+                            <p class="data-line blue"><span class="label">Stehen</span> <span class="value">4/12</span> <span class="unit">STD</span></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="data-cards-grid">
+                    <div class="card data-card purple">
+                        <div class="card-header"><h3 class="card-label">Streak</h3></div>
+                        <p class="card-sublabel">Tage in Folge</p>
+                        <p class="card-main-value purple-text"><span id="streak-counter">0</span> <span class="unit-inline">🔥</span></p>
+                    </div>
+                    <div class="card data-card cyan">
+                        <div class="card-header"><h3 class="card-label">Push</h3></div>
+                        <p class="card-sublabel">Wecker</p>
+                        <button onclick="window.requestNotifications()" class="premium-btn btn-outline" style="margin-top: 5px; font-size: 13px; padding: 6px;">Aktivieren</button>
+                    </div>
+                </section>
+
+                <h2 class="section-title" style="margin-top: 24px;">Tagesstatus</h2>
+                <div id="card-morning-checkin" class="card">
+                    <p style="margin-bottom: 15px; color: var(--ios-label-dim); font-size: 15px;">Guten Morgen! Wie sieht der Plan heute aus?</p>
+                    <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Schlaf (Stunden):</label>
+                    <input type="number" id="dash-sleep" class="premium-input" placeholder="z.B. 8" style="margin-top: 6px; margin-bottom: 16px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <button onclick="window.saveMorningStatus('gym')" class="premium-btn" style="background: var(--ios-green); color: black;">Gym</button>
+                        <button onclick="window.saveMorningStatus('rest')" class="premium-btn" style="background: var(--ios-blue); color: black;">Rest</button>
+                        <button onclick="window.saveMorningStatus('sick')" class="premium-btn" style="background: var(--ios-red); color: white;">Krank</button>
+                    </div>
                 </div>
-                <p class="card-sublabel">Heute</p>
-                <p class="card-main-value purple-text">2.932</p>
-                <div class="chart-placeholder"></div>
-            </div>
-
-            <div class="card data-card cyan">
-                <div class="card-header">
-                    <h3 class="card-label">Strecke</h3>
+                <div id="card-status-done" class="card" style="display: none; text-align: center;">
+                    <p id="today-status-text" style="font-size: 16px; font-weight: 600; margin-bottom: 12px;"></p>
+                    <button onclick="window.resetMorningStatus()" class="btn-text">Status ändern</button>
                 </div>
-                <p class="card-sublabel">Heute</p>
-                <p class="card-main-value cyan-text">2,22 <span class="unit-inline">KM</span></p>
-                <div class="chart-placeholder"></div>
-            </div>
-        </section>
 
-        <div class="card empty-card"></div>
+                <div class="card empty-card"></div>
+            </section>
 
-    </main>
+            <section id="view-listen" class="view">
+                <h2 class="section-title">Neue Vorlage</h2>
+                <div class="card">
+                    <input type="text" id="tpl-title" class="premium-input" placeholder="Name der Vorlage (z.B. Push Day)" style="margin-bottom: 12px;">
+                    <div id="tpl-exercise-selector" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                    <button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="margin-bottom: 16px;">+ Übung hinzufügen</button>
+                    <button onclick="window.saveWorkoutTemplate()" class="premium-btn btn-green" style="width: 100%;">Vorlage speichern</button>
+                </div>
 
-    <nav class="tab-bar">
-        <ul class="tab-list">
-            <li class="tab-item active" data-target="view-summary" data-title="Übersicht">
-                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"/></svg>
-                <span>Übersicht</span>
-            </li>
-            <li class="tab-item" data-target="view-fitness" data-title="Fitness+">
-                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
-                <span>Training</span>
-            </li>
-            <li class="tab-item" data-target="view-sharing" data-title="Teilen">
-                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.005 3.005 0 013.75-2.906z"/></svg>
-                <span>Verlauf</span>
-            </li>
-        </ul>
-    </nav>
+                <h2 class="section-title" style="margin-top: 24px;">Gespeicherte Vorlagen</h2>
+                <div class="card" id="workout-templates-list"></div>
 
+                <h2 class="section-title" style="margin-top: 24px;">Eigene Übungen</h2>
+                <div class="card">
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                        <input type="text" id="new-ex-name" class="premium-input" placeholder="Neue Übung..." style="margin: 0; flex: 1;">
+                        <button onclick="window.addExerciseDefinition()" class="premium-btn btn-green" style="padding: 0 16px;">Add</button>
+                    </div>
+                    <div id="exercise-definitions-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+                <div class="card empty-card"></div>
+            </section>
+
+            <section id="view-loggen" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h2 class="section-title" id="form-title" style="margin: 0;">Workout Loggen</h2>
+                    <select id="load-tpl-select" class="premium-input" style="width: auto; margin: 0; padding: 6px 12px; background: rgba(255,255,255,0.1);" onchange="window.applyTemplate(this.value)"></select>
+                </div>
+                
+                <div class="card">
+                    <input type="date" id="session-date" class="premium-input" style="margin-bottom: 12px;">
+                    <input type="text" id="session-name" class="premium-input" placeholder="Titel (z.B. Brust & Trizeps)" style="margin-bottom: 0;">
+                </div>
+
+                <div id="tracking-exercises"></div>
+                <button onclick="window.addTrackingExercise()" class="premium-btn btn-outline" style="width: 100%; margin-bottom: 24px;">+ Weitere Übung</button>
+
+                <h2 class="section-title">Körpergefühl</h2>
+                <div class="card">
+                    <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Energielevel (1-10)</label>
+                    <input type="number" id="checkin-energy" class="premium-input" placeholder="10" style="margin-top: 6px; margin-bottom: 16px;">
+                    <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Muskelkater (1-10)</label>
+                    <input type="number" id="checkin-soreness" class="premium-input" placeholder="0" style="margin-top: 6px;">
+                </div>
+
+                <button onclick="window.saveSession()" class="premium-btn btn-green" style="width: 100%; margin-bottom: 12px;">Workout Speichern</button>
+                <div id="edit-controls" style="display: none;">
+                    <button onclick="window.deleteCurrentSession()" class="premium-btn" style="background: rgba(250, 17, 79, 0.15); color: var(--ios-red); width: 100%; margin-bottom: 12px;">Workout Löschen</button>
+                    <button onclick="window.resetForm()" class="premium-btn btn-outline" style="width: 100%;">Abbrechen</button>
+                </div>
+                <div class="card empty-card"></div>
+            </section>
+
+            <section id="view-menu" class="view">
+                
+                <h2 class="section-title">Dein Verlauf</h2>
+                <div id="history"></div>
+
+                <h2 class="section-title" style="margin-top: 32px;">Progress Graph</h2>
+                <div class="card">
+                    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                        <select id="bro-exercise-select" class="premium-input" style="flex: 1; margin: 0;" onchange="window.updateBroChart()"></select>
+                    </div>
+                    <div style="height: 250px; position: relative;">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card empty-card"></div>
+            </section>
+
+        </main>
+
+        <nav class="tab-bar">
+            <ul class="tab-list">
+                <li class="tab-item active" data-target="view-home" data-title="Übersicht">
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"/></svg>
+                    <span>Übersicht</span>
+                </li>
+                <li class="tab-item" data-target="view-listen" data-title="Listen">
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z"/></svg>
+                    <span>Listen</span>
+                </li>
+                <li class="tab-item" data-target="view-loggen" data-title="Training">
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+                    <span>Training</span>
+                </li>
+                <li class="tab-item" data-target="view-menu" data-title="Verlauf">
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                    <span>Verlauf</span>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+
+    <div id="offline-banner" style="display: none; position: fixed; top: 0; width: 100%; background: var(--ios-red); color: white; text-align: center; padding: 5px; font-size: 12px; z-index: 100;">Offline Modus</div>
+
+    <script type="module" src="script.js"></script>
 </body>
 </html>
