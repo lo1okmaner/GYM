@@ -28,9 +28,8 @@
                     <p class="header-date" id="dynamic-date">HEUTE</p>
                     <h1 id="header-title">Übersicht</h1>
                 </div>
-                <div class="profile-avatar" onclick="window.handleLogout()">
-                    <img src="https://via.placeholder.com/40/333/fff?text=US" alt="User Avatar">
-                </div>
+                <div class="profile-avatar" onclick="window.handleLogout()" id="user-avatar-text">
+                    </div>
             </div>
         </header>
 
@@ -69,7 +68,7 @@
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                         <button onclick="window.saveMorningStatus('gym')" class="premium-btn" style="background: var(--ios-green); color: black;">Gym</button>
-                        <button onclick="window.saveMorningStatus('rest')" class="premium-btn" style="background: var(--ios-blue); color: black;">Rest</button>
+                        <button onclick="window.saveMorningStatus('rest')" class="premium-btn" style="background: var(--ios-cyan); color: black;">Rest</button>
                         <button onclick="window.saveMorningStatus('sick')" class="premium-btn" style="background: var(--ios-red); color: white;">Krank</button>
                     </div>
                 </div>
@@ -97,10 +96,7 @@
 
             <section id="view-training" class="view">
                 
-                <h2 class="section-title">Dein Verlauf</h2>
-                <div id="history"></div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 32px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <h2 class="section-title" id="form-title" style="margin: 0;">Workout Loggen</h2>
                     <select id="load-tpl-select" class="premium-input" style="width: auto; margin: 0; padding: 6px 12px;" onchange="window.applyTemplate(this.value)"></select>
                 </div>
@@ -114,7 +110,7 @@
                 <button onclick="window.addTrackingExercise()" class="premium-btn btn-outline" style="width: 100%; margin-bottom: 24px;">+ Weitere Übung</button>
 
                 <h2 class="section-title">Körpergefühl</h2>
-                <div class="card">
+                <div class="card" style="margin-bottom: 24px;">
                     <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Energielevel (1-10)</label>
                     <input type="number" id="checkin-energy" class="premium-input" placeholder="10" style="margin-top: 6px; margin-bottom: 16px;">
                     <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Muskelkater (1-10)</label>
@@ -122,29 +118,60 @@
                 </div>
 
                 <button onclick="window.saveSession()" class="premium-btn btn-green" style="width: 100%; margin-bottom: 12px;">Workout Speichern</button>
-                <div id="edit-controls" style="display: none;">
+                <div id="edit-controls" style="display: none; margin-bottom: 24px;">
                     <button onclick="window.deleteCurrentSession()" class="premium-btn" style="background: rgba(250, 17, 79, 0.15); color: var(--ios-red); width: 100%; margin-bottom: 12px;">Workout Löschen</button>
                     <button onclick="window.resetForm()" class="premium-btn btn-outline" style="width: 100%;">Abbrechen</button>
                 </div>
 
-                <h2 class="section-title" style="margin-top: 40px;">Neue Vorlage erstellen</h2>
-                <div class="card">
-                    <input type="text" id="tpl-title" class="premium-input" placeholder="Name der Vorlage" style="margin-bottom: 12px;">
-                    <div id="tpl-exercise-selector" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-                    <button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="margin-bottom: 16px;">+ Übung hinzufügen</button>
-                    <button onclick="window.saveWorkoutTemplate()" class="premium-btn btn-outline" style="width: 100%;">Vorlage speichern</button>
+                <div class="card accordion-section" style="margin-top: 32px;">
+                    <button class="accordion-header" onclick="window.toggleAccordion(this)">
+                        <h2 class="section-title" style="margin: 0;">Mein Verlauf</h2>
+                        <div class="chevron-icon">›</div>
+                    </button>
+                    <div class="collapsible-area">
+                        <div id="history" style="margin-top: 12px;"></div>
+                    </div>
                 </div>
 
-                <h2 class="section-title" style="margin-top: 24px;">Vorlagen verwalten</h2>
-                <div class="card" id="workout-templates-list"></div>
-
-                <h2 class="section-title" style="margin-top: 24px;">Eigene Übungen</h2>
-                <div class="card">
-                    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                        <input type="text" id="new-ex-name" class="premium-input" placeholder="Neue Übung..." style="margin: 0; flex: 1;">
-                        <button onclick="window.addExerciseDefinition()" class="premium-btn btn-green" style="padding: 0 16px;">Add</button>
+                <div class="card accordion-section">
+                    <button class="accordion-header" onclick="window.toggleAccordion(this)">
+                        <h2 class="section-title" style="margin: 0;">Neue Vorlage erstellen</h2>
+                        <div class="chevron-icon">›</div>
+                    </button>
+                    <div class="collapsible-area">
+                        <div style="margin-top: 12px;">
+                            <input type="text" id="tpl-title" class="premium-input" placeholder="Name der Vorlage" style="margin-bottom: 12px;">
+                            <div id="tpl-exercise-selector" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                            <button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="margin-bottom: 16px;">+ Übung hinzufügen</button>
+                            <button onclick="window.saveWorkoutTemplate()" class="premium-btn btn-outline" style="width: 100%;">Vorlage speichern</button>
+                        </div>
                     </div>
-                    <div id="exercise-definitions-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+
+                <div class="card accordion-section">
+                    <button class="accordion-header" onclick="window.toggleAccordion(this)">
+                        <h2 class="section-title" style="margin: 0;">Vorlagen verwalten</h2>
+                        <div class="chevron-icon">›</div>
+                    </button>
+                    <div class="collapsible-area">
+                        <div id="workout-templates-list" style="margin-top: 12px;"></div>
+                    </div>
+                </div>
+
+                <div class="card accordion-section">
+                    <button class="accordion-header" onclick="window.toggleAccordion(this)">
+                        <h2 class="section-title" style="margin: 0;">Eigene Übungen</h2>
+                        <div class="chevron-icon">›</div>
+                    </button>
+                    <div class="collapsible-area">
+                        <div style="margin-top: 12px;">
+                            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                                <input type="text" id="new-ex-name" class="premium-input" placeholder="Neue Übung..." style="margin: 0; flex: 1;">
+                                <button onclick="window.addExerciseDefinition()" class="premium-btn btn-green" style="padding: 0 16px;">Add</button>
+                            </div>
+                            <div id="exercise-definitions-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card empty-card"></div>
@@ -152,34 +179,34 @@
 
             <section id="view-bro" class="view">
                 
-                <h2 class="section-title">Dein Gewicht</h2>
+                <h2 class="section-title">Status Kalender</h2>
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                        <button onclick="window.changeBroMonth(-1)" class="btn-text" style="font-size: 24px; padding: 0 10px;">‹</button>
+                        <span id="bro-cal-month" style="font-weight: 600; font-size: 16px; text-transform: capitalize;">Lade...</span>
+                        <button onclick="window.changeBroMonth(1)" class="btn-text" style="font-size: 24px; padding: 0 10px;">›</button>
+                    </div>
+                    <div id="bro-calendar-days" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;"></div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 24px;">Dein Gewicht</h2>
                 <div class="card">
                     <div style="height: 200px; position: relative;">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </div>
 
-                <h2 class="section-title" style="margin-top: 24px;">Bro Kalender</h2>
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-                        <button onclick="window.changeBroMonth(-1)" class="btn-text" style="font-size: 24px; padding: 0 10px;">‹</button>
-                        <span id="bro-cal-month" style="font-weight: 600; font-size: 16px; text-transform: capitalize;">April</span>
-                        <button onclick="window.changeBroMonth(1)" class="btn-text" style="font-size: 24px; padding: 0 10px;">›</button>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 0.5px solid var(--ios-separator); padding-bottom: 12px;">
-                        <span style="font-size: 14px; color: var(--ios-label-dim);">Bro mit einblenden?</span>
-                        <label class="switch">
-                            <input type="checkbox" id="compare-bro-toggle" onchange="window.renderBroCalendar(); window.updateBroChart();" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                    <div id="bro-calendar-days" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;"></div>
-                </div>
-
-                <h2 class="section-title" style="margin-top: 24px;">Kraft Progress</h2>
+                <h2 class="section-title" style="margin-top: 24px;">Kraft Progress (Bro-Vergleich)</h2>
                 <div class="card">
                     <div style="display: flex; gap: 10px; margin-bottom: 16px;">
                         <select id="bro-exercise-select" class="premium-input" style="flex: 1; margin: 0;" onchange="window.updateBroChart()"></select>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                        <span style="font-size: 14px; color: var(--ios-label-dim);">Bro einblenden</span>
+                        <label class="switch">
+                            <input type="checkbox" id="compare-bro-toggle" onchange="window.updateBroChart();" checked>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
                     <div style="height: 250px; position: relative;">
                         <canvas id="progressChart"></canvas>
@@ -223,7 +250,7 @@
                 </li>
                 <li class="tab-item" data-target="view-bro" data-title="Verlauf">
                     <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
-                    <span>Bro & Stats</span>
+                    <span>Verlauf</span>
                 </li>
                 <li class="tab-item" data-target="view-settings" data-title="Einstellungen">
                     <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
