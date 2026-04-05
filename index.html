@@ -11,8 +11,8 @@
     <header class="app-header">
         <div class="header-content">
             <div class="header-titles">
+                <p class="header-date">DIENSTAG, 1. APR.</p>
                 <h1 id="header-title">Übersicht</h1>
-                <p class="header-date">Dienstag, 1. Apr.</p>
             </div>
             <div class="profile-avatar">
                 <img src="https://via.placeholder.com/40/333/fff?text=US" alt="User Avatar">
@@ -23,18 +23,22 @@
     <main class="app-content">
         
         <section class="activity-rings-section">
-            <h2 class="section-title">Aktivitätsringe</h2>
+            <h2 class="section-title">Aktivität</h2>
             <div class="card activity-card">
-                <div class="rings-placeholder">
-                    <div class="ring-red"></div>
-                    <div class="ring-green"></div>
-                    <div class="ring-blue"></div>
+                <div class="rings-wrapper">
+                    <div class="ring-track track-red"></div>
+                    <div class="ring-track track-green"></div>
+                    <div class="ring-track track-blue"></div>
+                    <div class="ring-active ring-red"></div>
+                    <div class="ring-active ring-green"></div>
+                    <div class="ring-active ring-blue"></div>
                 </div>
                 <div class="rings-data">
                     <p class="data-line red"><span class="label">Bewegen</span> <span class="value">450/800</span> <span class="unit">CAL</span></p>
                     <p class="data-line green"><span class="label">Trainieren</span> <span class="value">19/30</span> <span class="unit">MIN</span></p>
                     <p class="data-line blue"><span class="label">Stehen</span> <span class="value">4/12</span> <span class="unit">STD</span></p>
                 </div>
+                <span class="chevron-icon">›</span>
             </div>
         </section>
 
@@ -43,7 +47,6 @@
             <div class="card data-card purple">
                 <div class="card-header">
                     <h3 class="card-label">Schrittzahl</h3>
-                    <span class="chevron-icon">›</span>
                 </div>
                 <p class="card-sublabel">Heute</p>
                 <p class="card-main-value purple-text">2.932</p>
@@ -53,7 +56,6 @@
             <div class="card data-card cyan">
                 <div class="card-header">
                     <h3 class="card-label">Strecke</h3>
-                    <span class="chevron-icon">›</span>
                 </div>
                 <p class="card-sublabel">Heute</p>
                 <p class="card-main-value cyan-text">2,22 <span class="unit-inline">KM</span></p>
@@ -73,15 +75,14 @@
             </li>
             <li class="tab-item" data-target="view-fitness" data-title="Fitness+">
                 <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
-                <span>Fitness+</span>
+                <span>Training</span>
             </li>
             <li class="tab-item" data-target="view-sharing" data-title="Teilen">
                 <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.005 3.005 0 013.75-2.906z"/></svg>
-                <span>Teilen</span>
+                <span>Verlauf</span>
             </li>
         </ul>
     </nav>
 
-    <script src="script.js"></script>
 </body>
 </html>
