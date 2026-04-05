@@ -3,92 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Health Style App</title>
+    <title>MyGym Tracker</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="app-header">
-        <h1 id="header-title">Home</h1>
+        <div class="header-content">
+            <div class="header-titles">
+                <h1 id="header-title">Übersicht</h1>
+                <p class="header-date">Dienstag, 1. Apr.</p>
+            </div>
+            <div class="profile-avatar">
+                <img src="https://via.placeholder.com/40/333/fff?text=US" alt="User Avatar">
+            </div>
+        </div>
     </header>
 
     <main class="app-content">
         
-        <section id="view-home" class="view active">
-            <h2 class="section-title">Übersicht</h2>
+        <section class="activity-rings-section">
+            <h2 class="section-title">Aktivitätsringe</h2>
+            <div class="card activity-card">
+                <div class="rings-placeholder">
+                    <div class="ring-red"></div>
+                    <div class="ring-green"></div>
+                    <div class="ring-blue"></div>
+                </div>
+                <div class="rings-data">
+                    <p class="data-line red"><span class="label">Bewegen</span> <span class="value">450/800</span> <span class="unit">CAL</span></p>
+                    <p class="data-line green"><span class="label">Trainieren</span> <span class="value">19/30</span> <span class="unit">MIN</span></p>
+                    <p class="data-line blue"><span class="label">Stehen</span> <span class="value">4/12</span> <span class="unit">STD</span></p>
+                </div>
+            </div>
+        </section>
+
+        <section class="data-cards-grid">
             
-            <div class="card">
+            <div class="card data-card purple">
                 <div class="card-header">
-                    <div class="icon-title">
-                        <svg class="icon icon-orange" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"/></svg>
-                        <span>Schritte</span>
-                    </div>
-                    <span class="time">Heute</span>
+                    <h3 class="card-label">Schrittzahl</h3>
+                    <span class="chevron-icon">›</span>
                 </div>
-                <div class="card-value">
-                    <span class="number">5.432</span>
-                    <span class="unit">Schritte</span>
-                </div>
+                <p class="card-sublabel">Heute</p>
+                <p class="card-main-value purple-text">2.932</p>
+                <div class="chart-placeholder"></div>
             </div>
 
-            <div class="card">
+            <div class="card data-card cyan">
                 <div class="card-header">
-                    <div class="icon-title">
-                        <svg class="icon icon-red" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
-                        <span>Herzfrequenz</span>
-                    </div>
-                    <span class="time">Vor 2 Min.</span>
+                    <h3 class="card-label">Strecke</h3>
+                    <span class="chevron-icon">›</span>
                 </div>
-                <div class="card-value">
-                    <span class="number">68</span>
-                    <span class="unit">S/Min</span>
-                </div>
-            </div>
-            
-            <div class="card empty-card"></div>
-            <div class="card empty-card"></div>
-        </section>
-
-        <section id="view-listen" class="view">
-            <h2 class="section-title">Deine Listen</h2>
-            <div class="card">
-                <p class="text-muted">Hier stehen deine Einträge.</p>
+                <p class="card-sublabel">Heute</p>
+                <p class="card-main-value cyan-text">2,22 <span class="unit-inline">KM</span></p>
+                <div class="chart-placeholder"></div>
             </div>
         </section>
 
-        <section id="view-loggen" class="view">
-            <h2 class="section-title">Neuer Eintrag</h2>
-            <div class="card">
-                <p class="text-muted">Formular zum Loggen von Daten.</p>
-            </div>
-        </section>
-
-        <section id="view-menu" class="view">
-            <h2 class="section-title">Einstellungen</h2>
-            <div class="card">
-                <p class="text-muted">Profil und Account.</p>
-            </div>
-        </section>
+        <div class="card empty-card"></div>
 
     </main>
 
     <nav class="tab-bar">
         <ul class="tab-list">
-            <li class="tab-item active" data-target="view-home" data-title="Home">
-                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-                <span>Home</span>
+            <li class="tab-item active" data-target="view-summary" data-title="Übersicht">
+                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"/></svg>
+                <span>Übersicht</span>
             </li>
-            <li class="tab-item" data-target="view-listen" data-title="Listen">
-                <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                <span>Listen</span>
+            <li class="tab-item" data-target="view-fitness" data-title="Fitness+">
+                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+                <span>Fitness+</span>
             </li>
-            <li class="tab-item" data-target="view-loggen" data-title="Loggen">
-                <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
-                <span>Loggen</span>
-            </li>
-            <li class="tab-item" data-target="view-menu" data-title="Menü">
-                <svg class="tab-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
-                <span>Menü</span>
+            <li class="tab-item" data-target="view-sharing" data-title="Teilen">
+                <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3.005 3.005 0 013.75-2.906z"/></svg>
+                <span>Teilen</span>
             </li>
         </ul>
     </nav>
