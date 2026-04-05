@@ -1,39 +1,36 @@
-/* --- BASIS & VARIABLEN (Dark Mode) --- */
+/* --- BASIS & VARIABLEN (Dark Mode Premium) --- */
 :root {
-    /* Apple Protm echte Dark Mode Farben */
-    --ios-bg: #000000;              /* Reines Schwarz für den Hintergrund */
-    --ios-card-bg: #1C1C1E;         /* Spezifisches Dunkelgrau für Karten */
+    --ios-bg: #000000;
+    --ios-card-bg: #1C1C1E;
     --ios-text: #FFFFFF;
-    --ios-label-dim: #AEAEB2;       /* Abgedunkeltes Weiß für Beschriftungen */
-    --ios-separator: #3A3A3C;       /* Sehr feines Grau für Trennlinien */
+    --ios-label-dim: #8E8E93; /* Etwas dunkleres Grau für perfekten Kontrast */
+    --ios-separator: rgba(84, 84, 88, 0.6);
     
-    /* System Akzent-Farben */
-    --ios-red: #FF453A;
-    --ios-green: #32D74B;
-    --ios-blue: #0A84FF;
+    /* Original Apple Fitness Akzent-Farben */
+    --ios-red: #FA114F; 
+    --ios-green: #92E82A;
+    --ios-blue: #1FDAE1;
     --ios-purple: #BF5AF2;
     --ios-cyan: #64D2FF;
     
     /* Abmessungen */
-    --safe-top: env(safe-area-inset-top, 20px);
-    --safe-bottom: env(safe-area-inset-bottom, 20px);
-    --card-radius: 20px;            /* Die starke iOS-Rundung */
+    --safe-top: env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 34px);
+    --card-radius: 16px; /* 16px ist der Health-App Standard */
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    -webkit-tap-highlight-color: transparent; /* Verhindert Tap-Highlighting */
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased; /* Gestochen scharfe Schrift */
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
     background-color: var(--ios-bg);
     color: var(--ios-text);
-    
-    /* Layout-Shell */
     height: 100dvh;
     width: 100vw;
     display: flex;
@@ -43,37 +40,45 @@ body {
 
 /* --- HEADER (TOP NAV) --- */
 .app-header {
-    padding: calc(var(--safe-top) + 20px) 20px 10px 20px;
+    padding: calc(var(--safe-top) + 16px) 20px 16px 20px;
     flex-shrink: 0;
     z-index: 40;
+    background: var(--ios-bg);
 }
 
 .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center; /* Zentriert Avatar mit Text */
+}
+
+.header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.header-date {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ios-label-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .app-header h1 {
     font-size: 34px;
     font-weight: 700;
-    letter-spacing: -0.5px;
-    line-height: 41px;
-}
-
-.header-date {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ios-label-dim);
-    margin-top: -2px;
+    letter-spacing: -1.2px; /* Wichtig für den Apple Look! */
+    line-height: 1.1;
 }
 
 .profile-avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px; /* Etwas kleiner, eleganter */
+    height: 36px;
     border-radius: 50%;
     overflow: hidden;
-    margin-top: 5px;
+    background: #333; /* Fallback */
 }
 
 .profile-avatar img {
@@ -82,166 +87,183 @@ body {
     object-fit: cover;
 }
 
-/* --- HAUPTINHALT (SCROLLBAR) --- */
+/* --- HAUPTINHALT --- */
 .app-content {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 10px 20px 30px 20px;
+    padding: 0 20px 40px 20px;
 }
 
 .section-title {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 600;
     margin-bottom: 12px;
-    letter-spacing: -0.3px;
-    color: var(--ios-text);
+    letter-spacing: -0.4px;
+    padding-left: 4px;
 }
 
 /* --- KARTEN (HEALTH/FITNESS STYLE) --- */
 .card {
     background-color: var(--ios-card-bg);
     border-radius: var(--card-radius);
-    padding: 20px; /* Viel Platz für den Premium-Look */
+    padding: 16px 20px;
     margin-bottom: 16px;
-    transition: transform 0.1s ease;
+    /* DAS ist das Geheimnis für Dark-Mode Tiefe auf iOS: */
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .card:active {
-    transform: scale(0.98); /* Microinteraction beim Tippen */
+    transform: scale(0.97);
 }
 
-/* Spezifische Karte: Aktivitätsringe */
+/* --- ACTIVITY RINGE --- */
 .activity-card {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 24px;
+    padding: 20px;
 }
 
-.rings-placeholder {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: #333; /* Dunkler Placeholder */
+.rings-wrapper {
+    position: relative;
+    width: 86px;
+    height: 86px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 10px;
-    color: #555;
-    position: relative;
 }
-/* Basis-Simulation der Ringe (statisch) */
-.ring-red, .ring-green, .ring-blue { position: absolute; border-radius: 50%; border-style: solid; }
-.ring-red { width: 100%; height: 100%; border-color: var(--ios-red); border-width: 10px; }
-.ring-green { width: 75%; height: 75%; border-color: var(--ios-green); border-width: 10px; }
-.ring-blue { width: 50%; height: 50%; border-color: var(--ios-blue); border-width: 10px; }
+
+/* Ring Spuren (Hintergrund) */
+.ring-track, .ring-active {
+    position: absolute;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.ring-track { opacity: 0.15; } /* Dunkle Spur */
+.ring-active { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); } /* 3D Effekt */
+
+/* Roter Ring (Bewegen) */
+.track-red, .ring-red { width: 86px; height: 86px; border: 8.5px solid var(--ios-red); }
+.ring-red { border-left-color: transparent; border-bottom-color: transparent; transform: rotate(45deg); }
+
+/* Grüner Ring (Trainieren) */
+.track-green, .ring-green { width: 65px; height: 65px; border: 8.5px solid var(--ios-green); }
+.ring-green { border-right-color: transparent; border-top-color: transparent; transform: rotate(15deg); }
+
+/* Blauer Ring (Stehen) */
+.track-blue, .ring-blue { width: 44px; height: 44px; border: 8.5px solid var(--ios-blue); }
+.ring-blue { border-left-color: transparent; border-top-color: transparent; transform: rotate(-45deg); }
+
 
 .rings-data {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .data-line {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: baseline;
 }
 
-.data-line.red .label { color: #555; } /* Labels sind gedimmt */
-.data-line.green .label { color: #555; }
-.data-line.blue .label { color: #555; }
+.data-line .label { 
+    color: var(--ios-text); 
+    font-weight: 600;
+    width: 85px; /* Fixe Breite für saubere Ausrichtung */
+}
 
 .data-line .value {
-    color: #FFFFFF; /* Werte sind hellweiß */
     font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.3px;
 }
 
-.data-line.red .value { color: var(--ios-red); } /* Spezifische Werte-Farbe */
+.data-line.red .value { color: var(--ios-red); }
 .data-line.green .value { color: var(--ios-green); }
 .data-line.blue .value { color: var(--ios-blue); }
 
 .data-line .unit {
-    color: #555;
-    font-size: 12px;
+    color: var(--ios-label-dim);
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: 2px;
 }
 
-/* Spezifische Karte: Daten-Karten Zweispaltig */
+/* --- GRID KARTEN --- */
 .data-cards-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 12px; /* Etwas engeres Grid wirkt moderner */
     margin-bottom: 16px;
 }
 
 .data-card {
-    margin-bottom: 0; /* Margin wird vom Grid gesteuert */
-    padding: 16px 16px 12px 16px;
+    margin-bottom: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: -2px;
-}
-
-.card-label {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.2px;
-    color: var(--ios-text);
-}
-
-/* Spezifische Label-Farbe wie in image_1.png */
-.data-card.purple .card-label { color: var(--ios-purple); }
-.data-card.cyan .card-label { color: var(--ios-cyan); }
-
-.chevron-icon {
-    font-size: 20px;
-    color: var(--ios-label-dim);
-    margin-right: -4px;
-}
-
-.card-sublabel {
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--ios-label-dim);
     margin-bottom: 2px;
 }
 
+.card-label {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.data-card.purple .card-label { color: var(--ios-purple); }
+.data-card.cyan .card-label { color: var(--ios-cyan); }
+
+.card-sublabel {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ios-label-dim);
+    margin-bottom: 8px;
+}
+
 .card-main-value {
-    font-size: 34px;
+    font-size: 28px; /* Nicht ganz so riesig, wirkt balancierter */
     font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-left: -1px;
+    letter-spacing: -0.8px;
 }
 
 .unit-inline {
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--ios-label-dim);
+    margin-left: 2px;
 }
 
 .chart-placeholder {
-    height: 40px;
-    background-color: #222; /* Sehr dunkler Placeholder für Graphen */
-    border-radius: 4px;
-    margin-top: 8px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.05); /* Dezenter statt hartes Grau */
+    border-radius: 6px;
+    margin-top: 12px;
 }
 
-.empty-card {
-    height: 180px;
-}
+.empty-card { height: 180px; }
 
-/* --- BOTTOM TAB BAR (Glassmorphism) --- */
+/* --- TAB BAR (Perfekter Blur) --- */
 .tab-bar {
-    background-color: rgba(0, 0, 0, 0.85); /* Darker Glass */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.05); /* Sehr feiner Separator */
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: rgba(28, 28, 30, 0.75); /* Echtes iOS Tab-Bar Grau */
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-top: 0.5px solid rgba(255, 255, 255, 0.15);
     padding-bottom: var(--safe-bottom);
-    flex-shrink: 0;
     z-index: 50;
 }
 
@@ -260,22 +282,22 @@ body {
     justify-content: center;
     color: var(--ios-label-dim);
     cursor: pointer;
-    width: 33%; /* Drei Tabs */
-    transition: color 0.15s ease;
+    width: 33%;
+    transition: color 0.2s ease;
 }
 
 .tab-icon {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 3px;
+    width: 26px; /* Minimal größer */
+    height: 26px;
+    margin-bottom: 2px;
 }
 
 .tab-item span {
     font-size: 10px;
     font-weight: 500;
+    letter-spacing: 0.2px;
 }
 
-/* Aktiver Tab-Zustand (wie in image_1.png) */
 .tab-item.active {
-    color: var(--ios-green); /* Akzentfarbe für Fitness */
+    color: var(--ios-green);
 }
