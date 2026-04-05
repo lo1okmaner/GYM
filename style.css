@@ -3,7 +3,7 @@
     --ios-bg: #000000;
     --ios-card-bg: #1C1C1E;
     --ios-text: #FFFFFF;
-    --ios-label-dim: #8E8E93; /* Etwas dunkleres Grau für perfekten Kontrast */
+    --ios-label-dim: #8E8E93;
     --ios-separator: rgba(84, 84, 88, 0.6);
     
     /* Original Apple Fitness Akzent-Farben */
@@ -13,10 +13,9 @@
     --ios-purple: #BF5AF2;
     --ios-cyan: #64D2FF;
     
-    /* Abmessungen */
     --safe-top: env(safe-area-inset-top, 44px);
     --safe-bottom: env(safe-area-inset-bottom, 34px);
-    --card-radius: 16px; /* 16px ist der Health-App Standard */
+    --card-radius: 16px; 
 }
 
 * {
@@ -49,7 +48,7 @@ body {
 .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Zentriert Avatar mit Text */
+    align-items: center;
 }
 
 .header-titles {
@@ -69,23 +68,20 @@ body {
 .app-header h1 {
     font-size: 34px;
     font-weight: 700;
-    letter-spacing: -1.2px; /* Wichtig für den Apple Look! */
+    letter-spacing: -1.2px;
     line-height: 1.1;
 }
 
 .profile-avatar {
-    width: 36px; /* Etwas kleiner, eleganter */
+    width: 36px;
     height: 36px;
     border-radius: 50%;
     overflow: hidden;
-    background: #333; /* Fallback */
+    background: #333;
+    cursor: pointer;
 }
 
-.profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 /* --- HAUPTINHALT --- */
 .app-content {
@@ -93,6 +89,14 @@ body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 0 20px 40px 20px;
+}
+
+.view { display: none; }
+.view.active { display: block; animation: fadeIn 0.25s ease-out; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .section-title {
@@ -103,201 +107,138 @@ body {
     padding-left: 4px;
 }
 
-/* --- KARTEN (HEALTH/FITNESS STYLE) --- */
+/* --- KARTEN & KOMPONENTEN --- */
 .card {
     background-color: var(--ios-card-bg);
     border-radius: var(--card-radius);
     padding: 16px 20px;
     margin-bottom: 16px;
-    /* DAS ist das Geheimnis für Dark-Mode Tiefe auf iOS: */
     box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
     transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.card:active {
-    transform: scale(0.97);
+.card:active { transform: scale(0.97); }
+
+/* Eingabefelder im Premium Look */
+.premium-input {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--ios-text);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 16px;
+    font-family: inherit;
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
 }
+.premium-input::placeholder { color: var(--ios-label-dim); }
+.premium-input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--ios-green); background-color: rgba(255, 255, 255, 0.1); }
+select.premium-input { appearance: none; -webkit-appearance: none; }
 
-/* --- ACTIVITY RINGE --- */
-.activity-card {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    padding: 20px;
-}
-
-.rings-wrapper {
-    position: relative;
-    width: 86px;
-    height: 86px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Ring Spuren (Hintergrund) */
-.ring-track, .ring-active {
-    position: absolute;
-    border-radius: 50%;
-    box-sizing: border-box;
-}
-
-.ring-track { opacity: 0.15; } /* Dunkle Spur */
-.ring-active { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); } /* 3D Effekt */
-
-/* Roter Ring (Bewegen) */
-.track-red, .ring-red { width: 86px; height: 86px; border: 8.5px solid var(--ios-red); }
-.ring-red { border-left-color: transparent; border-bottom-color: transparent; transform: rotate(45deg); }
-
-/* Grüner Ring (Trainieren) */
-.track-green, .ring-green { width: 65px; height: 65px; border: 8.5px solid var(--ios-green); }
-.ring-green { border-right-color: transparent; border-top-color: transparent; transform: rotate(15deg); }
-
-/* Blauer Ring (Stehen) */
-.track-blue, .ring-blue { width: 44px; height: 44px; border: 8.5px solid var(--ios-blue); }
-.ring-blue { border-left-color: transparent; border-top-color: transparent; transform: rotate(-45deg); }
-
-
-.rings-data {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.data-line {
-    font-size: 15px;
-    display: flex;
-    align-items: baseline;
-}
-
-.data-line .label { 
-    color: var(--ios-text); 
-    font-weight: 600;
-    width: 85px; /* Fixe Breite für saubere Ausrichtung */
-}
-
-.data-line .value {
-    font-weight: 700;
-    font-size: 17px;
-    letter-spacing: -0.3px;
-}
-
-.data-line.red .value { color: var(--ios-red); }
-.data-line.green .value { color: var(--ios-green); }
-.data-line.blue .value { color: var(--ios-blue); }
-
-.data-line .unit {
-    color: var(--ios-label-dim);
-    font-size: 13px;
-    font-weight: 500;
-    margin-left: 2px;
-}
-
-/* --- GRID KARTEN --- */
-.data-cards-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px; /* Etwas engeres Grid wirkt moderner */
-    margin-bottom: 16px;
-}
-
-.data-card {
-    margin-bottom: 0;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2px;
-}
-
-.card-label {
+/* Buttons */
+.premium-btn {
+    padding: 14px;
+    border-radius: 12px;
     font-size: 16px;
     font-weight: 600;
-    letter-spacing: -0.2px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s;
 }
+.premium-btn:active { opacity: 0.7; }
+.btn-green { background-color: var(--ios-green); color: #000000; }
+.btn-outline { background-color: transparent; border: 1.5px solid rgba(255,255,255,0.15); color: var(--ios-text); }
+.btn-text { background: none; border: none; color: var(--ios-green); font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn-red-text { background: none; border: none; color: var(--ios-red); font-size: 15px; font-weight: 600; cursor: pointer; }
 
-.data-card.purple .card-label { color: var(--ios-purple); }
-.data-card.cyan .card-label { color: var(--ios-cyan); }
-
-.card-sublabel {
-    font-size: 13px;
-    font-weight: 500;
+/* Badge */
+.last-perf-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.08);
     color: var(--ios-label-dim);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 8px;
     margin-bottom: 8px;
 }
 
-.card-main-value {
-    font-size: 28px; /* Nicht ganz so riesig, wirkt balancierter */
-    font-weight: 700;
-    letter-spacing: -0.8px;
+/* Accordion Historie */
+.accordion-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    color: var(--ios-text);
+    text-align: left;
+    padding: 0;
+    cursor: pointer;
 }
-
-.unit-inline {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ios-label-dim);
-    margin-left: 2px;
-}
-
-.chart-placeholder {
-    height: 36px;
-    background-color: rgba(255, 255, 255, 0.05); /* Dezenter statt hartes Grau */
-    border-radius: 6px;
+.collapsible-area {
+    display: none;
+    padding-top: 12px;
     margin-top: 12px;
+    border-top: 0.5px solid var(--ios-separator);
 }
+.card.is-open .collapsible-area { display: block; }
+.chevron-icon { color: var(--ios-label-dim); font-size: 20px; transition: transform 0.3s; }
+.card.is-open .chevron-icon { transform: rotate(90deg); }
 
-.empty-card { height: 180px; }
+
+/* --- ACTIVITY RINGE --- */
+.activity-card { display: flex; align-items: center; gap: 24px; padding: 20px; }
+.rings-wrapper { position: relative; width: 86px; height: 86px; display: flex; justify-content: center; align-items: center; }
+.ring-track, .ring-active { position: absolute; border-radius: 50%; box-sizing: border-box; }
+.ring-track { opacity: 0.15; } 
+.ring-active { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); } 
+.track-red, .ring-red { width: 86px; height: 86px; border: 8.5px solid var(--ios-red); }
+.ring-red { border-left-color: transparent; border-bottom-color: transparent; transform: rotate(45deg); }
+.track-green, .ring-green { width: 65px; height: 65px; border: 8.5px solid var(--ios-green); }
+.ring-green { border-right-color: transparent; border-top-color: transparent; transform: rotate(15deg); }
+.track-blue, .ring-blue { width: 44px; height: 44px; border: 8.5px solid var(--ios-blue); }
+.ring-blue { border-left-color: transparent; border-top-color: transparent; transform: rotate(-45deg); }
+
+.rings-data { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.data-line { font-size: 15px; display: flex; align-items: baseline; }
+.data-line .label { color: var(--ios-text); font-weight: 600; width: 85px; }
+.data-line .value { font-weight: 700; font-size: 17px; letter-spacing: -0.3px; }
+.data-line.red .value { color: var(--ios-red); }
+.data-line.green .value { color: var(--ios-green); }
+.data-line.blue .value { color: var(--ios-blue); }
+.data-line .unit { color: var(--ios-label-dim); font-size: 13px; font-weight: 500; margin-left: 2px; }
+
+/* --- GRID KARTEN --- */
+.data-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.data-card { margin-bottom: 0; padding: 16px; display: flex; flex-direction: column; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.card-label { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
+.data-card.purple .card-label { color: var(--ios-purple); }
+.data-card.cyan .card-label { color: var(--ios-cyan); }
+.card-sublabel { font-size: 13px; font-weight: 500; color: var(--ios-label-dim); margin-bottom: 8px; }
+.card-main-value { font-size: 28px; font-weight: 700; letter-spacing: -0.8px; }
+.unit-inline { font-size: 15px; font-weight: 600; color: var(--ios-label-dim); margin-left: 2px; }
+
+.empty-card { height: 180px; background: transparent; box-shadow: none; }
 
 /* --- TAB BAR (Perfekter Blur) --- */
 .tab-bar {
     position: fixed;
     bottom: 0;
     width: 100%;
-    background-color: rgba(28, 28, 30, 0.75); /* Echtes iOS Tab-Bar Grau */
+    background-color: rgba(28, 28, 30, 0.75);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-top: 0.5px solid rgba(255, 255, 255, 0.15);
     padding-bottom: var(--safe-bottom);
     z-index: 50;
 }
-
-.tab-list {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    list-style: none;
-    padding: 8px 0 4px 0;
-}
-
-.tab-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--ios-label-dim);
-    cursor: pointer;
-    width: 33%;
-    transition: color 0.2s ease;
-}
-
-.tab-icon {
-    width: 26px; /* Minimal größer */
-    height: 26px;
-    margin-bottom: 2px;
-}
-
-.tab-item span {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.2px;
-}
-
-.tab-item.active {
-    color: var(--ios-green);
-}
+.tab-list { display: flex; justify-content: space-around; align-items: center; list-style: none; padding: 8px 0 4px 0; }
+.tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--ios-label-dim); cursor: pointer; width: 25%; transition: color 0.2s ease; }
+.tab-icon { width: 26px; height: 26px; margin-bottom: 2px; }
+.tab-item span { font-size: 10px; font-weight: 500; letter-spacing: 0.2px; }
+.tab-item.active { color: var(--ios-green); }
