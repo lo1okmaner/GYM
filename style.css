@@ -1,95 +1,281 @@
-/* Apple Design System CSS */
-
+/* --- BASIS & VARIABLEN (Dark Mode) --- */
 :root {
-    /* Apple System Colors */
-    --color-gray: #8E8E93;
-    --color-blue: #007AFF;
-    --color-green: #34C759;
-    --color-red: #FF3B30;
-    --color-orange: #FF9500;
-    --color-yellow: #FFCC00;
-    --color-pink: #FF2D55;
-    --color-purple: #AF52DE;
-    --color-cyan: #5AC8FA;
+    /* Apple Protm echte Dark Mode Farben */
+    --ios-bg: #000000;              /* Reines Schwarz für den Hintergrund */
+    --ios-card-bg: #1C1C1E;         /* Spezifisches Dunkelgrau für Karten */
+    --ios-text: #FFFFFF;
+    --ios-label-dim: #AEAEB2;       /* Abgedunkeltes Weiß für Beschriftungen */
+    --ios-separator: #3A3A3C;       /* Sehr feines Grau für Trennlinien */
+    
+    /* System Akzent-Farben */
+    --ios-red: #FF453A;
+    --ios-green: #32D74B;
+    --ios-blue: #0A84FF;
+    --ios-purple: #BF5AF2;
+    --ios-cyan: #64D2FF;
+    
+    /* Abmessungen */
+    --safe-top: env(safe-area-inset-top, 20px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+    --card-radius: 20px;            /* Die starke iOS-Rundung */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent; /* Verhindert Tap-Highlighting */
 }
 
 body {
-    font-family: 'SF Pro', sans-serif;
-    background-color: var(--color-gray);
-    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; /* Gestochen scharfe Schrift */
+    background-color: var(--ios-bg);
+    color: var(--ios-text);
+    
+    /* Layout-Shell */
+    height: 100dvh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-header {
-    font-size: 28px;
-    font-weight: bold;
-    margin: 16px;
+/* --- HEADER (TOP NAV) --- */
+.app-header {
+    padding: calc(var(--safe-top) + 20px) 20px 10px 20px;
+    flex-shrink: 0;
+    z-index: 40;
 }
 
-main {
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.app-header h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 41px;
+}
+
+.header-date {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ios-label-dim);
+    margin-top: -2px;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- HAUPTINHALT (SCROLLBAR) --- */
+.app-content {
+    flex: 1;
     overflow-y: auto;
-    transition: all 0.3s ease;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 20px 30px 20px;
 }
 
-.fadeIn {
-    animation: fadeIn 0.5s;
+.section-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+    color: var(--ios-text);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-section {
-    margin: 20px;
-    border-bottom: 1px solid var(--color-gray);
-}
-
+/* --- KARTEN (HEALTH/FITNESS STYLE) --- */
 .card {
-    background: linear-gradient(to bottom right, var(--color-blue), var(--color-purple));
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 16px;
-    transition: transform 0.2s;
+    background-color: var(--ios-card-bg);
+    border-radius: var(--card-radius);
+    padding: 20px; /* Viel Platz für den Premium-Look */
+    margin-bottom: 16px;
+    transition: transform 0.1s ease;
 }
 
-.card:hover {
-    transform: scale(1.05);
+.card:active {
+    transform: scale(0.98); /* Microinteraction beim Tippen */
 }
 
-.icon {
-    fill: var(--color-blue);
+/* Spezifische Karte: Aktivitätsringe */
+.activity-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
-.time-badge {
-    background-color: var(--color-gray);
-    border-radius: 12px;
-    padding: 4px 8px;
+.rings-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #333; /* Dunkler Placeholder */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+    color: #555;
+    position: relative;
+}
+/* Basis-Simulation der Ringe (statisch) */
+.ring-red, .ring-green, .ring-blue { position: absolute; border-radius: 50%; border-style: solid; }
+.ring-red { width: 100%; height: 100%; border-color: var(--ios-red); border-width: 10px; }
+.ring-green { width: 75%; height: 75%; border-color: var(--ios-green); border-width: 10px; }
+.ring-blue { width: 50%; height: 50%; border-color: var(--ios-blue); border-width: 10px; }
+
+.rings-data {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
+.data-line {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.data-line.red .label { color: #555; } /* Labels sind gedimmt */
+.data-line.green .label { color: #555; }
+.data-line.blue .label { color: #555; }
+
+.data-line .value {
+    color: #FFFFFF; /* Werte sind hellweiß */
+    font-weight: 700;
+}
+
+.data-line.red .value { color: var(--ios-red); } /* Spezifische Werte-Farbe */
+.data-line.green .value { color: var(--ios-green); }
+.data-line.blue .value { color: var(--ios-blue); }
+
+.data-line .unit {
+    color: #555;
+    font-size: 12px;
+}
+
+/* Spezifische Karte: Daten-Karten Zweispaltig */
+.data-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.data-card {
+    margin-bottom: 0; /* Margin wird vom Grid gesteuert */
+    padding: 16px 16px 12px 16px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -2px;
+}
+
+.card-label {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: var(--ios-text);
+}
+
+/* Spezifische Label-Farbe wie in image_1.png */
+.data-card.purple .card-label { color: var(--ios-purple); }
+.data-card.cyan .card-label { color: var(--ios-cyan); }
+
+.chevron-icon {
+    font-size: 20px;
+    color: var(--ios-label-dim);
+    margin-right: -4px;
+}
+
+.card-sublabel {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ios-label-dim);
+    margin-bottom: 2px;
+}
+
+.card-main-value {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-left: -1px;
+}
+
+.unit-inline {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ios-label-dim);
+}
+
+.chart-placeholder {
+    height: 40px;
+    background-color: #222; /* Sehr dunkler Placeholder für Graphen */
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+.empty-card {
+    height: 180px;
+}
+
+/* --- BOTTOM TAB BAR (Glassmorphism) --- */
 .tab-bar {
-    background-color: var(--color-gray);
+    background-color: rgba(0, 0, 0, 0.85); /* Darker Glass */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05); /* Sehr feiner Separator */
+    padding-bottom: var(--safe-bottom);
+    flex-shrink: 0;
+    z-index: 50;
+}
+
+.tab-list {
     display: flex;
     justify-content: space-around;
+    align-items: center;
+    list-style: none;
+    padding: 8px 0 4px 0;
 }
 
 .tab-item {
-    padding: 16px;
-    transition: background-color 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--ios-label-dim);
+    cursor: pointer;
+    width: 33%; /* Drei Tabs */
+    transition: color 0.15s ease;
 }
 
+.tab-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 3px;
+}
+
+.tab-item span {
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* Aktiver Tab-Zustand (wie in image_1.png) */
 .tab-item.active {
-    background-color: var(--color-blue);
-}
-
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: #1C1C1E;
-        color: #E5E5EA;
-    }
-    .card {
-        background: linear-gradient(to bottom right, #1C1C1E, #2C2C2E);
-    }
-    .tab-bar {
-        background-color: #2C2C2E;
-    }
+    color: var(--ios-green); /* Akzentfarbe für Fitness */
 }
