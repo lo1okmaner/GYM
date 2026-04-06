@@ -167,7 +167,7 @@ html.light-mode .slider { background-color: #E9E9EA; }
 .tab-bar {
     position: fixed; 
     /* Das max() sorgt dafür, dass auf Desktop ein kleiner Abstand bleibt, auf Handys der Safe-Area Abstand genutzt wird */
-    bottom: max(var(--safe-bottom), 16px); 
+    bottom: max(var(--safe-bottom), 0px); 
     left: 16px;
     right: 16px;
     width: auto;
