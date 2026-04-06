@@ -14,7 +14,7 @@
     --ios-cyan: #64D2FF;
     
     --safe-top: env(safe-area-inset-top, 44px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 12px); /* Minimum Abstand für die Pill */
     --card-radius: 16px; 
 }
 
@@ -34,17 +34,22 @@ html.light-mode {
     -webkit-tap-highlight-color: transparent;
 }
 
-html, body { height: 100%; }
+/* WICHTIG: 100dvh löst das Problem mit dem Platz unten auf mobilen Browsern */
+html, body {
+    height: 100dvh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     background-color: var(--ios-bg);
     color: var(--ios-text);
-    width: 100vw;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -62,13 +67,20 @@ body {
 .app-header h1 { font-size: 34px; font-weight: 700; letter-spacing: -1.2px; line-height: 1.1; color: var(--ios-text); }
 .profile-avatar { 
     width: 36px; height: 36px; border-radius: 50%; overflow: hidden; 
-    background: var(--ios-separator); cursor: pointer;
+    background: var(--ios-input-bg); cursor: pointer;
     display: flex; justify-content: center; align-items: center;
     font-size: 18px; font-weight: 700; color: var(--ios-text);
+    border: 1px solid rgba(255,255,255,0.1);
 }
+html.light-mode .profile-avatar { border: 1px solid rgba(0,0,0,0.1); }
 
 /* --- HAUPTINHALT --- */
-.app-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 20px 40px 20px; }
+.app-content { 
+    flex: 1; 
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+    padding: 0 20px 0 20px; 
+}
 .view { display: none; }
 .view.active { display: block; animation: fadeIn 0.25s ease-out; }
 
@@ -148,18 +160,34 @@ html.light-mode .slider { background-color: #E9E9EA; }
 .data-card.cyan .card-label { color: var(--ios-cyan); }
 .card-main-value { font-size: 28px; font-weight: 700; }
 
-.empty-card { height: 100px; background: transparent; box-shadow: none; }
+/* Platzhalter am Ende der Scroll-Area, damit nichts hinter der Floating-Leiste versteckt bleibt */
+.empty-scroll-space { height: 120px; width: 100%; }
 
-/* Tab Bar */
+/* --- SCHWEBENDE TAB BAR (Floating Pill) --- */
 .tab-bar {
-    position: fixed; bottom: 0; width: 100%;
-    background-color: rgba(28, 28, 30, 0.75);
-    backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
-    border-top: 0.5px solid rgba(255, 255, 255, 0.15);
+    position: fixed; 
+    /* Das max() sorgt dafür, dass auf Desktop ein kleiner Abstand bleibt, auf Handys der Safe-Area Abstand genutzt wird */
+    bottom: max(var(--safe-bottom), 16px); 
+    left: 16px;
+    right: 16px;
+    width: auto;
+    border-radius: 32px; /* Runde Pillen-Form */
+    background-color: rgba(28, 28, 30, 0.85);
+    backdrop-filter: saturate(180%) blur(25px); 
+    -webkit-backdrop-filter: saturate(180%) blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    z-index: 50; 
+    transition: background-color 0.3s ease;
+    padding: 6px 12px;
 }
-html.light-mode .tab-bar { background-color: rgba(255, 255, 255, 0.85); border-top: 0.5px solid rgba(0, 0, 0, 0.1); }
-.tab-list { display: flex; justify-content: space-around; list-style: none; padding: 8px 0 4px 0; }
-.tab-item { display: flex; flex-direction: column; align-items: center; color: var(--ios-label-dim); cursor: pointer; width: 25%; }
+html.light-mode .tab-bar { 
+    background-color: rgba(255, 255, 255, 0.85); 
+    border: 1px solid rgba(0, 0, 0, 0.1); 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+.tab-list { display: flex; justify-content: space-around; list-style: none; padding: 0; margin: 0; }
+.tab-item { display: flex; flex-direction: column; align-items: center; color: var(--ios-label-dim); cursor: pointer; width: 25%; padding: 6px 0; }
 .tab-icon { width: 26px; height: 26px; }
-.tab-item span { font-size: 10px; margin-top: 2px; }
+.tab-item span { font-size: 10px; margin-top: 2px; font-weight: 600; }
 .tab-item.active { color: var(--ios-green); }
