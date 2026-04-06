@@ -59,8 +59,13 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('main-wrapper').style.display = 'flex';
+        
+        // Initiale setzen
         const avatarEl = document.getElementById('user-avatar-text');
-        if (avatarEl && user.email) avatarEl.innerText = user.email.charAt(0).toUpperCase();
+        if (avatarEl && user.email) {
+            avatarEl.innerText = user.email.charAt(0).toUpperCase();
+        }
+        
         initApp();
     } else {
         document.getElementById('login-section').style.display = 'block';
@@ -114,19 +119,24 @@ window.checkMorningStatus = async function() {
     if(todayStatus) {
         document.getElementById('card-morning-checkin').style.display = 'none';
         document.getElementById('card-status-done').style.display = 'block';
-        let t = todayStatus.status === 'gym' ? "Ready fürs Gym! 💪" : (todayStatus.status === 'rest' ? "Rest Day! 🛋️" : "Krank! 🤒");
+        let t = todayStatus.status === 'gym' ? "Bereit fürs Gym! 💪" : (todayStatus.status === 'rest' ? "Rest Day! 🛋️" : "Krank! 🤒");
         document.getElementById('today-status-text').innerText = t;
     } else {
         document.getElementById('card-morning-checkin').style.display = 'block';
         document.getElementById('card-status-done').style.display = 'none';
     }
+    
+    // Workout-Logbuch auch in den Streak mit einberechnen
+    const workoutDates = allSessionsRaw.filter(s => s.userId === uid).map(s => s.date);
     let currentStreak = 0;
     for(let i=0; i<365; i++) {
         let checkDate = new Date(); checkDate.setDate(checkDate.getDate() - i);
         let checkDateStr = checkDate.toLocaleDateString('en-CA');
         let status = logsMap[checkDateStr];
-        if(i === 0 && !status) continue;
-        if(status === 'gym') currentStreak++; 
+        let hasWorkout = workoutDates.includes(checkDateStr);
+        
+        if(i === 0 && !status && !hasWorkout) continue;
+        if(status === 'gym' || hasWorkout) currentStreak++; 
         else if(status === 'rest' || status === 'sick') continue;
         else break; 
     }
@@ -283,6 +293,8 @@ window.renderBroCalendar = function() {
         const div = document.createElement('div'); div.className = "cal-day"; div.innerText = d;
         const log = dailyLogsRaw.find(l => l.date === ds);
         const hasWorkout = workoutDates.includes(ds);
+        
+        // Logik: Ein getracktes Workout macht den Tag automatisch grün (Gym), auch ohne Check-In.
         if(hasWorkout || (log && log.status === 'gym')) div.classList.add('day-gym');
         else if(log && log.status === 'rest') div.classList.add('day-rest');
         else if(log && log.status === 'sick') div.classList.add('day-sick');
