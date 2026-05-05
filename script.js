@@ -55,6 +55,10 @@ window.toggleTheme = function() {
     const isLight = document.getElementById('theme-toggle').checked;
     if(isLight) { document.documentElement.classList.add('light-mode'); localStorage.setItem('theme', 'light'); }
     else { document.documentElement.classList.remove('light-mode'); localStorage.setItem('theme', 'dark'); }
+    
+    // Charts updaten damit die Farben im Light-Mode stimmen
+    window.updateBroChart();
+    window.updateWeightChart();
 };
 
 onAuthStateChanged(auth, (user) => {
@@ -150,17 +154,14 @@ window.saveMorningStatus = async function(statusType) {
 
 window.resetMorningStatus = async function() {
     if(todayStatus && todayStatus.id) {
-        // Die Browser-Abfrage (confirm) haben wir entfernt, da iOS sie oft blockiert.
-        // Die Löschung wird jetzt direkt ausgeführt.
+        // Direkte Löschung ohne das blockierende iOS-Popup
         await window.fs.deleteDoc(window.fs.doc(window.db, "dailyLogs", todayStatus.id));
-        
-        todayStatus = null; // Wichtig: Den lokalen Status leeren
+        todayStatus = null;
         await window.checkMorningStatus(); 
         window.renderBroCalendar(); 
         window.updateWeightChart();
     }
 };
-
 
 window.addExerciseDefinition = async function() {
     const n = document.getElementById('new-ex-name').value; if(!n) return;
@@ -386,6 +387,9 @@ window.updateBroChart = function() {
             } 
         });
     }
+    
+    // Insights nach dem Chart-Update aktualisieren, um die 1RM Daten neu zu berechnen
+    window.generateInsights();
 };
 
 window.updateWeightChart = async function() {
@@ -418,12 +422,130 @@ window.updateWeightChart = async function() {
     }
 };
 
+// --- SMART INSIGHTS (Mathematik & Analyse) ---
+window.generateInsights = function() {
+    const container = document.getElementById('insights-container');
+    if(!container) return;
+    container.innerHTML = '';
+
+    let insightsHtml = '';
+
+    // 1. Fatigue / Übertraining Warnung
+    if (logs.length > 0) {
+        const recentLogs = logs.slice(0, 3); // Letzte 3 Workouts
+        let highSorenessCount = 0;
+        let lowEnergyCount = 0;
+        recentLogs.forEach(l => {
+            if(parseInt(l.checkIn?.soreness) >= 7) highSorenessCount++;
+            if(parseInt(l.checkIn?.energy) <= 4) lowEnergyCount++;
+        });
+        if(highSorenessCount >= 2 && lowEnergyCount >= 2) {
+            insightsHtml += `
+            <div class="insight-card" style="border-left-color: #FF453A;">
+                <div style="font-size: 13px; font-weight: 800; color: #FF453A; text-transform: uppercase; margin-bottom: 6px;">⚠️ Warnung</div>
+                <div style="font-size: 15px; line-height: 1.5;">Deine Regenerationswerte (Energie & Muskelkater) sind seit mehreren Workouts schlecht. Ein Rest Day oder Deload wird dringend empfohlen!</div>
+            </div>`;
+        }
+    }
+
+    // 2. 1RM & Relativkraft (Basierend auf dem Chart-Dropdown)
+    const exName = document.getElementById('bro-exercise-select')?.value;
+    if(exName) {
+        let recent1RM = 0;
+        let found = false;
+
+        // Finde den aktuellsten Satz für diese Übung zur 1RM Berechnung (Epley Formel)
+        allSessionsRaw.filter(s => s.userId === window.auth.currentUser.uid).forEach(s => {
+            const ex = s.exercises.find(e => e.name === exName);
+            if(ex) {
+                ex.sets.forEach(set => {
+                    const w = parseFloat(set.kg) || 0;
+                    const r = parseFloat(set.reps) || 0;
+                    if(w > 0 && r > 0) {
+                        const epley = w * (1 + (r / 30));
+                        recent1RM = epley; // allSessionsRaw ist chronologisch, also bleibt das neuste hier stehen
+                        found = true;
+                    }
+                });
+            }
+        });
+
+        // Letztes Körpergewicht für das Ratio holen
+        let latestWeight = 0;
+        const sortedLogs = [...dailyLogsRaw].sort((a,b) => new Date(a.date) - new Date(b.date));
+        if(sortedLogs.length > 0) {
+            for(let i = sortedLogs.length -1; i >= 0; i--) {
+                if(sortedLogs[i].weight) {
+                    latestWeight = parseFloat(sortedLogs[i].weight);
+                    break;
+                }
+            }
+        }
+
+        if(found) {
+            let text = `Dein geschätztes One-Rep-Max (1RM) für <b style="color:var(--text-main);">${exName}</b> liegt aktuell bei <b style="color:var(--text-main);">${recent1RM.toFixed(1)} kg</b>.`;
+            if(latestWeight > 0) {
+                const ratio = recent1RM / latestWeight;
+                text += `<br><br>Das entspricht dem <b style="color:var(--brand-orange);">${ratio.toFixed(2)}-fachen</b> deines eigenen Körpergewichts (${latestWeight}kg)!`;
+            }
+            insightsHtml += `
+            <div class="insight-card">
+                <div style="font-size: 13px; font-weight: 800; color: var(--brand-orange); text-transform: uppercase; margin-bottom: 6px;">🏋️ Kraft-Analyse</div>
+                <div style="font-size: 15px; line-height: 1.5;">${text}</div>
+            </div>`;
+        }
+    }
+
+    // 3. Schlaf vs Energie Korrelation
+    let goodSleepEnergy = [];
+    let badSleepEnergy = [];
+    
+    logs.forEach(session => {
+        const dailyLog = dailyLogsRaw.find(d => d.date === session.date);
+        if(dailyLog && dailyLog.sleep && session.checkIn?.energy) {
+            const s = parseFloat(dailyLog.sleep);
+            const e = parseFloat(session.checkIn.energy);
+            if(s >= 7.5) goodSleepEnergy.push(e);
+            else badSleepEnergy.push(e);
+        }
+    });
+
+    if(goodSleepEnergy.length > 0 && badSleepEnergy.length > 0) {
+        const avgGood = goodSleepEnergy.reduce((a,b)=>a+b,0) / goodSleepEnergy.length;
+        const avgBad = badSleepEnergy.reduce((a,b)=>a+b,0) / badSleepEnergy.length;
+        
+        if (avgGood > avgBad) {
+            const diff = (avgGood - avgBad).toFixed(1);
+            insightsHtml += `
+            <div class="insight-card" style="border-left-color: #0A84FF;">
+                <div style="font-size: 13px; font-weight: 800; color: #0A84FF; text-transform: uppercase; margin-bottom: 6px;">💤 Schlaf & Performance</div>
+                <div style="font-size: 15px; line-height: 1.5;">An Tagen mit über 7.5h Schlaf ist dein Energielevel im Schnitt um <b style="color:var(--text-main);">${diff} Punkte höher</b>. Dein Körper reagiert sehr stark auf gute Erholung!</div>
+            </div>`;
+        }
+    }
+
+    // Fallback Text, falls noch nicht genug Daten da sind
+    if(insightsHtml === '') {
+        insightsHtml = `<div style="text-align:center; color: var(--text-muted); font-size: 14px; padding: 20px;">Trage mehr Workouts und morgendliche Check-Ins ein, um hier smarte Analysen zu sehen!</div>`;
+    }
+
+    container.innerHTML = insightsHtml;
+};
+
+// Tab Switch Logic
 window.switchTab = function(t, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
     if(document.getElementById('view-' + t)) document.getElementById('view-' + t).classList.add('active');
     if(btn) { btn.classList.add('active'); document.getElementById('header-title').textContent = btn.getAttribute('data-title'); }
-    if(t === 'bro') setTimeout(() => { window.updateBroChart(); window.updateWeightChart(); window.renderBroCalendar(); }, 150);
+    if(t === 'bro') {
+        setTimeout(() => { 
+            window.updateBroChart(); 
+            window.updateWeightChart(); 
+            window.renderBroCalendar(); 
+            window.generateInsights(); // Insights beim Tab-Wechsel berechnen
+        }, 150);
+    }
     document.querySelector('.app-content').scrollTo({top: 0, behavior: 'smooth'});
 };
 window.toggleAccordion = function(e) { const c = e.closest('.card'); if(c) c.classList.toggle('is-open'); };
