@@ -149,11 +149,18 @@ window.saveMorningStatus = async function(statusType) {
 };
 
 window.resetMorningStatus = async function() {
-    if(todayStatus && todayStatus.id && confirm("Status ändern?")) {
+    if(todayStatus && todayStatus.id) {
+        // Die Browser-Abfrage (confirm) haben wir entfernt, da iOS sie oft blockiert.
+        // Die Löschung wird jetzt direkt ausgeführt.
         await window.fs.deleteDoc(window.fs.doc(window.db, "dailyLogs", todayStatus.id));
-        await window.checkMorningStatus(); window.renderBroCalendar(); window.updateWeightChart();
+        
+        todayStatus = null; // Wichtig: Den lokalen Status leeren
+        await window.checkMorningStatus(); 
+        window.renderBroCalendar(); 
+        window.updateWeightChart();
     }
 };
+
 
 window.addExerciseDefinition = async function() {
     const n = document.getElementById('new-ex-name').value; if(!n) return;
