@@ -8,17 +8,15 @@
     --separator: rgba(255, 255, 255, 0.08);
     --input-bg: rgba(255, 255, 255, 0.05);
     
-    /* Die neue Signature-Farbe */
     --brand-orange: #FF5E00; 
     
-    /* Status Farben angepasst für den dunklen Look */
     --color-sick: #FF453A; 
     --color-rest: #30D158; 
     --color-blue: #0A84FF;
     
     --safe-top: env(safe-area-inset-top, 44px);
     --safe-bottom: env(safe-area-inset-bottom, 12px); 
-    --card-radius: 28px; /* Sehr starke Rundung wie auf der Vorlage */
+    --card-radius: 28px;
 }
 
 html.light-mode {
@@ -49,13 +47,6 @@ body {
 .header-titles { display: flex; flex-direction: column; gap: 4px; }
 .header-date { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 .app-header h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; color: var(--text-main); }
-.profile-avatar { 
-    width: 44px; height: 44px; border-radius: 50%; 
-    background: var(--card-bg); cursor: pointer;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 18px; font-weight: 700; color: var(--brand-orange);
-    border: 2px solid var(--separator);
-}
 
 /* --- HAUPTINHALT --- */
 .app-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 20px 0 20px; }
@@ -90,13 +81,24 @@ body {
     font-family: inherit;
     transition: all 0.2s ease;
 }
+
+/* Spezifischer Fix für Datum auf iOS (Höhe und Zentrierung) */
+input[type="date"].premium-input {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 52px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+}
+
 .premium-input::placeholder { color: var(--text-muted); font-weight: 400; }
 .premium-input:focus { outline: none; border-color: var(--brand-orange); background-color: transparent; }
 select.premium-input { appearance: none; -webkit-appearance: none; }
 
 /* --- BUTTONS --- */
 .premium-btn { 
-    padding: 16px; border-radius: 100px; /* Pillenform */
+    padding: 16px; border-radius: 100px;
     font-size: 16px; font-weight: 700; text-align: center; border: none; cursor: pointer; font-family: inherit; transition: opacity 0.2s, transform 0.1s; 
 }
 .premium-btn:active { transform: scale(0.95); }
@@ -130,7 +132,7 @@ select.premium-input { appearance: none; -webkit-appearance: none; }
 .day-rest { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--separator); }
 .day-sick { background: var(--color-sick); color: #fff; }
 
-/* Ringe (Angepasst an neues Theme) */
+/* Ringe */
 .rings-wrapper { position: relative; width: 140px; height: 140px; display: flex; justify-content: center; align-items: center; }
 .ring-track, .ring-active { position: absolute; border-radius: 50%; box-sizing: border-box; }
 .ring-track { opacity: 0.1; }
@@ -164,5 +166,5 @@ html.light-mode .tab-bar { background-color: rgba(255, 255, 255, 0.9); border: 1
 .tab-list { display: flex; justify-content: space-between; list-style: none; padding: 0; margin: 0; }
 .tab-item { display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; width: 25%; padding: 12px 0; transition: all 0.2s; border-radius: 50px; }
 .tab-icon { width: 24px; height: 24px; }
-.tab-item span { display: none; } /* Text im Tab-Bar ausblenden für den cleanen Look wie auf der Vorlage */
+.tab-item span { display: none; }
 .tab-item.active { color: #FFFFFF; background-color: var(--brand-orange); box-shadow: 0 4px 12px rgba(255, 94, 0, 0.4); }
