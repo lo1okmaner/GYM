@@ -9,17 +9,21 @@
 </head>
 <body>
 
+    <!-- === LOGIN SCREEN === -->
     <div id="login-section" style="display: block; padding: calc(var(--safe-top) + 40px) 20px;">
-        <h1 style="font-size: 34px; font-weight: 700; letter-spacing: -1.2px; margin-bottom: 30px; text-align: center;">MyGym<br><span style="color: var(--ios-green);">Tracker</span></h1>
+        <h1 style="font-size: 38px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 40px; text-align: center; color: var(--text-main);">
+            MY<span style="color: var(--brand-orange);">GYM</span>
+        </h1>
         
         <div class="card">
-            <input type="email" id="email" class="premium-input" placeholder="E-Mail" style="margin-bottom: 12px;">
-            <input type="password" id="pass" class="premium-input" placeholder="Passwort" style="margin-bottom: 24px;">
-            <button onclick="window.handleLogin()" class="premium-btn btn-green" style="width: 100%; margin-bottom: 12px;">Anmelden</button>
+            <input type="email" id="email" class="premium-input" placeholder="E-Mail" style="margin-bottom: 16px;">
+            <input type="password" id="pass" class="premium-input" placeholder="Passwort" style="margin-bottom: 32px;">
+            <button onclick="window.handleLogin()" class="premium-btn btn-orange" style="width: 100%; margin-bottom: 16px;">Anmelden</button>
             <button onclick="window.handleRegister()" class="premium-btn btn-outline" style="width: 100%;">Neues Konto erstellen</button>
         </div>
     </div>
 
+    <!-- === HAUPT-APP === -->
     <div id="main-wrapper" style="display: none; height: 100%; width: 100%; flex-direction: column;">
         
         <header class="app-header">
@@ -35,11 +39,11 @@
 
         <main class="app-content">
             
+            <!-- === VIEW: ÜBERSICHT === -->
             <section id="view-home" class="view active">
                 
                 <section class="activity-rings-section">
-                    <h2 class="section-title">Aktivität</h2>
-                    <div class="card activity-card" style="justify-content: center; padding: 30px;">
+                    <div class="card activity-card" style="justify-content: center; padding: 40px 20px;">
                         <div class="rings-wrapper">
                             <div class="ring-track track-red"></div>
                             <div class="ring-track track-green"></div>
@@ -51,122 +55,124 @@
                     </div>
                 </section>
 
-                <h2 class="section-title" style="margin-top: 24px;">Tagesstatus & Check-In</h2>
+                <h2 class="section-title" style="margin-top: 32px;">Tagesstatus & Check-In</h2>
                 <div id="card-morning-checkin" class="card">
-                    <p style="margin-bottom: 15px; color: var(--ios-label-dim); font-size: 15px;">Guten Morgen! Tracke deine Werte:</p>
+                    <p style="margin-bottom: 20px; color: var(--text-muted); font-size: 15px;">Tracke deine morgendlichen Werte:</p>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                         <div>
-                            <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Schlaf (h)</label>
-                            <input type="number" id="dash-sleep" class="premium-input" placeholder="z.B. 8" style="margin-top: 6px;">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Schlaf (h)</label>
+                            <input type="number" id="dash-sleep" class="premium-input" placeholder="8.0" style="margin-top: 8px;">
                         </div>
                         <div>
-                            <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Gewicht (kg)</label>
-                            <input type="number" id="dash-weight" class="premium-input" placeholder="z.B. 80.5" style="margin-top: 6px;">
+                            <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Gewicht (kg)</label>
+                            <input type="number" id="dash-weight" class="premium-input" placeholder="80.5" style="margin-top: 8px;">
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                        <button onclick="window.saveMorningStatus('gym')" class="premium-btn" style="background: var(--ios-green); color: black;">Gym</button>
-                        <button onclick="window.saveMorningStatus('rest')" class="premium-btn" style="background: var(--ios-cyan); color: black;">Rest</button>
-                        <button onclick="window.saveMorningStatus('sick')" class="premium-btn" style="background: var(--ios-red); color: white;">Krank</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <button onclick="window.saveMorningStatus('gym')" class="premium-btn btn-orange">Gym</button>
+                        <button onclick="window.saveMorningStatus('rest')" class="premium-btn btn-dark">Rest</button>
+                        <button onclick="window.saveMorningStatus('sick')" class="premium-btn btn-dark" style="color: #FF453A;">Krank</button>
                     </div>
                 </div>
                 
                 <div id="card-status-done" class="card" style="display: none; text-align: center;">
-                    <p id="today-status-text" style="font-size: 16px; font-weight: 600; margin-bottom: 12px;"></p>
-                    <button onclick="window.resetMorningStatus()" class="btn-text">Status ändern</button>
+                    <p id="today-status-text" style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--brand-orange);"></p>
+                    <button onclick="window.resetMorningStatus()" class="btn-text" style="color: var(--text-muted);">Status bearbeiten</button>
                 </div>
 
                 <section class="data-cards-grid" style="margin-top: 16px;">
-                    <div class="card data-card purple">
+                    <div class="card data-card">
                         <div class="card-header"><h3 class="card-label">Streak</h3></div>
                         <p class="card-sublabel">Tage in Folge</p>
-                        <p class="card-main-value purple-text"><span id="streak-counter">0</span> <span class="unit-inline">🔥</span></p>
+                        <p class="card-main-value" style="color: var(--brand-orange);"><span id="streak-counter">0</span> <span class="unit-inline" style="font-size:20px;">🔥</span></p>
                     </div>
-                    <div class="card data-card cyan">
-                        <div class="card-header"><h3 class="card-label">Letztes Workout</h3></div>
+                    <div class="card data-card">
+                        <div class="card-header"><h3 class="card-label">Workout</h3></div>
                         <p class="card-sublabel" id="last-workout-date">Lade...</p>
-                        <p class="card-main-value cyan-text">✓</p>
+                        <p class="card-main-value" style="color: var(--text-main);">Letztes</p>
                     </div>
                 </section>
 
                 <div class="empty-scroll-space"></div>
             </section>
 
+            <!-- === VIEW: TRAINING === -->
             <section id="view-training" class="view">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <h2 class="section-title" id="form-title" style="margin: 0;">Workout Loggen</h2>
-                    <select id="load-tpl-select" class="premium-input" style="width: auto; margin: 0; padding: 6px 12px;" onchange="window.applyTemplate(this.value)"></select>
+                    <select id="load-tpl-select" class="premium-input" style="width: auto; margin: 0; padding: 8px 16px; border-radius: 50px;" onchange="window.applyTemplate(this.value)"></select>
                 </div>
                 
                 <div class="card">
-                    <input type="date" id="session-date" class="premium-input" style="margin-bottom: 12px;">
+                    <input type="date" id="session-date" class="premium-input" style="margin-bottom: 16px;">
                     <input type="text" id="session-name" class="premium-input" placeholder="Titel (z.B. Push Day)" style="margin-bottom: 0;">
                 </div>
 
                 <div id="tracking-exercises"></div>
-                <button onclick="window.addTrackingExercise()" class="premium-btn btn-outline" style="width: 100%; margin-bottom: 24px;">+ Weitere Übung</button>
+                <button onclick="window.addTrackingExercise()" class="premium-btn btn-outline" style="width: 100%; margin-bottom: 32px; border-style: dashed;">+ Weitere Übung</button>
 
                 <h2 class="section-title">Körpergefühl</h2>
-                <div class="card" style="margin-bottom: 24px;">
-                    <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Energielevel (1-10)</label>
-                    <input type="number" id="checkin-energy" class="premium-input" placeholder="10" style="margin-top: 6px; margin-bottom: 16px;">
-                    <label style="font-size: 13px; font-weight: 600; color: var(--ios-label-dim);">Muskelkater (1-10)</label>
-                    <input type="number" id="checkin-soreness" class="premium-input" placeholder="0" style="margin-top: 6px;">
+                <div class="card" style="margin-bottom: 32px;">
+                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Energielevel (1-10)</label>
+                    <input type="number" id="checkin-energy" class="premium-input" placeholder="10" style="margin-top: 8px; margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Muskelkater (1-10)</label>
+                    <input type="number" id="checkin-soreness" class="premium-input" placeholder="0" style="margin-top: 8px;">
                 </div>
 
-                <button onclick="window.saveSession()" class="premium-btn btn-green" style="width: 100%; margin-bottom: 12px;">Workout Speichern</button>
-                <div id="edit-controls" style="display: none; margin-bottom: 24px;">
-                    <button onclick="window.deleteCurrentSession()" class="premium-btn" style="background: rgba(250, 17, 79, 0.15); color: var(--ios-red); width: 100%; margin-bottom: 12px;">Workout Löschen</button>
+                <button onclick="window.saveSession()" class="premium-btn btn-orange" style="width: 100%; margin-bottom: 16px;">Workout Speichern</button>
+                <div id="edit-controls" style="display: none; margin-bottom: 32px;">
+                    <button onclick="window.deleteCurrentSession()" class="premium-btn" style="background: rgba(255, 69, 58, 0.1); color: #FF453A; width: 100%; margin-bottom: 12px;">Workout Löschen</button>
                     <button onclick="window.resetForm()" class="premium-btn btn-outline" style="width: 100%;">Abbrechen</button>
                 </div>
 
-                <div class="card accordion-section" style="margin-top: 32px;">
+                <div class="card accordion-section" style="margin-top: 40px;">
                     <button class="accordion-header" onclick="window.toggleAccordion(this)">
-                        <h2 class="section-title" style="margin: 0;">Mein Verlauf</h2>
+                        <h2 class="section-title" style="margin: 0; font-size: 18px;">Mein Verlauf</h2>
                         <div class="chevron-icon">›</div>
                     </button>
                     <div class="collapsible-area">
-                        <div id="history" style="margin-top: 12px;"></div>
+                        <div id="history" style="margin-top: 16px;"></div>
                     </div>
                 </div>
 
                 <div class="card accordion-section">
                     <button class="accordion-header" onclick="window.toggleAccordion(this)">
-                        <h2 class="section-title" style="margin: 0;">Neue Vorlage erstellen</h2>
+                        <h2 class="section-title" id="tpl-form-title" style="margin: 0; font-size: 18px;">Neue Vorlage erstellen</h2>
                         <div class="chevron-icon">›</div>
                     </button>
                     <div class="collapsible-area">
-                        <div style="margin-top: 12px;">
-                            <input type="text" id="tpl-title" class="premium-input" placeholder="Name" style="margin-bottom: 12px;">
-                            <div id="tpl-exercise-selector" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-                            <button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="margin-bottom: 16px;">+ Übung hinzufügen</button>
-                            <button onclick="window.saveWorkoutTemplate()" class="premium-btn btn-outline" style="width: 100%;">Vorlage speichern</button>
+                        <div style="margin-top: 16px;" id="tpl-creator-area">
+                            <input type="text" id="tpl-title" class="premium-input" placeholder="Name der Vorlage" style="margin-bottom: 16px;">
+                            <div id="tpl-exercise-selector" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;"></div>
+                            <button onclick="window.addTemplateExerciseSelector()" class="btn-text" style="margin-bottom: 24px; display: block; width: 100%; text-align: center;">+ Übung hinzufügen</button>
+                            <button onclick="window.saveWorkoutTemplate()" id="btn-save-tpl" class="premium-btn btn-outline" style="width: 100%;">Vorlage speichern</button>
+                            <button onclick="window.cancelEditTpl()" id="btn-cancel-tpl" class="btn-text" style="display:none; width: 100%; text-align: center; margin-top: 16px; color: var(--text-muted);">Abbrechen</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="card accordion-section">
                     <button class="accordion-header" onclick="window.toggleAccordion(this)">
-                        <h2 class="section-title" style="margin: 0;">Vorlagen verwalten</h2>
+                        <h2 class="section-title" style="margin: 0; font-size: 18px;">Vorlagen verwalten</h2>
                         <div class="chevron-icon">›</div>
                     </button>
                     <div class="collapsible-area">
-                        <div id="workout-templates-list" style="margin-top: 12px;"></div>
+                        <div id="workout-templates-list" style="margin-top: 16px;"></div>
                     </div>
                 </div>
 
                 <div class="card accordion-section">
                     <button class="accordion-header" onclick="window.toggleAccordion(this)">
-                        <h2 class="section-title" style="margin: 0;">Eigene Übungen</h2>
+                        <h2 class="section-title" style="margin: 0; font-size: 18px;">Eigene Übungen</h2>
                         <div class="chevron-icon">›</div>
                     </button>
                     <div class="collapsible-area">
-                        <div style="margin-top: 12px;">
-                            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                        <div style="margin-top: 16px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                                 <input type="text" id="new-ex-name" class="premium-input" placeholder="Neue Übung..." style="margin: 0; flex: 1;">
-                                <button onclick="window.addExerciseDefinition()" class="premium-btn btn-green" style="padding: 0 16px;">Add</button>
+                                <button onclick="window.addExerciseDefinition()" class="premium-btn btn-orange" style="padding: 0 24px;">Add</button>
                             </div>
                             <div id="exercise-definitions-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
                         </div>
@@ -176,31 +182,32 @@
                 <div class="empty-scroll-space"></div>
             </section>
 
+            <!-- === VIEW: STATS & KALENDER === -->
             <section id="view-bro" class="view">
                 <h2 class="section-title">Status Kalender</h2>
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-                        <button onclick="window.changeBroMonth(-1)" class="btn-text" style="font-size: 24px; padding: 0 10px;">‹</button>
-                        <span id="bro-cal-month" style="font-weight: 600; font-size: 16px; text-transform: capitalize;">Lade...</span>
-                        <button onclick="window.changeBroMonth(1)" class="btn-text" style="font-size: 24px; padding: 0 10px;">›</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                        <button onclick="window.changeBroMonth(-1)" class="btn-text" style="font-size: 24px; padding: 0 10px; color: var(--text-main);">‹</button>
+                        <span id="bro-cal-month" style="font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">Lade...</span>
+                        <button onclick="window.changeBroMonth(1)" class="btn-text" style="font-size: 24px; padding: 0 10px; color: var(--text-main);">›</button>
                     </div>
-                    <div id="bro-calendar-days" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;"></div>
+                    <div id="bro-calendar-days" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;"></div>
                 </div>
 
-                <h2 class="section-title" style="margin-top: 24px;">Dein Gewicht</h2>
+                <h2 class="section-title" style="margin-top: 32px;">Dein Gewicht</h2>
                 <div class="card">
-                    <div style="height: 200px; position: relative;">
+                    <div style="height: 220px; position: relative;">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </div>
 
-                <h2 class="section-title" style="margin-top: 24px;">Kraft Progress</h2>
+                <h2 class="section-title" style="margin-top: 32px;">Kraft Progress</h2>
                 <div class="card">
-                    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-                        <select id="bro-exercise-select" class="premium-input" style="flex: 1; margin: 0;" onchange="window.updateBroChart()"></select>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <select id="bro-exercise-select" class="premium-input" style="flex: 1; margin: 0; border-radius: 50px;" onchange="window.updateBroChart()"></select>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-                        <span style="font-size: 14px; color: var(--ios-label-dim);">Bro einblenden</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                        <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Bro vergleichen</span>
                         <label class="switch">
                             <input type="checkbox" id="compare-bro-toggle" onchange="window.updateBroChart();" checked>
                             <span class="slider round"></span>
@@ -213,15 +220,12 @@
                 <div class="empty-scroll-space"></div>
             </section>
 
+            <!-- === VIEW: EINSTELLUNGEN === -->
             <section id="view-settings" class="view">
                 <h2 class="section-title">App Einstellungen</h2>
                 <div class="card" style="padding: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 0.5px solid var(--ios-separator);">
-                        <span style="font-weight: 500;">Push-Benachrichtigungen</span>
-                        <button onclick="window.requestNotifications()" class="premium-btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Aktivieren</button>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
-                        <span style="font-weight: 500;">Light Mode</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                        <span style="font-weight: 600; font-size: 16px;">Light Mode</span>
                         <label class="switch">
                             <input type="checkbox" id="theme-toggle" onchange="window.toggleTheme()">
                             <span class="slider round"></span>
@@ -237,26 +241,22 @@
             <ul class="tab-list">
                 <li class="tab-item active" data-target="view-home" data-title="Übersicht">
                     <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"/></svg>
-                    <span>Übersicht</span>
                 </li>
                 <li class="tab-item" data-target="view-training" data-title="Training">
                     <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
-                    <span>Training</span>
                 </li>
                 <li class="tab-item" data-target="view-bro" data-title="Verlauf">
                     <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
-                    <span>Verlauf</span>
                 </li>
                 <li class="tab-item" data-target="view-settings" data-title="Einstellungen">
                     <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-                    <span>Menü</span>
                 </li>
             </ul>
         </nav>
 
     </div>
 
-    <div id="offline-banner" style="display: none; position: fixed; top: 0; width: 100%; background: var(--ios-red); color: white; text-align: center; padding: 5px; font-size: 12px; z-index: 100;">Offline Modus</div>
+    <div id="offline-banner" style="display: none; position: fixed; top: 0; width: 100%; background: #FF453A; color: white; text-align: center; padding: 5px; font-size: 12px; z-index: 100; font-weight: bold;">Offline Modus</div>
 
     <script type="module" src="script.js"></script>
 </body>
