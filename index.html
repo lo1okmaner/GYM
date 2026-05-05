@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- === APPLE iOS PWA TAGS (Für das Icon auf dem Homescreen) === -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="icon.png">
+    
     <title>MyGym Tracker</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,8 +38,6 @@
                 <div class="header-titles">
                     <p class="header-date" id="dynamic-date">HEUTE</p>
                     <h1 id="header-title">Übersicht</h1>
-                </div>
-                <div class="profile-avatar" onclick="window.handleLogout()" id="user-avatar-text">
                 </div>
             </div>
         </header>
@@ -232,6 +237,10 @@
                         </label>
                     </div>
                 </div>
+                
+                <!-- Abmelde Button ganz unten -->
+                <button onclick="window.handleLogout()" class="premium-btn btn-outline" style="width: 100%; margin-top: 16px; color: #FF453A; border-color: rgba(255, 69, 58, 0.3);">Konto abmelden</button>
+
                 <div class="empty-scroll-space"></div>
             </section>
 
