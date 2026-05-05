@@ -81,9 +81,10 @@
                         <p class="card-main-value" style="color: var(--brand-orange);"><span id="streak-counter">0</span> <span class="unit-inline" style="font-size:20px;">🔥</span></p>
                     </div>
                     <div class="card data-card">
-                        <div class="card-header"><h3 class="card-label">Workout</h3></div>
-                        <p class="card-sublabel" id="last-workout-date">Lade...</p>
-                        <p class="card-main-value" style="color: var(--text-main);">Letztes</p>
+                        <div class="card-header"><h3 class="card-label">Letztes Workout</h3></div>
+                        <p class="card-sublabel">Datum</p>
+                        <!-- Schriftgröße für das Datum leicht verkleinert, damit es perfekt passt -->
+                        <p class="card-main-value" id="last-workout-date" style="color: var(--text-main); font-size: 24px;">Lade...</p>
                     </div>
                 </section>
 
@@ -210,7 +211,7 @@
                     </div>
                 </div>
 
-                <!-- NEU: SMART INSIGHTS BEREICH -->
+                <!-- SMART INSIGHTS BEREICH -->
                 <h2 class="section-title" style="margin-top: 40px;">Smart Insights</h2>
                 <div id="insights-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
                     <!-- Wird per JS dynamisch mit Karten befüllt -->
