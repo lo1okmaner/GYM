@@ -28,13 +28,12 @@ let dailyLogsRaw = [];
 let exerciseDefinitions = [];
 let workoutTemplates = [];
 let editId = null;
-let editTplId = null; // Für das Bearbeiten von Vorlagen
+let editTplId = null;
 let myChart = null;
 let myWeightChart = null;
 let broCalDate = new Date();
 let todayStatus = null;
 
-// Die neue Akzentfarbe für die Charts definieren
 const BRAND_ORANGE = '#FF5E00';
 const CHART_BG_ORANGE = 'rgba(255, 94, 0, 0.15)';
 
@@ -62,8 +61,6 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('main-wrapper').style.display = 'flex';
-        const avatarEl = document.getElementById('user-avatar-text');
-        if (avatarEl && user.email) avatarEl.innerText = user.email.charAt(0).toUpperCase();
         initApp();
     } else {
         document.getElementById('login-section').style.display = 'block';
@@ -81,7 +78,7 @@ window.handleRegister = async function() {
         catch(e) { alert("Fehler: " + e.message); }
     }
 };
-window.handleLogout = function() { if(confirm("Abmelden?")) window.authFuncs.signOut(window.auth); };
+window.handleLogout = function() { if(confirm("Wirklich abmelden?")) window.authFuncs.signOut(window.auth); };
 
 async function initApp() {
     const user = window.auth.currentUser;
@@ -214,7 +211,6 @@ window.loadEditTpl = function(id) {
     document.getElementById('btn-save-tpl').innerText = "Änderungen speichern";
     document.getElementById('btn-cancel-tpl').style.display = "block";
     
-    // Automatisch das Akkordeon öffnen falls zu
     const accArea = document.getElementById('tpl-creator-area').closest('.collapsible-area');
     if(accArea) accArea.parentElement.classList.add('is-open');
 };
