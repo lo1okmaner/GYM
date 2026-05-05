@@ -15,7 +15,8 @@
     --color-blue: #0A84FF;
     
     --safe-top: env(safe-area-inset-top, 44px);
-    --safe-bottom: env(safe-area-inset-bottom, 12px); 
+    /* Setze den Sicherheitsabstand auf einen flexiblen Wert */
+    --safe-bottom: env(safe-area-inset-bottom, 16px); 
     --card-radius: 28px;
 }
 
@@ -132,17 +133,6 @@ select.premium-input { appearance: none; -webkit-appearance: none; }
 .day-rest { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--separator); }
 .day-sick { background: var(--color-sick); color: #fff; }
 
-/* Ringe */
-.rings-wrapper { position: relative; width: 140px; height: 140px; display: flex; justify-content: center; align-items: center; }
-.ring-track, .ring-active { position: absolute; border-radius: 50%; box-sizing: border-box; }
-.ring-track { opacity: 0.1; }
-.track-red, .ring-red { width: 140px; height: 140px; border: 14px solid var(--brand-orange); }
-.ring-red { border-left-color: transparent; border-bottom-color: transparent; transform: rotate(45deg); }
-.track-green, .ring-green { width: 104px; height: 104px; border: 14px solid #FFFFFF; }
-.ring-green { border-right-color: transparent; border-top-color: transparent; transform: rotate(15deg); }
-.track-blue, .ring-blue { width: 68px; height: 68px; border: 14px solid var(--text-muted); }
-.ring-blue { border-left-color: transparent; border-top-color: transparent; transform: rotate(-45deg); }
-
 .data-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .data-card { padding: 20px; }
 .data-card .card-label { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
@@ -153,7 +143,8 @@ select.premium-input { appearance: none; -webkit-appearance: none; }
 /* --- SCHWEBENDE TAB BAR --- */
 .tab-bar {
     position: fixed; 
-    bottom: max(var(--safe-bottom), 16px); 
+    /* Zieht die Leiste weiter nach unten in Richtung Bildschirmrand (max verhindert dass es bei PCs zu weit sinkt) */
+    bottom: max(calc(env(safe-area-inset-bottom) - 15px), 12px); 
     left: 20px; right: 20px; width: auto;
     border-radius: 100px; 
     background-color: rgba(24, 24, 26, 0.85);
@@ -166,5 +157,5 @@ html.light-mode .tab-bar { background-color: rgba(255, 255, 255, 0.9); border: 1
 .tab-list { display: flex; justify-content: space-between; list-style: none; padding: 0; margin: 0; }
 .tab-item { display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; width: 25%; padding: 12px 0; transition: all 0.2s; border-radius: 50px; }
 .tab-icon { width: 24px; height: 24px; }
-.tab-item span { display: none; }
+.tab-item span { display: none; } /* Text im Tab-Bar ausblenden */
 .tab-item.active { color: #FFFFFF; background-color: var(--brand-orange); box-shadow: 0 4px 12px rgba(255, 94, 0, 0.4); }
