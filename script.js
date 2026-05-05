@@ -536,7 +536,7 @@ window.generateInsights = function() {
 window.switchTab = function(t, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
-    if(document.getElementById('view-' + t)) document.getElementById('view-' + t).classList.add('active');
+    if(document.getElementById('view-' + t)) document.getElementById('view-' + t).classList.add('active');//Commit Test 
     if(btn) { btn.classList.add('active'); document.getElementById('header-title').textContent = btn.getAttribute('data-title'); }
     if(t === 'bro') {
         setTimeout(() => { 
