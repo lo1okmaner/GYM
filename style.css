@@ -15,7 +15,6 @@
     --color-blue: #0A84FF;
     
     --safe-top: env(safe-area-inset-top, 44px);
-    /* Setze den Sicherheitsabstand auf einen flexiblen Wert */
     --safe-bottom: env(safe-area-inset-bottom, 16px); 
     --card-radius: 28px;
 }
@@ -83,7 +82,6 @@ body {
     transition: all 0.2s ease;
 }
 
-/* Spezifischer Fix für Datum auf iOS (Höhe und Zentrierung) */
 input[type="date"].premium-input {
     -webkit-appearance: none;
     appearance: none;
@@ -138,12 +136,14 @@ select.premium-input { appearance: none; -webkit-appearance: none; }
 .data-card .card-label { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 .card-main-value { font-size: 32px; font-weight: 800; margin-top: 8px; }
 
+/* Insight Cards */
+.insight-card { background-color: var(--input-bg); border-radius: 16px; padding: 16px; border-left: 4px solid var(--brand-orange); }
+
 .empty-scroll-space { height: 140px; width: 100%; }
 
 /* --- SCHWEBENDE TAB BAR --- */
 .tab-bar {
     position: fixed; 
-    /* Zieht die Leiste weiter nach unten in Richtung Bildschirmrand (max verhindert dass es bei PCs zu weit sinkt) */
     bottom: max(calc(env(safe-area-inset-bottom) - 15px), 12px); 
     left: 20px; right: 20px; width: auto;
     border-radius: 100px; 
@@ -157,5 +157,5 @@ html.light-mode .tab-bar { background-color: rgba(255, 255, 255, 0.9); border: 1
 .tab-list { display: flex; justify-content: space-between; list-style: none; padding: 0; margin: 0; }
 .tab-item { display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; width: 25%; padding: 12px 0; transition: all 0.2s; border-radius: 50px; }
 .tab-icon { width: 24px; height: 24px; }
-.tab-item span { display: none; } /* Text im Tab-Bar ausblenden */
+.tab-item span { display: none; }
 .tab-item.active { color: #FFFFFF; background-color: var(--brand-orange); box-shadow: 0 4px 12px rgba(255, 94, 0, 0.4); }
