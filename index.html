@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- === APPLE iOS PWA TAGS (Für das Icon auf dem Homescreen) === -->
+    <!-- === APPLE iOS PWA TAGS === -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
@@ -46,21 +46,8 @@
             
             <!-- === VIEW: ÜBERSICHT === -->
             <section id="view-home" class="view active">
-                
-                <section class="activity-rings-section">
-                    <div class="card activity-card" style="justify-content: center; padding: 40px 20px;">
-                        <div class="rings-wrapper">
-                            <div class="ring-track track-red"></div>
-                            <div class="ring-track track-green"></div>
-                            <div class="ring-track track-blue"></div>
-                            <div class="ring-active ring-red"></div>
-                            <div class="ring-active ring-green"></div>
-                            <div class="ring-active ring-blue"></div>
-                        </div>
-                    </div>
-                </section>
 
-                <h2 class="section-title" style="margin-top: 32px;">Tagesstatus & Check-In</h2>
+                <h2 class="section-title">Tagesstatus & Check-In</h2>
                 <div id="card-morning-checkin" class="card">
                     <p style="margin-bottom: 20px; color: var(--text-muted); font-size: 15px;">Tracke deine morgendlichen Werte:</p>
                     
@@ -238,7 +225,7 @@
                     </div>
                 </div>
                 
-                <!-- Abmelde Button ganz unten -->
+                <!-- Abmelde Button -->
                 <button onclick="window.handleLogout()" class="premium-btn btn-outline" style="width: 100%; margin-top: 16px; color: #FF453A; border-color: rgba(255, 69, 58, 0.3);">Konto abmelden</button>
 
                 <div class="empty-scroll-space"></div>
