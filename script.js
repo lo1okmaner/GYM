@@ -31,11 +31,12 @@ let editId = null;
 let editTplId = null;
 let myChart = null;
 let myWeightChart = null;
+let muscleChart = null; // Neu für die Heatmap
 let broCalDate = new Date();
 let todayStatus = null;
 
 const BRAND_ORANGE = '#FF5E00';
-const CHART_BG_ORANGE = 'rgba(255, 94, 0, 0.15)';
+const CHART_BG_ORANGE = 'rgba(255, 94, 0, 0.2)';
 
 window.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('dynamic-date');
@@ -58,6 +59,7 @@ window.toggleTheme = function() {
     
     window.updateBroChart();
     window.updateWeightChart();
+    window.updateMuscleHeatmap();
 };
 
 onAuthStateChanged(auth, (user) => {
@@ -104,6 +106,7 @@ async function initApp() {
     
     window.renderBroCalendar();
     window.updateWeightChart();
+    window.updateMuscleHeatmap(); // Heatmap beim Start laden
 }
 
 window.checkMorningStatus = async function() {
@@ -149,16 +152,14 @@ window.checkMorningStatus = async function() {
 window.saveMorningStatus = async function(statusType) {
     const data = { userId: window.auth.currentUser.uid, date: new Date().toLocaleDateString('en-CA'), sleep: document.getElementById('dash-sleep').value, weight: document.getElementById('dash-weight').value, status: statusType, timestamp: new Date().toISOString() };
     await window.fs.addDoc(window.fs.collection(window.db, "dailyLogs"), data);
-    await window.checkMorningStatus(); window.renderBroCalendar(); window.updateWeightChart(); 
+    await window.checkMorningStatus(); window.renderBroCalendar(); window.updateWeightChart(); window.generateInsights();
 };
 
 window.resetMorningStatus = async function() {
     if(todayStatus && todayStatus.id) {
         await window.fs.deleteDoc(window.fs.doc(window.db, "dailyLogs", todayStatus.id));
         todayStatus = null;
-        await window.checkMorningStatus(); 
-        window.renderBroCalendar(); 
-        window.updateWeightChart();
+        await window.checkMorningStatus(); window.renderBroCalendar(); window.updateWeightChart(); window.generateInsights();
     }
 };
 
@@ -188,36 +189,25 @@ window.saveWorkoutTemplate = async function() {
     const title = document.getElementById('tpl-title').value;
     if(!title) return alert("Bitte einen Titel vergeben!");
     let names = []; document.querySelectorAll('.tpl-ex-item').forEach(x => { if(x.value) names.push(x.value); });
-    
     const data = { userId: window.auth.currentUser.uid, title: title, exerciseNames: names };
-    
-    if (editTplId) {
-        await window.fs.updateDoc(window.fs.doc(window.db, "workoutTemplates", editTplId), data);
-    } else {
-        await window.fs.addDoc(window.fs.collection(window.db, "workoutTemplates"), data);
-    }
-    window.cancelEditTpl();
-    initApp();
+    if (editTplId) { await window.fs.updateDoc(window.fs.doc(window.db, "workoutTemplates", editTplId), data); } 
+    else { await window.fs.addDoc(window.fs.collection(window.db, "workoutTemplates"), data); }
+    window.cancelEditTpl(); initApp();
 };
 
 window.loadEditTpl = function(id) {
-    const tpl = workoutTemplates.find(t => t.id === id);
-    if(!tpl) return;
+    const tpl = workoutTemplates.find(t => t.id === id); if(!tpl) return;
     editTplId = id;
-    
     document.getElementById('tpl-form-title').innerText = "Vorlage bearbeiten";
     document.getElementById('tpl-title').value = tpl.title;
     document.getElementById('tpl-exercise-selector').innerHTML = "";
-    
     tpl.exerciseNames.forEach(n => {
         window.addTemplateExerciseSelector();
         const selects = document.querySelectorAll('.tpl-ex-item');
         selects[selects.length - 1].value = n;
     });
-    
     document.getElementById('btn-save-tpl').innerText = "Änderungen speichern";
     document.getElementById('btn-cancel-tpl').style.display = "block";
-    
     const accArea = document.getElementById('tpl-creator-area').closest('.collapsible-area');
     if(accArea) accArea.parentElement.classList.add('is-open');
 };
@@ -235,16 +225,7 @@ function renderWorkoutTemplates() {
     const list = document.getElementById('workout-templates-list'); list.innerHTML = "";
     workoutTemplates.forEach(t => {
         const d = document.createElement('div'); d.style.padding = "16px 0"; d.style.borderBottom = "1px solid var(--separator)";
-        d.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <b style="font-size:16px;">${t.title}</b>
-                <div style="display: flex; gap: 16px;">
-                    <button onclick="window.loadEditTpl('${t.id}')" class="btn-text" style="color: var(--text-muted);">Edit</button>
-                    <button onclick="window.deleteTpl('${t.id}')" class="btn-red-text">×</button>
-                </div>
-            </div>
-            <small style="color: var(--text-muted); display: block; margin-top: 6px;">${t.exerciseNames.join(', ')}</small>
-        `;
+        d.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px;">${t.title}</b><div style="display: flex; gap: 16px;"><button onclick="window.loadEditTpl('${t.id}')" class="btn-text" style="color: var(--text-muted);">Edit</button><button onclick="window.deleteTpl('${t.id}')" class="btn-red-text">×</button></div></div><small style="color: var(--text-muted); display: block; margin-top: 6px;">${t.exerciseNames.join(', ')}</small>`;
         list.appendChild(d);
     });
 }
@@ -308,7 +289,6 @@ window.deleteCurrentSession = async function() { if(editId && confirm("Wirklich 
 function renderHistory() {
     const h = document.getElementById('history'); h.innerHTML = "";
     if(logs.length > 0) {
-        // Das Datum für die Übersichtskarte setzen
         const dateStr = new Date(logs[0].date).toLocaleDateString('de-DE');
         document.getElementById('last-workout-date').innerText = dateStr;
     }
@@ -349,6 +329,96 @@ window.renderBroCalendar = function() {
         else if(log && log.status === 'rest') div.classList.add('day-rest');
         else if(log && log.status === 'sick') div.classList.add('day-sick');
         grid.appendChild(div);
+    }
+};
+
+// --- MUSCLE HEATMAP BERECHNUNG ---
+function getMuscleGroup(name) {
+    const n = name.toLowerCase();
+    if(n.includes('bank') || n.includes('bench') || n.includes('brust') || n.includes('fly') || n.includes('push') || n.includes('dips')) return 'Brust';
+    if(n.includes('klimm') || n.includes('pull') || n.includes('row') || n.includes('ruder') || n.includes('lat') || n.includes('rücken') || n.includes('deadlift') || n.includes('kreuz')) return 'Rücken';
+    if(n.includes('knie') || n.includes('squat') || n.includes('bein') || n.includes('leg') || n.includes('wade') || n.includes('calf') || n.includes('lunge') || n.includes('press')) return 'Beine';
+    if(n.includes('schulter') || n.includes('shoulder') || n.includes('overhead') || n.includes('seitheben') || n.includes('lateral') || n.includes('military')) return 'Schultern';
+    if(n.includes('bizeps') || n.includes('trizeps') || n.includes('curl') || n.includes('arm') || n.includes('extension') || n.includes('pushdown') || n.includes('triceps') || n.includes('biceps')) return 'Arme';
+    if(n.includes('bauch') || n.includes('core') || n.includes('situp') || n.includes('crunch') || n.includes('plank')) return 'Bauch';
+    return 'Ganzkörper';
+}
+
+window.updateMuscleHeatmap = function() {
+    if(logs.length === 0) return;
+    
+    const timeframe = document.getElementById('heatmap-timeframe')?.value || 'last';
+    const now = new Date();
+    
+    // Workouts nach Zeitraum filtern
+    let filteredLogs = [];
+    if(timeframe === 'last') {
+        filteredLogs = [logs[0]];
+    } else if (timeframe === 'week') {
+        const weekAgo = new Date(); weekAgo.setDate(now.getDate() - 7);
+        filteredLogs = logs.filter(l => new Date(l.date) >= weekAgo);
+    } else if (timeframe === 'month') {
+        const monthAgo = new Date(); monthAgo.setDate(now.getDate() - 30);
+        filteredLogs = logs.filter(l => new Date(l.date) >= monthAgo);
+    } else {
+        filteredLogs = logs;
+    }
+
+    // Volumen summieren
+    const volumes = { 'Brust': 0, 'Rücken': 0, 'Beine': 0, 'Schultern': 0, 'Arme': 0, 'Bauch': 0 };
+    
+    filteredLogs.forEach(s => {
+        s.exercises.forEach(ex => {
+            const group = getMuscleGroup(ex.name);
+            let vol = 0;
+            ex.sets.forEach(set => {
+                const w = parseFloat(set.kg) || 0;
+                const r = parseFloat(set.reps) || 0;
+                vol += (w * r);
+            });
+            if(volumes[group] !== undefined) volumes[group] += vol;
+        });
+    });
+
+    const labels = Object.keys(volumes);
+    const data = Object.values(volumes);
+
+    if(muscleChart) muscleChart.destroy();
+    const ctx = document.getElementById('muscleRadarChart')?.getContext('2d');
+    if (ctx) {
+        const textColor = document.documentElement.classList.contains('light-mode') ? '#000' : '#8E8E93';
+        const gridColor = document.documentElement.classList.contains('light-mode') ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+        
+        muscleChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Volumen (kg)',
+                    data: data,
+                    backgroundColor: CHART_BG_ORANGE,
+                    borderColor: BRAND_ORANGE,
+                    pointBackgroundColor: '#000',
+                    pointBorderColor: BRAND_ORANGE,
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: BRAND_ORANGE,
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: gridColor },
+                        grid: { color: gridColor },
+                        pointLabels: { color: textColor, font: { size: 11, weight: 'bold' } },
+                        ticks: { display: false } // Keine Zahlen auf dem Netz
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
     }
 };
 
@@ -424,14 +494,12 @@ window.updateWeightChart = async function() {
     }
 };
 
-// --- SMART INSIGHTS ---
 window.generateInsights = function() {
     const container = document.getElementById('insights-container');
     if(!container) return;
     container.innerHTML = '';
     let insightsHtml = '';
 
-    // 1. Fatigue Warning
     if (logs.length > 0) {
         const recentLogs = logs.slice(0, 3);
         let highSorenessCount = 0;
@@ -449,7 +517,6 @@ window.generateInsights = function() {
         }
     }
     
-    // 2. Volumen-Tracking des letzten Workouts (Wird immer angezeigt, wenn ein Workout da ist)
     if (logs.length > 0) {
         const lastS = logs[0];
         let totalVolume = 0;
@@ -470,35 +537,22 @@ window.generateInsights = function() {
         }
     }
 
-    // 3. 1RM & Relativkraft
     let exName = document.getElementById('bro-exercise-select')?.value;
-    
-    // Auto-Erkennung: Wenn im Dropdown nichts gewählt ist, nimm die letzte Übung mit Gewicht
     if (!exName && logs.length > 0) {
          for(let s of logs) {
              const exWithWeight = s.exercises.find(e => e.sets.some(st => parseFloat(st.kg) > 0));
-             if(exWithWeight) {
-                 exName = exWithWeight.name;
-                 break;
-             }
+             if(exWithWeight) { exName = exWithWeight.name; break; }
          }
     }
 
     if(exName) {
-        let recent1RM = 0;
-        let found = false;
-
+        let recent1RM = 0; let found = false;
         allSessionsRaw.filter(s => s.userId === window.auth.currentUser.uid).forEach(s => {
             const ex = s.exercises.find(e => e.name === exName);
             if(ex) {
                 ex.sets.forEach(set => {
-                    const w = parseFloat(set.kg) || 0;
-                    const r = parseFloat(set.reps) || 0;
-                    if(w > 0 && r > 0) {
-                        const epley = w * (1 + (r / 30));
-                        recent1RM = epley; 
-                        found = true;
-                    }
+                    const w = parseFloat(set.kg) || 0; const r = parseFloat(set.reps) || 0;
+                    if(w > 0 && r > 0) { recent1RM = w * (1 + (r / 30)); found = true; }
                 });
             }
         });
@@ -507,10 +561,7 @@ window.generateInsights = function() {
         const sortedLogs = [...dailyLogsRaw].sort((a,b) => new Date(a.date) - new Date(b.date));
         if(sortedLogs.length > 0) {
             for(let i = sortedLogs.length -1; i >= 0; i--) {
-                if(sortedLogs[i].weight) {
-                    latestWeight = parseFloat(sortedLogs[i].weight);
-                    break;
-                }
+                if(sortedLogs[i].weight) { latestWeight = parseFloat(sortedLogs[i].weight); break; }
             }
         }
 
@@ -528,24 +579,18 @@ window.generateInsights = function() {
         }
     }
 
-    // 4. Schlaf vs Energie
-    let goodSleepEnergy = [];
-    let badSleepEnergy = [];
-    
+    let goodSleepEnergy = []; let badSleepEnergy = [];
     logs.forEach(session => {
         const dailyLog = dailyLogsRaw.find(d => d.date === session.date);
         if(dailyLog && dailyLog.sleep && session.checkIn?.energy) {
-            const s = parseFloat(dailyLog.sleep);
-            const e = parseFloat(session.checkIn.energy);
-            if(s >= 7.5) goodSleepEnergy.push(e);
-            else badSleepEnergy.push(e);
+            const s = parseFloat(dailyLog.sleep); const e = parseFloat(session.checkIn.energy);
+            if(s >= 7.5) goodSleepEnergy.push(e); else badSleepEnergy.push(e);
         }
     });
 
     if(goodSleepEnergy.length > 0 && badSleepEnergy.length > 0) {
         const avgGood = goodSleepEnergy.reduce((a,b)=>a+b,0) / goodSleepEnergy.length;
         const avgBad = badSleepEnergy.reduce((a,b)=>a+b,0) / badSleepEnergy.length;
-        
         if (avgGood > avgBad) {
             const diff = (avgGood - avgBad).toFixed(1);
             insightsHtml += `
@@ -555,7 +600,6 @@ window.generateInsights = function() {
             </div>`;
         }
     } else if (goodSleepEnergy.length > 0 || badSleepEnergy.length > 0) {
-        // Fallback, wenn nur gute oder nur schlechte Nächte geloggt wurden
         const allEnergy = [...goodSleepEnergy, ...badSleepEnergy];
         const avg = (allEnergy.reduce((a,b)=>a+b,0) / allEnergy.length).toFixed(1);
         insightsHtml += `
@@ -565,10 +609,7 @@ window.generateInsights = function() {
         </div>`;
     }
 
-    if(insightsHtml === '') {
-        insightsHtml = `<div style="text-align:center; color: var(--text-muted); font-size: 14px; padding: 20px;">Trage dein erstes Workout ein, um hier smarte Analysen zu sehen!</div>`;
-    }
-
+    if(insightsHtml === '') insightsHtml = `<div style="text-align:center; color: var(--text-muted); font-size: 14px; padding: 20px;">Trage dein erstes Workout ein, um hier smarte Analysen zu sehen!</div>`;
     container.innerHTML = insightsHtml;
 };
 
@@ -579,6 +620,7 @@ window.switchTab = function(t, btn) {
     if(btn) { btn.classList.add('active'); document.getElementById('header-title').textContent = btn.getAttribute('data-title'); }
     if(t === 'bro') {
         setTimeout(() => { 
+            window.updateMuscleHeatmap();
             window.updateBroChart(); 
             window.updateWeightChart(); 
             window.renderBroCalendar(); 
