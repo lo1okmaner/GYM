@@ -83,7 +83,6 @@
                     <div class="card data-card">
                         <div class="card-header"><h3 class="card-label">Letztes Workout</h3></div>
                         <p class="card-sublabel">Datum</p>
-                        <!-- Schriftgröße für das Datum leicht verkleinert, damit es perfekt passt -->
                         <p class="card-main-value" id="last-workout-date" style="color: var(--text-main); font-size: 24px;">Lade...</p>
                     </div>
                 </section>
@@ -187,10 +186,19 @@
                     <div id="bro-calendar-days" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;"></div>
                 </div>
 
-                <h2 class="section-title" style="margin-top: 32px;">Dein Gewicht</h2>
+                <!-- NEU: MUSCLE HEATMAP -->
+                <h2 class="section-title" style="margin-top: 32px;">Muscle Heatmap (Volumen)</h2>
                 <div class="card">
-                    <div style="height: 220px; position: relative;">
-                        <canvas id="weightChart"></canvas>
+                    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                        <select id="heatmap-timeframe" class="premium-input" style="flex: 1; margin: 0; border-radius: 50px; font-weight: 600; text-align: center;" onchange="window.updateMuscleHeatmap()">
+                            <option value="last">Letztes Workout</option>
+                            <option value="week">Letzte 7 Tage</option>
+                            <option value="month">Letzte 30 Tage</option>
+                            <option value="all">All-Time Historie</option>
+                        </select>
+                    </div>
+                    <div style="height: 260px; position: relative; display: flex; justify-content: center;">
+                        <canvas id="muscleRadarChart"></canvas>
                     </div>
                 </div>
 
@@ -211,10 +219,16 @@
                     </div>
                 </div>
 
-                <!-- SMART INSIGHTS BEREICH -->
+                <h2 class="section-title" style="margin-top: 32px;">Dein Gewicht</h2>
+                <div class="card">
+                    <div style="height: 220px; position: relative;">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- SMART INSIGHTS -->
                 <h2 class="section-title" style="margin-top: 40px;">Smart Insights</h2>
                 <div id="insights-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
-                    <!-- Wird per JS dynamisch mit Karten befüllt -->
                 </div>
 
                 <div class="empty-scroll-space"></div>
