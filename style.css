@@ -93,7 +93,7 @@ input[type="date"].premium-input {
 
 .premium-input::placeholder { color: var(--text-muted); font-weight: 400; }
 .premium-input:focus { outline: none; border-color: var(--brand-orange); background-color: transparent; }
-select.premium-input { appearance: none; -webkit-appearance: none; }
+select.premium-input { appearance: none; -webkit-appearance: none; text-align: center; }
 
 /* --- BUTTONS --- */
 .premium-btn { 
@@ -122,7 +122,7 @@ select.premium-input { appearance: none; -webkit-appearance: none; }
 .chevron-icon { color: var(--text-muted); font-size: 24px; transition: transform 0.3s; font-weight: 300; }
 .card.is-open .chevron-icon { transform: rotate(90deg); }
 
-/* Badge (Last Time) */
+/* Badge */
 .last-perf-badge { display: inline-block; background: var(--brand-orange); color: #fff; padding: 4px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; margin: 12px 0; }
 
 /* Kalender */
@@ -135,9 +135,6 @@ select.premium-input { appearance: none; -webkit-appearance: none; }
 .data-card { padding: 20px; }
 .data-card .card-label { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 .card-main-value { font-size: 32px; font-weight: 800; margin-top: 8px; }
-
-/* Insight Cards */
-.insight-card { background-color: var(--input-bg); border-radius: 16px; padding: 16px; border-left: 4px solid var(--brand-orange); }
 
 .empty-scroll-space { height: 140px; width: 100%; }
 
