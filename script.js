@@ -58,7 +58,7 @@ window.toggleTheme = function() {
     
     window.updateBroChart();
     window.updateWeightChart();
-    window.updateMuscleHeatmap(); // Heatmap Farben müssen sich beim Theme-Wechsel ebenfalls anpassen
+    window.updateMuscleHeatmap(); // Heatmap Farben müssen sich beim Theme-Wechsel anpassen
 };
 
 onAuthStateChanged(auth, (user) => {
@@ -385,7 +385,7 @@ window.updateMuscleHeatmap = function() {
     const colorMed = '#FF9F0A';   // Orange
     const colorHigh = '#FF453A';  // Rot
 
-    // SVG Pfade updaten
+    // Einfärben der SVG Pfade je nach berechnetem Volumen
     document.querySelectorAll('.svg-muscle').forEach(path => {
         const muscleName = path.getAttribute('data-muscle');
         const vol = volumes[muscleName] || 0;
@@ -397,13 +397,12 @@ window.updateMuscleHeatmap = function() {
             else if (pct > 0.33) color = colorMed;
             else color = colorLow;
         }
-        
         path.style.fill = color;
     });
     
-    // Kopf-Farbe anpassen (nur Design)
-    document.querySelectorAll('.svg-head').forEach(head => {
-        head.style.fill = colorEmpty;
+    // Basis-Teile (Kopf etc.) in leerer Farbe halten
+    document.querySelectorAll('.svg-base').forEach(base => {
+        base.style.fill = colorEmpty;
     });
 };
 
