@@ -136,6 +136,19 @@ select.premium-input { appearance: none; -webkit-appearance: none; text-align: c
 .data-card .card-label { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 .card-main-value { font-size: 32px; font-weight: 800; margin-top: 8px; }
 
+/* SVG Muskel Heatmap */
+.svg-muscle {
+    fill: var(--input-bg);
+    stroke: var(--bg-main);
+    stroke-width: 2px;
+    stroke-linejoin: round;
+    transition: fill 0.4s ease;
+}
+.svg-head {
+    fill: var(--input-bg);
+    transition: fill 0.4s ease;
+}
+
 .empty-scroll-space { height: 140px; width: 100%; }
 
 /* --- SCHWEBENDE TAB BAR --- */
