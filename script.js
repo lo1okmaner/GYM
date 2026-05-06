@@ -31,12 +31,11 @@ let editId = null;
 let editTplId = null;
 let myChart = null;
 let myWeightChart = null;
-let muscleChart = null; // Neu für die Heatmap
 let broCalDate = new Date();
 let todayStatus = null;
 
 const BRAND_ORANGE = '#FF5E00';
-const CHART_BG_ORANGE = 'rgba(255, 94, 0, 0.2)';
+const CHART_BG_ORANGE = 'rgba(255, 94, 0, 0.15)';
 
 window.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('dynamic-date');
@@ -59,7 +58,7 @@ window.toggleTheme = function() {
     
     window.updateBroChart();
     window.updateWeightChart();
-    window.updateMuscleHeatmap();
+    window.updateMuscleHeatmap(); // Heatmap Farben müssen sich beim Theme-Wechsel ebenfalls anpassen
 };
 
 onAuthStateChanged(auth, (user) => {
@@ -106,7 +105,7 @@ async function initApp() {
     
     window.renderBroCalendar();
     window.updateWeightChart();
-    window.updateMuscleHeatmap(); // Heatmap beim Start laden
+    window.updateMuscleHeatmap(); 
 }
 
 window.checkMorningStatus = async function() {
@@ -341,7 +340,7 @@ function getMuscleGroup(name) {
     if(n.includes('schulter') || n.includes('shoulder') || n.includes('overhead') || n.includes('seitheben') || n.includes('lateral') || n.includes('military')) return 'Schultern';
     if(n.includes('bizeps') || n.includes('trizeps') || n.includes('curl') || n.includes('arm') || n.includes('extension') || n.includes('pushdown') || n.includes('triceps') || n.includes('biceps')) return 'Arme';
     if(n.includes('bauch') || n.includes('core') || n.includes('situp') || n.includes('crunch') || n.includes('plank')) return 'Bauch';
-    return 'Ganzkörper';
+    return 'Unbekannt';
 }
 
 window.updateMuscleHeatmap = function() {
@@ -350,7 +349,6 @@ window.updateMuscleHeatmap = function() {
     const timeframe = document.getElementById('heatmap-timeframe')?.value || 'last';
     const now = new Date();
     
-    // Workouts nach Zeitraum filtern
     let filteredLogs = [];
     if(timeframe === 'last') {
         filteredLogs = [logs[0]];
@@ -364,7 +362,6 @@ window.updateMuscleHeatmap = function() {
         filteredLogs = logs;
     }
 
-    // Volumen summieren
     const volumes = { 'Brust': 0, 'Rücken': 0, 'Beine': 0, 'Schultern': 0, 'Arme': 0, 'Bauch': 0 };
     
     filteredLogs.forEach(s => {
@@ -380,46 +377,34 @@ window.updateMuscleHeatmap = function() {
         });
     });
 
-    const labels = Object.keys(volumes);
-    const data = Object.values(volumes);
+    const maxVol = Math.max(...Object.values(volumes), 0);
+    
+    const isLight = document.documentElement.classList.contains('light-mode');
+    const colorEmpty = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const colorLow = '#FFD60A';   // Gelb
+    const colorMed = '#FF9F0A';   // Orange
+    const colorHigh = '#FF453A';  // Rot
 
-    if(muscleChart) muscleChart.destroy();
-    const ctx = document.getElementById('muscleRadarChart')?.getContext('2d');
-    if (ctx) {
-        const textColor = document.documentElement.classList.contains('light-mode') ? '#000' : '#8E8E93';
-        const gridColor = document.documentElement.classList.contains('light-mode') ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+    // SVG Pfade updaten
+    document.querySelectorAll('.svg-muscle').forEach(path => {
+        const muscleName = path.getAttribute('data-muscle');
+        const vol = volumes[muscleName] || 0;
         
-        muscleChart = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Volumen (kg)',
-                    data: data,
-                    backgroundColor: CHART_BG_ORANGE,
-                    borderColor: BRAND_ORANGE,
-                    pointBackgroundColor: '#000',
-                    pointBorderColor: BRAND_ORANGE,
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: BRAND_ORANGE,
-                    borderWidth: 2,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        angleLines: { color: gridColor },
-                        grid: { color: gridColor },
-                        pointLabels: { color: textColor, font: { size: 11, weight: 'bold' } },
-                        ticks: { display: false } // Keine Zahlen auf dem Netz
-                    }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
+        let color = colorEmpty;
+        if (maxVol > 0 && vol > 0) {
+            const pct = vol / maxVol;
+            if (pct > 0.66) color = colorHigh;
+            else if (pct > 0.33) color = colorMed;
+            else color = colorLow;
+        }
+        
+        path.style.fill = color;
+    });
+    
+    // Kopf-Farbe anpassen (nur Design)
+    document.querySelectorAll('.svg-head').forEach(head => {
+        head.style.fill = colorEmpty;
+    });
 };
 
 window.updateBroChart = function() {
