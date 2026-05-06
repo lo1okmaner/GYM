@@ -177,10 +177,10 @@
             <!-- === VIEW: STATS, INSIGHTS & KALENDER === -->
             <section id="view-bro" class="view">
                 
-                <!-- NEU: ANATOMISCHE HEATMAP -->
+                <!-- NEU: ANATOMISCHE HEATMAP (High-End Vector Style) -->
                 <h2 class="section-title">Muscle Heatmap</h2>
                 <div class="card">
-                    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 24px;">
                         <select id="heatmap-timeframe" class="premium-input" style="flex: 1; margin: 0; border-radius: 50px; font-weight: 600; text-align: center;" onchange="window.updateMuscleHeatmap()">
                             <option value="last">Letztes Workout</option>
                             <option value="week">Letzte 7 Tage</option>
@@ -190,46 +190,71 @@
                     </div>
                     
                     <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px;">
-                        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">VORDERSEITE</span>
-                        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">RÜCKSEITE</span>
+                        <span style="font-size: 12px; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">VORDERSEITE</span>
+                        <span style="font-size: 12px; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">RÜCKSEITE</span>
                     </div>
 
-                    <!-- SVG Geometrischer Körper (Vorder- und Rückseite) -->
+                    <!-- Hochauflösende SVG Silhouette -->
                     <div style="width: 100%; display: flex; justify-content: center;">
-                        <svg viewBox="0 0 220 150" style="width: 100%; max-width: 350px; height: auto;">
-                            <!-- VORDERSEITE -->
-                            <g>
-                                <circle cx="50" cy="15" r="10" class="svg-head" />
-                                <path d="M 35 28 L 22 35 L 20 50 L 32 42 Z" data-muscle="Schultern" class="svg-muscle"/>
-                                <path d="M 65 28 L 78 35 L 80 50 L 68 42 Z" data-muscle="Schultern" class="svg-muscle"/>
-                                <path d="M 36 30 L 64 30 L 66 45 L 50 50 L 34 45 Z" data-muscle="Brust" class="svg-muscle"/>
-                                <path d="M 35 48 L 50 52 L 65 48 L 60 75 L 40 75 Z" data-muscle="Bauch" class="svg-muscle"/>
-                                <path d="M 18 53 L 12 85 L 22 85 L 28 53 Z" data-muscle="Arme" class="svg-muscle"/>
-                                <path d="M 82 53 L 88 85 L 78 85 L 72 53 Z" data-muscle="Arme" class="svg-muscle"/>
-                                <path d="M 38 78 L 30 135 L 44 135 L 48 78 Z" data-muscle="Beine" class="svg-muscle"/>
-                                <path d="M 62 78 L 70 135 L 56 135 L 52 78 Z" data-muscle="Beine" class="svg-muscle"/>
+                        <svg viewBox="0 0 240 260" style="width: 100%; max-width: 400px; height: auto;">
+                            <!-- ==== VORDERSEITE ==== -->
+                            <g transform="translate(0, 0)">
+                                <!-- Kopf & Hals -->
+                                <path d="M50,10 C62,10 62,35 50,40 C38,35 38,10 50,10 Z" class="svg-base" />
+                                <path d="M44,38 L56,38 L58,45 L42,45 Z" class="svg-base" />
+                                <!-- Schultern -->
+                                <path d="M42,45 C30,45 25,50 20,60 C25,70 30,70 32,60 Z" data-muscle="Schultern" class="svg-muscle" />
+                                <path d="M58,45 C70,45 75,50 80,60 C75,70 70,70 68,60 Z" data-muscle="Schultern" class="svg-muscle" />
+                                <!-- Brust -->
+                                <path d="M32,55 C45,55 48,70 50,70 C52,70 55,55 68,55 C68,75 55,80 50,80 C45,80 32,75 32,55 Z" data-muscle="Brust" class="svg-muscle" />
+                                <!-- Arme (Bizeps/Unterarm) -->
+                                <path d="M20,65 C15,80 12,90 10,105 C15,108 20,105 24,90 C26,80 25,70 20,65 Z" data-muscle="Arme" class="svg-muscle" />
+                                <path d="M80,65 C85,80 88,90 90,105 C85,108 80,105 76,90 C74,80 75,70 80,65 Z" data-muscle="Arme" class="svg-muscle" />
+                                <path d="M10,110 C8,125 5,135 8,140 C12,135 15,125 18,110 Z" class="svg-base" />
+                                <path d="M90,110 C92,125 95,135 92,140 C88,135 85,125 82,110 Z" class="svg-base" />
+                                <!-- Bauch -->
+                                <path d="M35,82 C45,85 55,85 65,82 C62,115 55,125 50,130 C45,125 38,115 35,82 Z" data-muscle="Bauch" class="svg-muscle" />
+                                <!-- Beine (Quads) -->
+                                <path d="M35,135 C42,130 48,130 49,145 C49,175 42,190 40,200 C32,190 28,160 35,135 Z" data-muscle="Beine" class="svg-muscle" />
+                                <path d="M65,135 C58,130 52,130 51,145 C51,175 58,190 60,200 C68,190 72,160 65,135 Z" data-muscle="Beine" class="svg-muscle" />
+                                <!-- Waden (Vorderseite) -->
+                                <path d="M38,205 C42,215 42,235 40,245 C35,245 32,235 34,205 Z" data-muscle="Beine" class="svg-muscle" />
+                                <path d="M62,205 C58,215 58,235 60,245 C65,245 68,235 66,205 Z" data-muscle="Beine" class="svg-muscle" />
                             </g>
-                            <!-- RÜCKSEITE -->
-                            <g>
-                                <circle cx="160" cy="15" r="10" class="svg-head" />
-                                <path d="M 145 28 L 132 35 L 130 50 L 142 42 Z" data-muscle="Schultern" class="svg-muscle"/>
-                                <path d="M 175 28 L 188 35 L 190 50 L 178 42 Z" data-muscle="Schultern" class="svg-muscle"/>
-                                <path d="M 146 30 L 174 30 L 176 55 L 160 68 L 144 55 Z" data-muscle="Rücken" class="svg-muscle"/>
-                                <path d="M 145 58 L 160 70 L 175 58 L 170 75 L 150 75 Z" data-muscle="Beine" class="svg-muscle"/> <!-- Glutes counted to Legs -->
-                                <path d="M 128 53 L 122 85 L 132 85 L 138 53 Z" data-muscle="Arme" class="svg-muscle"/>
-                                <path d="M 192 53 L 198 85 L 188 85 L 182 53 Z" data-muscle="Arme" class="svg-muscle"/>
-                                <path d="M 148 78 L 140 135 L 154 135 L 158 78 Z" data-muscle="Beine" class="svg-muscle"/>
-                                <path d="M 172 78 L 180 135 L 166 135 L 162 78 Z" data-muscle="Beine" class="svg-muscle"/>
+
+                            <!-- ==== RÜCKSEITE ==== -->
+                            <g transform="translate(130, 0)">
+                                <!-- Kopf & Nacken -->
+                                <path d="M50,10 C62,10 62,35 50,40 C38,35 38,10 50,10 Z" class="svg-base" />
+                                <path d="M42,35 C48,45 52,45 58,35 L58,45 L42,45 Z" data-muscle="Rücken" class="svg-muscle" />
+                                <!-- Schultern (Hintere) -->
+                                <path d="M42,45 C30,45 25,50 20,60 C25,70 30,70 32,60 Z" data-muscle="Schultern" class="svg-muscle" />
+                                <path d="M58,45 C70,45 75,50 80,60 C75,70 70,70 68,60 Z" data-muscle="Schultern" class="svg-muscle" />
+                                <!-- Rücken (Lats & Traps) -->
+                                <path d="M32,55 C40,45 60,45 68,55 C70,75 60,95 50,115 C40,95 30,75 32,55 Z" data-muscle="Rücken" class="svg-muscle" />
+                                <!-- Arme (Trizeps) -->
+                                <path d="M20,65 C15,80 12,90 10,105 C15,108 20,105 24,90 C26,80 25,70 20,65 Z" data-muscle="Arme" class="svg-muscle" />
+                                <path d="M80,65 C85,80 88,90 90,105 C85,108 80,105 76,90 C74,80 75,70 80,65 Z" data-muscle="Arme" class="svg-muscle" />
+                                <path d="M10,110 C8,125 5,135 8,140 C12,135 15,125 18,110 Z" class="svg-base" />
+                                <path d="M90,110 C92,125 95,135 92,140 C88,135 85,125 82,110 Z" class="svg-base" />
+                                <!-- Unterer Rücken & Glutes -->
+                                <path d="M38,115 C45,105 55,105 62,115 C68,130 65,145 50,140 C35,145 32,130 38,115 Z" data-muscle="Beine" class="svg-muscle" /> <!-- Glutes zählen zu Beinen -->
+                                <!-- Beine (Hamstrings) -->
+                                <path d="M35,145 C42,140 48,140 49,155 C49,175 45,190 40,200 C32,190 28,160 35,145 Z" data-muscle="Beine" class="svg-muscle" />
+                                <path d="M65,145 C58,140 52,140 51,155 C51,175 55,190 60,200 C68,190 72,160 65,145 Z" data-muscle="Beine" class="svg-muscle" />
+                                <!-- Waden -->
+                                <path d="M38,205 C45,215 45,235 40,245 C32,245 30,225 34,205 Z" data-muscle="Beine" class="svg-muscle" />
+                                <path d="M62,205 C55,215 55,235 60,245 C68,245 70,225 66,205 Z" data-muscle="Beine" class="svg-muscle" />
                             </g>
                         </svg>
                     </div>
 
                     <!-- Legende -->
-                    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 16px; font-size: 11px; font-weight: 600; color: var(--text-muted);">
-                        <div style="display: flex; align-items: center; gap: 4px;"><span style="width:10px; height:10px; border-radius:2px; background:var(--input-bg);"></span> Leer</div>
-                        <div style="display: flex; align-items: center; gap: 4px;"><span style="width:10px; height:10px; border-radius:2px; background:#FFD60A;"></span> Leicht</div>
-                        <div style="display: flex; align-items: center; gap: 4px;"><span style="width:10px; height:10px; border-radius:2px; background:#FF9F0A;"></span> Mittel</div>
-                        <div style="display: flex; align-items: center; gap: 4px;"><span style="width:10px; height:10px; border-radius:2px; background:#FF453A;"></span> Fokus</div>
+                    <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px; font-size: 12px; font-weight: 700; color: var(--text-muted);">
+                        <div style="display: flex; align-items: center; gap: 6px;"><span style="width:12px; height:12px; border-radius:3px; background:var(--input-bg);"></span> Leer</div>
+                        <div style="display: flex; align-items: center; gap: 6px;"><span style="width:12px; height:12px; border-radius:3px; background:#FFD60A;"></span> Leicht</div>
+                        <div style="display: flex; align-items: center; gap: 6px;"><span style="width:12px; height:12px; border-radius:3px; background:#FF9F0A;"></span> Mittel</div>
+                        <div style="display: flex; align-items: center; gap: 6px;"><span style="width:12px; height:12px; border-radius:3px; background:#FF453A;"></span> Fokus</div>
                     </div>
                 </div>
 
