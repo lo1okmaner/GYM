@@ -188,42 +188,79 @@
                     </div>
 
                     <div style="width: 100%; display: flex; justify-content: center;">
-                        <svg viewBox="0 0 300 350" style="width: 100%; max-width: 400px; height: auto;">
+                        <svg viewBox="0 0 320 400" style="width: 100%; max-width: 400px; height: auto;">
                             <g transform="translate(0, 0)">
-                                <path d="M 60 20 Q 75 5 90 20 L 85 45 L 65 45 Z" class="svg-base" />
-                                <path d="M 65 45 L 85 45 L 90 55 L 60 55 Z" class="svg-base" />
-                                <path d="M 60 55 L 90 55 L 110 65 L 40 65 Z" data-muscle="Rücken" class="svg-muscle" />
-                                <path d="M 40 65 Q 20 65 25 95 L 45 100 Z" data-muscle="Schultern" class="svg-muscle" />
-                                <path d="M 110 65 Q 130 65 125 95 L 105 100 Z" data-muscle="Schultern" class="svg-muscle" />
-                                <path d="M 75 65 L 110 65 Q 115 90 105 105 L 75 110 L 45 105 Q 35 90 40 65 Z" data-muscle="Brust" class="svg-muscle" />
-                                <path d="M 50 110 L 100 110 Q 95 160 85 170 L 65 170 Q 55 160 50 110 Z" data-muscle="Bauch" class="svg-muscle" />
-                                <path d="M 25 95 Q 15 120 20 140 L 35 135 Q 40 115 45 100 Z" data-muscle="Bizeps" class="svg-muscle" />
-                                <path d="M 125 95 Q 135 120 130 140 L 115 135 Q 110 115 105 100 Z" data-muscle="Bizeps" class="svg-muscle" />
-                                <path d="M 20 140 Q 10 170 15 185 L 30 180 Q 35 160 35 135 Z" class="svg-base" />
-                                <path d="M 130 140 Q 140 170 135 185 L 120 180 Q 115 160 115 135 Z" class="svg-base" />
-                                <path d="M 55 170 Q 30 200 40 260 L 70 250 Q 75 210 75 170 Z" data-muscle="Quads" class="svg-muscle" />
-                                <path d="M 95 170 Q 120 200 110 260 L 80 250 Q 75 210 75 170 Z" data-muscle="Quads" class="svg-muscle" />
-                                <path d="M 40 260 Q 30 300 45 330 L 65 325 Q 70 280 70 250 Z" data-muscle="Waden" class="svg-muscle" />
-                                <path d="M 110 260 Q 120 300 105 330 L 85 325 Q 80 280 80 250 Z" data-muscle="Waden" class="svg-muscle" />
+                                <path d="M 65 15 C 65 -5, 95 -5, 95 15 C 95 35, 88 45, 80 50 C 72 45, 65 35, 65 15 Z" class="svg-base" />
+                                <path d="M 72 48 L 88 48 L 92 65 L 68 65 Z" class="svg-base" />
+                                
+                                <path d="M 45 75 C 30 75, 20 95, 25 115 C 30 110, 40 100, 48 95 Z" data-muscle="Schultern" class="svg-muscle" />
+                                <path d="M 115 75 C 130 75, 140 95, 135 115 C 130 110, 120 100, 112 95 Z" data-muscle="Schultern" class="svg-muscle" />
+                                
+                                <path d="M 78 65 L 45 75 C 45 100, 55 115, 78 115 Z" data-muscle="Brust" class="svg-muscle" />
+                                <path d="M 82 65 L 115 75 C 115 100, 105 115, 82 115 Z" data-muscle="Brust" class="svg-muscle" />
+
+                                <path d="M 65 120 L 78 120 L 78 140 L 63 140 Z" data-muscle="Bauch" class="svg-muscle" />
+                                <path d="M 82 120 L 95 120 L 97 140 L 82 140 Z" data-muscle="Bauch" class="svg-muscle" />
+                                <path d="M 62 145 L 78 145 L 78 165 L 60 165 Z" data-muscle="Bauch" class="svg-muscle" />
+                                <path d="M 82 145 L 98 145 L 100 165 L 82 165 Z" data-muscle="Bauch" class="svg-muscle" />
+                                <path d="M 58 170 L 78 170 L 78 200 C 70 200, 60 190, 55 180 Z" data-muscle="Bauch" class="svg-muscle" />
+                                <path d="M 82 170 L 102 170 L 105 180 C 100 190, 90 200, 82 200 Z" data-muscle="Bauch" class="svg-muscle" />
+
+                                <path d="M 58 120 C 50 140, 50 160, 52 180 C 55 180, 58 160, 60 120 Z" data-muscle="Bauch" class="svg-muscle" />
+                                <path d="M 102 120 C 110 140, 110 160, 108 180 C 105 180, 102 160, 100 120 Z" data-muscle="Bauch" class="svg-muscle" />
+
+                                <path d="M 28 120 C 20 135, 18 150, 25 165 C 32 150, 38 135, 45 120 Z" data-muscle="Bizeps" class="svg-muscle" />
+                                <path d="M 132 120 C 140 135, 142 150, 135 165 C 128 150, 122 135, 115 120 Z" data-muscle="Bizeps" class="svg-muscle" />
+
+                                <path d="M 25 170 C 10 190, 5 210, 15 220 C 25 210, 30 190, 35 170 Z" class="svg-base" />
+                                <path d="M 135 170 C 150 190, 155 210, 145 220 C 135 210, 130 190, 125 170 Z" class="svg-base" />
+                                <path d="M 15 225 C 5 235, 5 255, 15 260 C 25 255, 25 235, 20 225 Z" class="svg-base" />
+                                <path d="M 145 225 C 155 235, 155 255, 145 260 C 135 255, 135 235, 140 225 Z" class="svg-base" />
+
+                                <path d="M 45 205 C 30 230, 35 280, 48 300 C 55 280, 65 240, 75 210 Z" data-muscle="Quads" class="svg-muscle" />
+                                <path d="M 115 205 C 130 230, 125 280, 112 300 C 105 280, 95 240, 85 210 Z" data-muscle="Quads" class="svg-muscle" />
+                                <path d="M 77 215 C 68 250, 55 280, 52 300 L 70 290 Z" data-muscle="Quads" class="svg-muscle" />
+                                <path d="M 83 215 C 92 250, 105 280, 108 300 L 90 290 Z" data-muscle="Quads" class="svg-muscle" />
+
+                                <path d="M 50 305 C 45 320, 65 320, 65 305 Z" class="svg-base" />
+                                <path d="M 110 305 C 115 320, 95 320, 95 305 Z" class="svg-base" />
+
+                                <path d="M 52 325 C 40 350, 45 380, 55 390 C 65 370, 70 340, 65 325 Z" data-muscle="Waden" class="svg-muscle" />
+                                <path d="M 108 325 C 120 350, 115 380, 105 390 C 95 370, 90 340, 95 325 Z" data-muscle="Waden" class="svg-muscle" />
                             </g>
 
-                            <g transform="translate(0, 0)">
-                                <path d="M 210 20 Q 225 5 240 20 L 235 45 L 215 45 Z" class="svg-base" />
-                                <path d="M 215 45 L 235 45 L 250 65 L 200 65 Z" data-muscle="Rücken" class="svg-muscle" />
-                                <path d="M 200 65 Q 180 65 185 95 L 205 100 Z" data-muscle="Schultern" class="svg-muscle" />
-                                <path d="M 250 65 Q 270 65 265 95 L 245 100 Z" data-muscle="Schultern" class="svg-muscle" />
-                                <path d="M 225 65 L 250 65 Q 265 90 245 120 L 225 130 L 205 120 Q 185 90 200 65 Z" data-muscle="Rücken" class="svg-muscle" />
-                                <path d="M 205 120 L 245 120 L 235 155 L 215 155 Z" data-muscle="Rücken" class="svg-muscle" />
-                                <path d="M 185 95 Q 170 120 175 145 L 195 140 Q 200 115 205 100 Z" data-muscle="Trizeps" class="svg-muscle" />
-                                <path d="M 265 95 Q 280 120 275 145 L 255 140 Q 250 115 245 100 Z" data-muscle="Trizeps" class="svg-muscle" />
-                                <path d="M 175 145 Q 160 175 165 190 L 185 185 Q 190 160 195 140 Z" class="svg-base" />
-                                <path d="M 275 145 Q 290 175 285 190 L 265 185 Q 260 160 255 140 Z" class="svg-base" />
-                                <path d="M 215 155 Q 190 170 200 195 L 225 195 Z" data-muscle="Glutes" class="svg-muscle" />
-                                <path d="M 235 155 Q 260 170 250 195 L 225 195 Z" data-muscle="Glutes" class="svg-muscle" />
-                                <path d="M 200 195 Q 185 220 195 260 L 220 250 Q 225 220 225 195 Z" data-muscle="Hamstrings" class="svg-muscle" />
-                                <path d="M 250 195 Q 265 220 255 260 L 230 250 Q 225 220 225 195 Z" data-muscle="Hamstrings" class="svg-muscle" />
-                                <path d="M 195 260 Q 170 290 195 330 L 215 325 Q 220 280 220 250 Z" data-muscle="Waden" class="svg-muscle" />
-                                <path d="M 255 260 Q 280 290 255 330 L 235 325 Q 230 280 230 250 Z" data-muscle="Waden" class="svg-muscle" />
+                            <g transform="translate(160, 0)">
+                                <path d="M 65 15 C 65 -5, 95 -5, 95 15 C 95 35, 88 45, 80 50 C 72 45, 65 35, 65 15 Z" class="svg-base" />
+                                
+                                <path d="M 80 50 L 55 75 L 80 140 L 105 75 Z" data-muscle="Rücken" class="svg-muscle" />
+
+                                <path d="M 50 75 C 35 75, 25 95, 30 115 C 35 110, 45 100, 50 95 Z" data-muscle="Schultern" class="svg-muscle" />
+                                <path d="M 110 75 C 125 75, 135 95, 130 115 C 125 110, 115 100, 110 95 Z" data-muscle="Schultern" class="svg-muscle" />
+
+                                <path d="M 52 80 C 40 100, 45 130, 60 160 L 78 145 Z" data-muscle="Rücken" class="svg-muscle" />
+                                <path d="M 108 80 C 120 100, 115 130, 100 160 L 82 145 Z" data-muscle="Rücken" class="svg-muscle" />
+
+                                <path d="M 78 150 L 65 190 L 80 200 L 95 190 L 82 150 Z" data-muscle="Rücken" class="svg-muscle" />
+
+                                <path d="M 32 120 C 25 135, 20 155, 30 170 C 35 150, 40 140, 45 125 Z" data-muscle="Trizeps" class="svg-muscle" />
+                                <path d="M 128 120 C 135 135, 140 155, 130 170 C 125 150, 120 140, 115 125 Z" data-muscle="Trizeps" class="svg-muscle" />
+
+                                <path d="M 30 175 C 15 195, 10 215, 20 225 C 30 215, 35 195, 40 175 Z" class="svg-base" />
+                                <path d="M 130 175 C 145 195, 150 215, 140 225 C 130 215, 125 195, 120 175 Z" class="svg-base" />
+                                <path d="M 20 230 C 10 240, 10 260, 20 265 C 30 260, 30 240, 25 230 Z" class="svg-base" />
+                                <path d="M 140 230 C 150 240, 150 260, 140 265 C 130 260, 130 240, 135 230 Z" class="svg-base" />
+
+                                <path d="M 60 195 C 40 200, 40 230, 55 245 C 70 245, 75 220, 78 200 Z" data-muscle="Glutes" class="svg-muscle" />
+                                <path d="M 100 195 C 120 200, 120 230, 105 245 C 90 245, 85 220, 82 200 Z" data-muscle="Glutes" class="svg-muscle" />
+
+                                <path d="M 55 250 C 40 270, 45 300, 52 315 C 65 300, 70 270, 75 245 Z" data-muscle="Hamstrings" class="svg-muscle" />
+                                <path d="M 105 250 C 120 270, 115 300, 108 315 C 95 300, 90 270, 85 245 Z" data-muscle="Hamstrings" class="svg-muscle" />
+
+                                <path d="M 55 320 C 50 330, 65 330, 65 320 Z" class="svg-base" />
+                                <path d="M 105 320 C 110 330, 95 330, 95 320 Z" class="svg-base" />
+
+                                <path d="M 52 330 C 35 350, 45 385, 55 395 C 65 375, 70 345, 65 330 Z" data-muscle="Waden" class="svg-muscle" />
+                                <path d="M 108 330 C 125 350, 115 385, 105 395 C 95 375, 90 345, 95 330 Z" data-muscle="Waden" class="svg-muscle" />
                             </g>
                         </svg>
                     </div>
