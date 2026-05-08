@@ -140,14 +140,14 @@ select.premium-input { appearance: none; -webkit-appearance: none; text-align: c
 .svg-muscle {
     fill: var(--input-bg);
     stroke: var(--bg-main);
-    stroke-width: 2px; /* Dickerer Stroke für den Armor-Look */
+    stroke-width: 2.5px; /* Dickerer Stroke für den Segment-Look */
     stroke-linejoin: round;
     transition: fill 0.5s ease;
 }
 .svg-base {
     fill: var(--input-bg);
     stroke: var(--bg-main);
-    stroke-width: 2px;
+    stroke-width: 2.5px;
     stroke-linejoin: round;
     transition: fill 0.5s ease;
 }
