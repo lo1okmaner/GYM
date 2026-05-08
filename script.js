@@ -1,7 +1,8 @@
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } 
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, sendPasswordResetEmail } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -20,7 +21,7 @@ setPersistence(auth, browserLocalPersistence);
 
 window.db = db; window.auth = auth;
 window.fs = { collection, addDoc, getDocs, query, orderBy, where, deleteDoc, doc, updateDoc, setDoc };
-window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword };
+window.authFuncs = { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail };
 
 let logs = [];
 let allSessionsRaw = []; 
@@ -58,7 +59,7 @@ window.toggleTheme = function() {
     
     window.updateBroChart();
     window.updateWeightChart();
-    window.updateMuscleHeatmap(); // Heatmap Farben müssen sich beim Theme-Wechsel anpassen
+    window.updateMuscleHeatmap();
 };
 
 onAuthStateChanged(auth, (user) => {
@@ -72,16 +73,49 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// --- NEU & VERBESSERT: Login Error Handling ---
 window.handleLogin = async function() {
-    try { await window.authFuncs.signInWithEmailAndPassword(window.auth, document.getElementById('email').value.trim(), document.getElementById('pass').value); }
-    catch(e) { alert("Fehler: " + e.message); }
-};
-window.handleRegister = async function() {
-    if(confirm("Konto erstellen?")) {
-        try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, document.getElementById('email').value.trim(), document.getElementById('pass').value); }
-        catch(e) { alert("Fehler: " + e.message); }
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('pass').value;
+    if(!email || !pass) return alert("Bitte E-Mail und Passwort eingeben!");
+    
+    try { 
+        await window.authFuncs.signInWithEmailAndPassword(window.auth, email, pass); 
+    } catch(e) { 
+        if(e.code === 'auth/invalid-credential' || e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
+            alert("Falsche E-Mail oder falsches Passwort.");
+        } else if (e.code === 'auth/invalid-email') {
+            alert("Die eingegebene E-Mail-Adresse ist ungültig.");
+        } else {
+            alert("Login fehlgeschlagen: " + e.message); 
+        }
     }
 };
+
+window.handleRegister = async function() {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('pass').value;
+    if(!email || !pass) return alert("Bitte E-Mail und Passwort eingeben!");
+    
+    if(confirm("Neues Konto erstellen?")) {
+        try { await window.authFuncs.createUserWithEmailAndPassword(window.auth, email, pass); }
+        catch(e) { alert("Fehler beim Registrieren: " + e.message); }
+    }
+};
+
+// --- NEU: Passwort Vergessen Funktion ---
+window.handleResetPassword = async function() {
+    const email = document.getElementById('email').value.trim();
+    if(!email) return alert("Bitte gib oben deine E-Mail-Adresse ein, um das Passwort zurückzusetzen.");
+    
+    try {
+        await window.authFuncs.sendPasswordResetEmail(window.auth, email);
+        alert(`Ein Link zum Zurücksetzen des Passworts wurde an ${email} gesendet!`);
+    } catch(e) {
+        alert("Fehler beim Zurücksetzen: " + e.message);
+    }
+};
+
 window.handleLogout = function() { if(confirm("Wirklich abmelden?")) window.authFuncs.signOut(window.auth); };
 
 async function initApp() {
@@ -298,15 +332,46 @@ function renderHistory() {
         h.appendChild(item);
     });
 }
-window.loadEdit = function(id) {
-    const s = logs.find(l => l.id === id); editId = id; document.getElementById('session-date').value = s.date; document.getElementById('session-name').value = s.title;
-    document.getElementById('tracking-exercises').innerHTML = ""; s.exercises.forEach(ex => window.addTrackingExercise(ex.name, ex.sets));
-    document.getElementById('form-title').innerText = "Bearbeiten"; document.getElementById('edit-controls').style.display = "block";
-    document.querySelector('.app-content').scrollTo({top: 0, behavior: 'smooth'});
-};
-window.resetForm = function() { editId = null; document.getElementById('session-date').value = new Date().toISOString().split('T')[0]; document.getElementById('session-name').value = ""; document.getElementById('tracking-exercises').innerHTML = ""; document.getElementById('form-title').innerText = "Workout Loggen"; document.getElementById('edit-controls').style.display = "none"; };
 
-// --- KALENDER ---
+// --- NEU & VERBESSERT: Automatischer Tab-Wechsel beim Editieren ---
+window.loadEdit = function(id) {
+    const s = logs.find(l => l.id === id); 
+    editId = id; 
+    document.getElementById('session-date').value = s.date; 
+    document.getElementById('session-name').value = s.title;
+    
+    // Alte Übungen ins Formular laden
+    document.getElementById('tracking-exercises').innerHTML = ""; 
+    s.exercises.forEach(ex => window.addTrackingExercise(ex.name, ex.sets));
+    
+    // Check-In Werte aus dem alten Workout laden
+    if(s.checkIn) {
+        document.getElementById('checkin-energy').value = s.checkIn.energy || "";
+        document.getElementById('checkin-soreness').value = s.checkIn.soreness || "";
+    } else {
+        document.getElementById('checkin-energy').value = "";
+        document.getElementById('checkin-soreness').value = "";
+    }
+
+    document.getElementById('form-title').innerText = "Workout Bearbeiten"; 
+    document.getElementById('edit-controls').style.display = "block";
+    
+    // WICHTIG: Zum Training-Tab springen, damit man das Formular auch sieht!
+    const trainingTabBtn = document.querySelector('.tab-item[data-target="view-training"]');
+    window.switchTab('training', trainingTabBtn);
+};
+
+window.resetForm = function() { 
+    editId = null; 
+    document.getElementById('session-date').value = new Date().toISOString().split('T')[0]; 
+    document.getElementById('session-name').value = ""; 
+    document.getElementById('tracking-exercises').innerHTML = ""; 
+    document.getElementById('checkin-energy').value = "";
+    document.getElementById('checkin-soreness').value = "";
+    document.getElementById('form-title').innerText = "Workout Loggen"; 
+    document.getElementById('edit-controls').style.display = "none"; 
+};
+
 window.changeBroMonth = function(v) { broCalDate.setMonth(broCalDate.getMonth() + v); window.renderBroCalendar(); };
 window.renderBroCalendar = function() {
     const grid = document.getElementById('bro-calendar-days'); if (!grid) return; grid.innerHTML = "";
@@ -331,7 +396,6 @@ window.renderBroCalendar = function() {
     }
 };
 
-// --- MUSCLE HEATMAP BERECHNUNG MIT ROBUSTEM REGEX ---
 function getMuscleGroup(name) {
     const n = name.toLowerCase();
 
@@ -373,14 +437,12 @@ window.updateMuscleHeatmap = function() {
         filteredLogs = logs;
     }
 
-    // Wir zählen jetzt ARBEITSSÄTZE statt Kilos
     const setsCount = { 'Brust': 0, 'Rücken': 0, 'Quads': 0, 'Hamstrings': 0, 'Glutes': 0, 'Waden': 0, 'Schultern': 0, 'Bizeps': 0, 'Trizeps': 0, 'Bauch': 0 };
     
     filteredLogs.forEach(s => {
         s.exercises.forEach(ex => {
             const group = getMuscleGroup(ex.name);
             let validSets = 0;
-            // Zähle nur Sätze, bei denen auch wirklich was gemacht wurde (Gewicht/Reps > 0)
             ex.sets.forEach(set => {
                 const w = parseFloat(set.kg) || 0;
                 const r = parseFloat(set.reps) || 0;
@@ -390,21 +452,17 @@ window.updateMuscleHeatmap = function() {
         });
     });
 
-    // Dynamische Schwellenwerte je nach Zeitraum (Wie viele Sätze sind "viel"?)
     let thresholdLow, thresholdMed, thresholdHigh;
     
     if (timeframe === 'last') {
-        // Für ein einzelnes Workout
-        thresholdLow = 1;   // ab 1 Satz
-        thresholdMed = 4;   // ab 4 Sätzen
-        thresholdHigh = 7;  // ab 7 Sätzen (Fokus-Muskel des Tages)
+        thresholdLow = 1;   
+        thresholdMed = 4;   
+        thresholdHigh = 7;  
     } else if (timeframe === 'week') {
-        // Für eine Woche (Wissenschaftliches Hypertrophie-Optimum liegt bei ~10-20 Sätzen/Woche)
-        thresholdLow = 1;   // ab 1 Satz
-        thresholdMed = 8;   // ab 8 Sätzen
-        thresholdHigh = 14; // ab 14 Sätzen
+        thresholdLow = 1;   
+        thresholdMed = 8;   
+        thresholdHigh = 14; 
     } else {
-        // Für Monat / All-Time (passt sich an das absolute Maximum des Nutzers an)
         const maxSets = Math.max(...Object.values(setsCount), 1);
         thresholdLow = maxSets * 0.2;
         thresholdMed = maxSets * 0.5;
@@ -417,7 +475,6 @@ window.updateMuscleHeatmap = function() {
     const colorMed = '#FF9F0A';   // Orange
     const colorHigh = '#FF453A';  // Rot
 
-    // Einfärben der SVG Pfade je nach erreichten Arbeitssätzen
     document.querySelectorAll('.svg-muscle').forEach(path => {
         const muscleName = path.getAttribute('data-muscle');
         const sets = setsCount[muscleName] || 0;
@@ -430,7 +487,6 @@ window.updateMuscleHeatmap = function() {
         path.style.fill = color;
     });
     
-    // Basis-Teile in leerer Farbe halten
     document.querySelectorAll('.svg-base').forEach(base => {
         base.style.fill = colorEmpty;
     });
