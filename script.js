@@ -373,42 +373,60 @@ window.updateMuscleHeatmap = function() {
         filteredLogs = logs;
     }
 
-    const volumes = { 'Brust': 0, 'Rücken': 0, 'Quads': 0, 'Hamstrings': 0, 'Glutes': 0, 'Waden': 0, 'Schultern': 0, 'Bizeps': 0, 'Trizeps': 0, 'Bauch': 0 };
+    // Wir zählen jetzt ARBEITSSÄTZE statt Kilos
+    const setsCount = { 'Brust': 0, 'Rücken': 0, 'Quads': 0, 'Hamstrings': 0, 'Glutes': 0, 'Waden': 0, 'Schultern': 0, 'Bizeps': 0, 'Trizeps': 0, 'Bauch': 0 };
     
     filteredLogs.forEach(s => {
         s.exercises.forEach(ex => {
             const group = getMuscleGroup(ex.name);
-            let vol = 0;
+            let validSets = 0;
+            // Zähle nur Sätze, bei denen auch wirklich was gemacht wurde (Gewicht/Reps > 0)
             ex.sets.forEach(set => {
                 const w = parseFloat(set.kg) || 0;
                 const r = parseFloat(set.reps) || 0;
-                vol += (w * r);
+                if(r > 0) validSets++; 
             });
-            if(volumes[group] !== undefined) volumes[group] += vol;
+            if(setsCount[group] !== undefined) setsCount[group] += validSets;
         });
     });
 
-    const maxVol = Math.max(...Object.values(volumes), 0);
+    // Dynamische Schwellenwerte je nach Zeitraum (Wie viele Sätze sind "viel"?)
+    let thresholdLow, thresholdMed, thresholdHigh;
     
-    // Farben wie im Bild: Hellgrau (Empty), Gelb (Low), Orange (Med), Rot (High)
+    if (timeframe === 'last') {
+        // Für ein einzelnes Workout
+        thresholdLow = 1;   // ab 1 Satz
+        thresholdMed = 4;   // ab 4 Sätzen
+        thresholdHigh = 7;  // ab 7 Sätzen (Fokus-Muskel des Tages)
+    } else if (timeframe === 'week') {
+        // Für eine Woche (Wissenschaftliches Hypertrophie-Optimum liegt bei ~10-20 Sätzen/Woche)
+        thresholdLow = 1;   // ab 1 Satz
+        thresholdMed = 8;   // ab 8 Sätzen
+        thresholdHigh = 14; // ab 14 Sätzen
+    } else {
+        // Für Monat / All-Time (passt sich an das absolute Maximum des Nutzers an)
+        const maxSets = Math.max(...Object.values(setsCount), 1);
+        thresholdLow = maxSets * 0.2;
+        thresholdMed = maxSets * 0.5;
+        thresholdHigh = maxSets * 0.8;
+    }
+
     const isLight = document.documentElement.classList.contains('light-mode');
     const colorEmpty = isLight ? '#E5E5EA' : '#2C2C2E';
     const colorLow = '#FFD60A';   // Gelb
     const colorMed = '#FF9F0A';   // Orange
     const colorHigh = '#FF453A';  // Rot
 
-    // Einfärben der SVG Pfade
+    // Einfärben der SVG Pfade je nach erreichten Arbeitssätzen
     document.querySelectorAll('.svg-muscle').forEach(path => {
         const muscleName = path.getAttribute('data-muscle');
-        const vol = volumes[muscleName] || 0;
+        const sets = setsCount[muscleName] || 0;
         
         let color = colorEmpty;
-        if (maxVol > 0 && vol > 0) {
-            const pct = vol / maxVol;
-            if (pct > 0.66) color = colorHigh;
-            else if (pct > 0.33) color = colorMed;
-            else color = colorLow;
-        }
+        if (sets >= thresholdHigh) color = colorHigh;
+        else if (sets >= thresholdMed) color = colorMed;
+        else if (sets >= thresholdLow) color = colorLow;
+        
         path.style.fill = color;
     });
     
