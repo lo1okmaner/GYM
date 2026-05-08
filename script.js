@@ -334,12 +334,27 @@ window.renderBroCalendar = function() {
 // --- MUSCLE HEATMAP BERECHNUNG ---
 function getMuscleGroup(name) {
     const n = name.toLowerCase();
-    if(n.includes('bank') || n.includes('bench') || n.includes('brust') || n.includes('fly') || n.includes('push') || n.includes('dips')) return 'Brust';
-    if(n.includes('klimm') || n.includes('pull') || n.includes('row') || n.includes('ruder') || n.includes('lat') || n.includes('rücken') || n.includes('deadlift') || n.includes('kreuz')) return 'Rücken';
-    if(n.includes('knie') || n.includes('squat') || n.includes('bein') || n.includes('leg') || n.includes('wade') || n.includes('calf') || n.includes('lunge') || n.includes('press')) return 'Beine';
-    if(n.includes('schulter') || n.includes('shoulder') || n.includes('overhead') || n.includes('seitheben') || n.includes('lateral') || n.includes('military')) return 'Schultern';
-    if(n.includes('bizeps') || n.includes('trizeps') || n.includes('curl') || n.includes('arm') || n.includes('extension') || n.includes('pushdown') || n.includes('triceps') || n.includes('biceps')) return 'Arme';
-    if(n.includes('bauch') || n.includes('core') || n.includes('situp') || n.includes('crunch') || n.includes('plank')) return 'Bauch';
+
+    // 1. BEINE (SPLIT)
+    if(n.includes('beuger') || (n.includes('curl') && (n.includes('bein') || n.includes('leg'))) || n.includes('hamstring') || n.includes('romanian') || n.includes('rdl') || n.includes('gestreckt')) return 'Hamstrings';
+    if(n.includes('strecker') || n.includes('quad') || n.includes('front squat') || n.includes('sissy') || n.includes('hack')) return 'Quads';
+    if(n.includes('wade') || n.includes('calf') || n.includes('calves')) {
+        if(!n.includes('seit') && !n.includes('front') && !n.includes('kreuz')) return 'Waden';
+    }
+    if(n.includes('hip thrust') || n.includes('glute') || n.includes('po') || n.includes('bridge') || n.includes('kickback')) return 'Glutes';
+    // Allgemein Bein -> Default zu Quads (z.B. Beinpresse, Kniebeuge)
+    if(n.includes('knie') || n.includes('squat') || n.includes('bein') || n.includes('leg') || n.includes('lunge') || n.includes('press') && (n.includes('bein') || n.includes('leg'))) return 'Quads';
+
+    // 2. ARME (SPLIT)
+    if(n.includes('trizeps') || n.includes('triceps') || n.includes('pushdown') || n.includes('dips') || n.includes('french') || n.includes('skull')) return 'Trizeps';
+    if(n.includes('bizeps') || n.includes('biceps') || n.includes('curl')) return 'Bizeps';
+
+    // 3. OBERKÖRPER (REST)
+    if(n.includes('bank') || n.includes('bench') || n.includes('brust') || n.includes('fly') || n.includes('push') || n.includes('chest') || n.includes('cable cross')) return 'Brust';
+    if(n.includes('klimm') || n.includes('pull') || n.includes('row') || n.includes('ruder') || n.includes('lat') || n.includes('rücken') || n.includes('deadlift') || n.includes('kreuz') || n.includes('back')) return 'Rücken';
+    if(n.includes('schulter') || n.includes('shoulder') || n.includes('overhead') || n.includes('seitheben') || n.includes('lateral') || n.includes('military') || n.includes('frontheben') || n.includes('delt')) return 'Schultern';
+    if(n.includes('bauch') || n.includes('core') || n.includes('situp') || n.includes('crunch') || n.includes('plank') || n.includes('ab') || n.includes('leg raise')) return 'Bauch';
+
     return 'Unbekannt';
 }
 
@@ -362,7 +377,8 @@ window.updateMuscleHeatmap = function() {
         filteredLogs = logs;
     }
 
-    const volumes = { 'Brust': 0, 'Rücken': 0, 'Beine': 0, 'Schultern': 0, 'Arme': 0, 'Bauch': 0 };
+    // Neue, spezifischere Volumen-Objekte
+    const volumes = { 'Brust': 0, 'Rücken': 0, 'Quads': 0, 'Hamstrings': 0, 'Glutes': 0, 'Waden': 0, 'Schultern': 0, 'Bizeps': 0, 'Trizeps': 0, 'Bauch': 0 };
     
     filteredLogs.forEach(s => {
         s.exercises.forEach(ex => {
@@ -400,7 +416,7 @@ window.updateMuscleHeatmap = function() {
         path.style.fill = color;
     });
     
-    // Basis-Teile (Kopf etc.) in leerer Farbe halten
+    // Basis-Teile (Kopf, Nacken, Unterarme) in leerer Farbe halten
     document.querySelectorAll('.svg-base').forEach(base => {
         base.style.fill = colorEmpty;
     });
