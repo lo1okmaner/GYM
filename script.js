@@ -331,29 +331,25 @@ window.renderBroCalendar = function() {
     }
 };
 
-// --- MUSCLE HEATMAP BERECHNUNG ---
+// --- MUSCLE HEATMAP BERECHNUNG MIT ROBUSTEM REGEX ---
 function getMuscleGroup(name) {
     const n = name.toLowerCase();
 
-    // 1. BEINE (SPLIT)
-    if(n.includes('beuger') || (n.includes('curl') && (n.includes('bein') || n.includes('leg'))) || n.includes('hamstring') || n.includes('romanian') || n.includes('rdl') || n.includes('gestreckt')) return 'Hamstrings';
-    if(n.includes('strecker') || n.includes('quad') || n.includes('front squat') || n.includes('sissy') || n.includes('hack')) return 'Quads';
-    if(n.includes('wade') || n.includes('calf') || n.includes('calves')) {
-        if(!n.includes('seit') && !n.includes('front') && !n.includes('kreuz')) return 'Waden';
-    }
-    if(n.includes('hip thrust') || n.includes('glute') || n.includes('po') || n.includes('bridge') || n.includes('kickback')) return 'Glutes';
-    // Allgemein Bein -> Default zu Quads (z.B. Beinpresse, Kniebeuge)
-    if(n.includes('knie') || n.includes('squat') || n.includes('bein') || n.includes('leg') || n.includes('lunge') || n.includes('press') && (n.includes('bein') || n.includes('leg'))) return 'Quads';
+    // 1. BEINE
+    if (/(beuger|leg curl|hamstring|romanian|rdl|gestreckt)/.test(n)) return 'Hamstrings';
+    if (/(strecker|quad|front squat|sissy|hack|beinpresse|leg press|kniebeuge|squat|lunge|ausfall)/.test(n)) return 'Quads';
+    if (/(wade|calf|calves)/.test(n)) return 'Waden';
+    if (/(hip thrust|glute|po|bridge|kickback)/.test(n) && !n.includes('trizeps') && !n.includes('triceps')) return 'Glutes';
 
-    // 2. ARME (SPLIT)
-    if(n.includes('trizeps') || n.includes('triceps') || n.includes('pushdown') || n.includes('dips') || n.includes('french') || n.includes('skull')) return 'Trizeps';
-    if(n.includes('bizeps') || n.includes('biceps') || n.includes('curl')) return 'Bizeps';
+    // 2. ARME
+    if (/(trizeps|triceps|pushdown|dips|french|skull|kickback)/.test(n) && !n.includes('glute')) return 'Trizeps';
+    if (/(bizeps|biceps|curl|preacher|sz)/.test(n) && !n.includes('leg')) return 'Bizeps';
 
-    // 3. OBERKÖRPER (REST)
-    if(n.includes('bank') || n.includes('bench') || n.includes('brust') || n.includes('fly') || n.includes('push') || n.includes('chest') || n.includes('cable cross')) return 'Brust';
-    if(n.includes('klimm') || n.includes('pull') || n.includes('row') || n.includes('ruder') || n.includes('lat') || n.includes('rücken') || n.includes('deadlift') || n.includes('kreuz') || n.includes('back')) return 'Rücken';
-    if(n.includes('schulter') || n.includes('shoulder') || n.includes('overhead') || n.includes('seitheben') || n.includes('lateral') || n.includes('military') || n.includes('frontheben') || n.includes('delt')) return 'Schultern';
-    if(n.includes('bauch') || n.includes('core') || n.includes('situp') || n.includes('crunch') || n.includes('plank') || n.includes('ab') || n.includes('leg raise')) return 'Bauch';
+    // 3. OBERKÖRPER
+    if (/(bank|bench|brust|chest|fly|push|cable cross|butterfly)/.test(n) && !n.includes('pushdown')) return 'Brust';
+    if (/(lat|pull|row|ruder|rücken|back|deadlift|kreuzheben|klimmzug)/.test(n) && !n.includes('face')) return 'Rücken';
+    if (/(schulter|shoulder|overhead|seitheben|lateral|military|frontheben|delt|face pull)/.test(n)) return 'Schultern';
+    if (/(bauch|core|situp|crunch|plank|ab|leg raise)/.test(n)) return 'Bauch';
 
     return 'Unbekannt';
 }
@@ -377,7 +373,6 @@ window.updateMuscleHeatmap = function() {
         filteredLogs = logs;
     }
 
-    // Neue, spezifischere Volumen-Objekte
     const volumes = { 'Brust': 0, 'Rücken': 0, 'Quads': 0, 'Hamstrings': 0, 'Glutes': 0, 'Waden': 0, 'Schultern': 0, 'Bizeps': 0, 'Trizeps': 0, 'Bauch': 0 };
     
     filteredLogs.forEach(s => {
@@ -395,13 +390,14 @@ window.updateMuscleHeatmap = function() {
 
     const maxVol = Math.max(...Object.values(volumes), 0);
     
+    // Farben wie im Bild: Hellgrau (Empty), Gelb (Low), Orange (Med), Rot (High)
     const isLight = document.documentElement.classList.contains('light-mode');
-    const colorEmpty = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    const colorEmpty = isLight ? '#E5E5EA' : '#2C2C2E';
     const colorLow = '#FFD60A';   // Gelb
     const colorMed = '#FF9F0A';   // Orange
     const colorHigh = '#FF453A';  // Rot
 
-    // Einfärben der SVG Pfade je nach berechnetem Volumen
+    // Einfärben der SVG Pfade
     document.querySelectorAll('.svg-muscle').forEach(path => {
         const muscleName = path.getAttribute('data-muscle');
         const vol = volumes[muscleName] || 0;
@@ -416,7 +412,7 @@ window.updateMuscleHeatmap = function() {
         path.style.fill = color;
     });
     
-    // Basis-Teile (Kopf, Nacken, Unterarme) in leerer Farbe halten
+    // Basis-Teile in leerer Farbe halten
     document.querySelectorAll('.svg-base').forEach(base => {
         base.style.fill = colorEmpty;
     });
