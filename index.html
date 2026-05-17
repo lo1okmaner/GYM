@@ -45,6 +45,10 @@
             <section id="view-home" class="view active">
 
                 <h2 class="section-title">Tagesstatus & Check-In</h2>
+                
+                <!-- NEU: Trainingsplan Hinweis -->
+                <div id="plan-hint" style="display: none; padding: 12px 16px; background: rgba(255, 94, 0, 0.1); border-left: 4px solid var(--brand-orange); border-radius: 8px; margin-bottom: 16px; font-size: 15px; font-weight: 600; color: var(--brand-orange);"></div>
+                
                 <div id="card-morning-checkin" class="card">
                     <p style="margin-bottom: 20px; color: var(--text-muted); font-size: 15px;">Tracke deine morgendlichen Werte:</p>
                     
@@ -326,6 +330,10 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- NEU: Trainingsplan Editor -->
+                <h2 class="section-title" style="margin-top: 32px;">Trainingsplan</h2>
+                <div id="training-plan-editor" class="card"></div>
                 
                 <button onclick="window.handleLogout()" class="premium-btn btn-outline" style="width: 100%; margin-top: 16px; color: #FF453A; border-color: rgba(255, 69, 58, 0.3);">Konto abmelden</button>
 
@@ -337,23 +345,25 @@
         <nav class="tab-bar">
             <ul class="tab-list">
                 <li class="tab-item active" data-target="view-home" data-title="Übersicht">
-                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"/></svg>
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
                 </li>
                 <li class="tab-item" data-target="view-training" data-title="Training">
-                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
                 </li>
                 <li class="tab-item" data-target="view-bro" data-title="Verlauf">
-                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
                 </li>
                 <li class="tab-item" data-target="view-settings" data-title="Einstellungen">
-                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>
                 </li>
             </ul>
         </nav>
 
     </div>
 
-    <div id="offline-banner" style="display: none; position: fixed; top: 0; width: 100%; background: #FF453A; color: white; text-align: center; padding: 5px; font-size: 12px; z-index: 100; font-weight: bold;">Offline Modus</div>
+    <div id="offline-banner" style="display: none; position: fixed; top: 0; width: 100%; background: #FF453A; color: white; text-align: center; padding: 5px; font-size: 12px; z-index: 100; font-weight: 600;">
+        Offline – Daten werden lokal synchronisiert
+    </div>
 
     <script type="module" src="script.js"></script>
 </body>
