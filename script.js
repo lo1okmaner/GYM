@@ -28,6 +28,7 @@ let allSessionsRaw = [];
 let dailyLogsRaw = [];
 let exerciseDefinitions = [];
 let workoutTemplates = [];
+let trainingPlan = null; // NEU: Wochenplan
 let editId = null;
 let editTplId = null;
 let myChart = null;
@@ -37,6 +38,10 @@ let todayStatus = null;
 
 const BRAND_ORANGE = '#FF5E00';
 const CHART_BG_ORANGE = 'rgba(255, 94, 0, 0.15)';
+
+// NEU: Wochentag -> Deutsche Labels
+const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+const WEEKDAYS_SHORT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 window.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('dynamic-date');
@@ -135,12 +140,102 @@ async function initApp() {
     logs = allSessionsRaw.filter(s => s.userId === user.uid).reverse();
     renderHistory(); updateBroExerciseDropdown();
 
+    // NEU: Trainingsplan laden
+    await window.loadTrainingPlan();
+    
     await window.checkMorningStatus();
     
     window.renderBroCalendar();
     window.updateWeightChart();
     window.updateMuscleHeatmap(); 
 }
+
+// ========== NEU: TRAININGSPLAN SYSTEM ==========
+
+window.loadTrainingPlan = async function() {
+    const uid = window.auth.currentUser.uid;
+    try {
+        const planSnap = await window.fs.getDocs(window.fs.query(
+            window.fs.collection(window.db, "trainingPlans"),
+            window.fs.where("userId", "==", uid)
+        ));
+        
+        if(planSnap.docs.length > 0) {
+            trainingPlan = {id: planSnap.docs[0].id, ...planSnap.docs[0].data()};
+        } else {
+            trainingPlan = null;
+        }
+    } catch(e) {
+        console.error("Fehler beim Laden des Trainingsplans:", e);
+        trainingPlan = null;
+    }
+};
+
+// NEU: Heute sollte trainiert werden (basierend auf Plan)
+window.getTodayPlanType = function() {
+    if(!trainingPlan) return null;
+    const today = new Date().getDay(); // 0=So, 1=Mo, ..., 6=Sa
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return trainingPlan[days[today]] || null;
+};
+
+// NEU: Trainingsplan speichern
+window.saveTrainingPlan = async function() {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const planData = { userId: window.auth.currentUser.uid };
+    
+    days.forEach(day => {
+        const select = document.getElementById(`plan-select-${day}`);
+        if(select) planData[day] = select.value;
+    });
+    
+    try {
+        if(trainingPlan && trainingPlan.id) {
+            await window.fs.updateDoc(window.fs.doc(window.db, "trainingPlans", trainingPlan.id), planData);
+        } else {
+            const docRef = await window.fs.addDoc(window.fs.collection(window.db, "trainingPlans"), planData);
+            trainingPlan = {id: docRef.id, ...planData};
+        }
+        alert("Trainingsplan gespeichert! ✅");
+        window.checkMorningStatus();
+    } catch(e) {
+        alert("Fehler beim Speichern: " + e.message);
+    }
+};
+
+// NEU: Trainingsplan-Editor rendern
+window.renderTrainingPlanEditor = function() {
+    const container = document.getElementById('training-plan-editor');
+    if(!container) return;
+    
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayLabels = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    
+    let html = `
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+    `;
+    
+    days.forEach((day, idx) => {
+        const currentType = trainingPlan ? (trainingPlan[day] || 'rest') : 'rest';
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--input-bg); border-radius: 12px;">
+                <label style="font-weight: 600; min-width: 100px;">${dayLabels[idx]}</label>
+                <select id="plan-select-${day}" class="premium-input" style="flex: 1; margin: 0 12px;">
+                    <option value="rest" ${currentType === 'rest' ? 'selected' : ''}>🛋️ Rest Day</option>
+                    <option value="gym" ${currentType === 'gym' ? 'selected' : ''}>💪 Gym Day</option>
+                    <option value="light" ${currentType === 'light' ? 'selected' : ''}>🚶 Light Day</option>
+                </select>
+            </div>
+        `;
+    });
+    
+    html += `
+        </div>
+        <button onclick="window.saveTrainingPlan()" class="premium-btn btn-orange" style="width: 100%; margin-top: 20px;">Plan speichern</button>
+    `;
+    
+    container.innerHTML = html;
+};
 
 window.checkMorningStatus = async function() {
     const uid = window.auth.currentUser.uid;
@@ -156,6 +251,9 @@ window.checkMorningStatus = async function() {
         if(d.date === dateStr) todayStatus = d;
     });
     
+    // NEU: Wenn noch kein Status eingetragen, aber Trainingsplan sagt 'gym' -> vorsuggerieren
+    const planType = window.getTodayPlanType();
+    
     if(todayStatus) {
         document.getElementById('card-morning-checkin').style.display = 'none';
         document.getElementById('card-status-done').style.display = 'block';
@@ -164,6 +262,16 @@ window.checkMorningStatus = async function() {
     } else {
         document.getElementById('card-morning-checkin').style.display = 'block';
         document.getElementById('card-status-done').style.display = 'none';
+        
+        // NEU: Hinweis anzeigen, was der Plan vorsieht
+        const planHint = document.getElementById('plan-hint');
+        if(planHint && planType) {
+            const hintText = planType === 'gym' ? '💡 Dein Plan sieht heute einen Gym Day vor!' 
+                           : planType === 'light' ? '💡 Dein Plan sieht heute einen Light Day vor!' 
+                           : '💡 Dein Plan sieht heute einen Rest Day vor!';
+            planHint.innerText = hintText;
+            planHint.style.display = 'block';
+        }
     }
     
     const workoutDates = allSessionsRaw.filter(s => s.userId === uid).map(s => s.date);
@@ -183,7 +291,7 @@ window.checkMorningStatus = async function() {
 };
 
 window.saveMorningStatus = async function(statusType) {
-    const data = { userId: window.auth.currentUser.uid, date: new Date().toLocaleDateString('en-CA'), sleep: document.getElementById('dash-sleep').value, weight: document.getElementById('dash-weight').value, status: statusType, timestamp: new Date().toISOString() };
+    const data = { userId: window.auth.currentUser.uid, date: new Date().toLocaleDateString('en-CA'), sleep: document.getElementById('dash-sleep').value, weight: document.getElementById('dash-weight').value, status: statusType };
     await window.fs.addDoc(window.fs.collection(window.db, "dailyLogs"), data);
     await window.checkMorningStatus(); window.renderBroCalendar(); window.updateWeightChart(); window.generateInsights();
 };
@@ -258,7 +366,7 @@ function renderWorkoutTemplates() {
     const list = document.getElementById('workout-templates-list'); list.innerHTML = "";
     workoutTemplates.forEach(t => {
         const d = document.createElement('div'); d.style.padding = "16px 0"; d.style.borderBottom = "1px solid var(--separator)";
-        d.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px;">${t.title}</b><div style="display: flex; gap: 16px;"><button onclick="window.loadEditTpl('${t.id}')" class="btn-text" style="color: var(--text-muted);">Edit</button><button onclick="window.deleteTpl('${t.id}')" class="btn-red-text">×</button></div></div><small style="color: var(--text-muted); display: block; margin-top: 6px;">${t.exerciseNames.join(', ')}</small>`;
+        d.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:16px;">${t.title}</b><div style="display: flex; gap: 16px;"><button onclick="window.loadEditTpl('${t.id}')" class="btn-text" style="color:var(--brand-orange);">Bearbeiten</button><button onclick="window.deleteTpl('${t.id}')" class="btn-text" style="color:#FF453A;">Löschen</button></div></div>`;
         list.appendChild(d);
     });
 }
@@ -281,7 +389,7 @@ window.addTrackingExercise = function(name = "", sets = []) {
         const lastS = allSessionsRaw.filter(s => s.userId === window.auth.currentUser.uid).reverse().find(s => s.exercises.some(e => e.name === name));
         if (lastS) lastHtml = `<div class="last-perf-badge">Letztes Mal: ${lastS.exercises.find(e => e.name === name).sets.map(st => st.kg + "kg").join(" | ")}</div>`;
     }
-    div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;"><select class="premium-input ex-select" style="flex:1; font-weight:700;" onchange="window.refreshExerciseBadge(this)"><option value="">-- Übung --</option>${exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name === name ? 'selected' : ''}>${ex.name}</option>`).join('')}</select><button onclick="this.parentElement.parentElement.remove()" class="btn-red-text" style="font-size:28px; margin-left:16px;">×</button></div>${lastHtml}<div class="sets-list"></div><button onclick="window.addSetRow(this.previousElementSibling)" class="btn-text" style="margin-top: 12px; display:block; width:100%; text-align:center;">+ Satz hinzufügen</button>`;
+    div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;"><select class="premium-input ex-select" style="flex:1; font-weight:700;" onchange="window.refreshExerciseBadge(this)"><option value="">-- Übung wählen --</option>${exerciseDefinitions.map(ex => `<option value="${ex.name}" ${ex.name===name?'selected':''}>${ex.name}</option>`).join('')}</select><button onclick="this.closest('.card').remove()" class="btn-red-text">✕</button></div>${lastHtml}<div class="sets-list" style="display: flex; flex-direction: column; gap: 12px;"></div>`;
     document.getElementById('tracking-exercises').appendChild(div);
     const list = div.querySelector('.sets-list');
     if(sets.length > 0) sets.forEach(s => window.addSetRow(list, s.reps, s.kg)); else window.addSetRow(list);
@@ -300,7 +408,7 @@ window.refreshExerciseBadge = function(el) {
 
 window.addSetRow = function(container, reps="", kg="") {
     const r = document.createElement('div'); r.style.display = "grid"; r.style.gridTemplateColumns = "1fr 1fr 40px"; r.style.gap = "12px"; r.style.marginTop = "12px";
-    r.innerHTML = `<input type="number" class="premium-input s-reps" placeholder="Reps" value="${reps}"><input type="number" class="premium-input s-weight" placeholder="kg" value="${kg}"><button onclick="this.parentElement.remove()" class="btn-red-text" style="font-size: 24px;">×</button>`;
+    r.innerHTML = `<input type="number" class="premium-input s-reps" placeholder="Reps" value="${reps}"><input type="number" class="premium-input s-weight" placeholder="kg" value="${kg}"><button onclick="this.parentElement.remove()" class="premium-btn" style="background: rgba(255, 69, 58, 0.1); color: #FF453A; padding: 0;">✕</button>`;
     container.appendChild(r);
 };
 
@@ -311,7 +419,7 @@ window.saveSession = async function() {
         let sets = []; for(let i=0; i<rs.length; i++) if(rs[i].value) sets.push({reps: rs[i].value, kg: ws[i].value});
         if(n) ex.push({name: n, sets: sets});
     });
-    const d = { userId: window.auth.currentUser.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Training", exercises: ex, checkIn: { energy: document.getElementById('checkin-energy').value, soreness: document.getElementById('checkin-soreness').value } };
+    const d = { userId: window.auth.currentUser.uid, date: document.getElementById('session-date').value, title: document.getElementById('session-name').value || "Training", exercises: ex, checkIn: {energy: document.getElementById('checkin-energy').value, soreness: document.getElementById('checkin-soreness').value} };
     if(editId) await window.fs.updateDoc(window.fs.doc(window.db, "sessions", editId), d);
     else await window.fs.addDoc(window.fs.collection(window.db, "sessions"), d);
     window.resetForm(); initApp();
@@ -328,7 +436,7 @@ function renderHistory() {
     
     logs.forEach(s => {
         const item = document.createElement('div'); item.style.padding = "16px 0"; item.style.borderBottom = "1px solid var(--separator)";
-        item.innerHTML = `<button class="accordion-header" onclick="const c = this.nextElementSibling; c.style.display = c.style.display === 'block' ? 'none' : 'block';"><div><div style="font-weight:800; font-size:16px;">${s.title}</div><small style="color:var(--text-muted); font-weight:600;">${new Date(s.date).toLocaleDateString('de-DE')}</small></div><div style="display:flex; gap:16px; align-items:center;"><div onclick="event.stopPropagation(); window.loadEdit('${s.id}')" class="btn-text" style="color: var(--text-muted);">Edit</div><div class="chevron-icon">›</div></div></button><div class="collapsible-area" style="border:none; padding-top:12px; margin-top:0;">${s.exercises.map(ex => `<div style="padding:6px 0;"><b style="color:var(--brand-orange);">${ex.name}:</b> ${ex.sets.map(st => st.reps+'x'+st.kg).join(' · ')}</div>`).join('')}</div>`;
+        item.innerHTML = `<button class="accordion-header" onclick="const c = this.nextElementSibling; c.style.display = c.style.display === 'block' ? 'none' : 'block';"><div><div style="font-weight: 700; margin-bottom: 4px;">${s.title}</div><div style="font-size: 13px; color: var(--text-muted);">${new Date(s.date).toLocaleDateString('de-DE')} • ${s.exercises.length} Übungen</div></div><div class="chevron-icon">›</div></button><div style="display:none; padding-top:12px;"><button onclick="window.loadEdit('${s.id}')" class="btn-text" style="margin-right:16px; color:var(--brand-orange);">Bearbeiten</button><button onclick="window.deleteCurrentSession()" class="btn-text" style="color:#FF453A;">Löschen</button><div style="margin-top:12px; font-size:14px;">${s.exercises.map(ex => `<b>${ex.name}</b>: ${ex.sets.map(st => `${st.kg}kg x${st.reps}`).join(', ')}`).join('<br>')}</div></div>`;
         h.appendChild(item);
     });
 }
@@ -380,7 +488,7 @@ window.renderBroCalendar = function() {
     const first = new Date(broCalDate.getFullYear(), broCalDate.getMonth(), 1);
     const last = new Date(broCalDate.getFullYear(), broCalDate.getMonth() + 1, 0);
     document.getElementById('bro-cal-month').innerText = broCalDate.toLocaleString('de-de', {month:'long', year:'numeric'});
-    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => { const el = document.createElement('div'); el.style.color = "var(--text-muted)"; el.style.fontSize = "12px"; el.style.fontWeight = "700"; el.style.textAlign = "center"; el.innerText=d; grid.appendChild(el); });
+    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => { const el = document.createElement('div'); el.style.color = "var(--text-muted)"; el.style.fontSize = "12px"; el.style.fontWeight = "700"; el.innerText = d; grid.appendChild(el); });
     let start = (first.getDay() + 6) % 7;
     for (let i = 0; i < start; i++) grid.appendChild(document.createElement('div'));
     for (let d = 1; d <= last.getDate(); d++) {
@@ -517,8 +625,8 @@ window.updateBroChart = function() {
             type: 'line', 
             data: { 
                 datasets: [
-                    { label: 'Du', data: myD, borderColor: BRAND_ORANGE, backgroundColor: CHART_BG_ORANGE, tension: 0.4, fill: true, pointRadius: myD.length === 1 ? 6 : 4, pointBackgroundColor: '#000', pointBorderWidth: 2 }, 
-                    ...(compare && broD.length > 0 ? [{ label: 'Bro', data: broD, borderColor: '#30D158', tension: 0.4, fill: false, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2, borderDash: [5, 5] }] : [])
+                    { label: 'Du', data: myD, borderColor: BRAND_ORANGE, backgroundColor: CHART_BG_ORANGE, tension: 0.4, fill: true, pointRadius: myD.length === 1 ? 6 : 4, pointBackgroundColor: BRAND_ORANGE },
+                    ...(compare && broD.length > 0 ? [{ label: 'Bro', data: broD, borderColor: '#30D158', tension: 0.4, fill: false, pointRadius: 4, pointBackgroundColor: '#000', pointBorderWidth: 2, borderWidth: 2 }] : [])
                 ] 
             }, 
             options: { 
@@ -550,7 +658,7 @@ window.updateWeightChart = async function() {
         myWeightChart = new Chart(ctx, { 
             type: 'line', 
             data: { 
-                datasets: [{ label: 'kg', data: pts, borderColor: BRAND_ORANGE, backgroundColor: CHART_BG_ORANGE, tension: 0.4, fill: true, pointRadius: pts.length === 1 ? 6 : 4, pointBackgroundColor: '#000', pointBorderWidth: 2 }] 
+                datasets: [{ label: 'kg', data: pts, borderColor: BRAND_ORANGE, backgroundColor: CHART_BG_ORANGE, tension: 0.4, fill: true, pointRadius: pts.length === 1 ? 6 : 4, pointBackgroundColor: BRAND_ORANGE }]
             }, 
             options: { 
                 responsive: true, maintainAspectRatio: false, 
@@ -602,7 +710,7 @@ window.generateInsights = function() {
             insightsHtml += `
             <div class="insight-card" style="border-left-color: var(--color-rest); background-color: var(--input-bg); border-radius: 16px; padding: 16px; border-left-width: 4px; border-left-style: solid; margin-bottom: 12px;">
                 <div style="font-size: 13px; font-weight: 800; color: var(--color-rest); text-transform: uppercase; margin-bottom: 6px;">📈 Volumen-Tracking</div>
-                <div style="font-size: 15px; line-height: 1.5;">In deinem letzten Workout ("${lastS.title}") hast du insgesamt <b style="color:var(--text-main);">${totalVolume.toLocaleString('de-DE')} kg</b> bewegt. Starke Leistung!</div>
+                <div style="font-size: 15px; line-height: 1.5;">In deinem letzten Workout ("${lastS.title}") hast du insgesamt <b style="color:var(--text-main);">${totalVolume.toLocaleString('de-DE')}</b> kg trainiert!</div>
             </div>`;
         }
     }
@@ -610,10 +718,10 @@ window.generateInsights = function() {
     let exName = document.getElementById('bro-exercise-select')?.value;
     if (!exName && logs.length > 0) {
          for(let s of logs) {
-             const exWithWeight = s.exercises.find(e => e.sets.some(st => parseFloat(st.kg) > 0));
-             if(exWithWeight) { exName = exWithWeight.name; break; }
-         }
-    }
+              const exWithWeight = s.exercises.find(e => e.sets.some(st => parseFloat(st.kg) > 0));
+              if(exWithWeight) { exName = exWithWeight.name; break; }
+          }
+     }
 
     if(exName) {
         let recent1RM = 0; let found = false;
@@ -675,11 +783,11 @@ window.generateInsights = function() {
         insightsHtml += `
         <div class="insight-card" style="border-left-color: #0A84FF; background-color: var(--input-bg); border-radius: 16px; padding: 16px; border-left-width: 4px; border-left-style: solid; margin-bottom: 12px;">
             <div style="font-size: 13px; font-weight: 800; color: #0A84FF; text-transform: uppercase; margin-bottom: 6px;">💤 Schlaf & Performance</div>
-            <div style="font-size: 15px; line-height: 1.5;">Dein durchschnittliches Energielevel liegt aktuell bei <b style="color:var(--text-main);">${avg}/10</b>. Sammle mehr Nächte und Log-Daten für detaillierte Schlaf-Vergleiche!</div>
+            <div style="font-size: 15px; line-height: 1.5;">Dein durchschnittliches Energielevel liegt aktuell bei <b style="color:var(--text-main);">${avg}/10</b>. Sammle mehr Nächte und Log-Daten für bessere Analysen!</div>
         </div>`;
     }
 
-    if(insightsHtml === '') insightsHtml = `<div style="text-align:center; color: var(--text-muted); font-size: 14px; padding: 20px;">Trage dein erstes Workout ein, um hier smarte Analysen zu sehen!</div>`;
+    if(insightsHtml === '') insightsHtml = `<div style="text-align:center; color: var(--text-muted); font-size: 14px; padding: 20px;">Trage dein erstes Workout ein, um hier smarte Analysen zu sehen 🔍</div>`;
     container.innerHTML = insightsHtml;
 };
 
@@ -697,9 +805,12 @@ window.switchTab = function(t, btn) {
             window.generateInsights(); 
         }, 150);
     }
+    if(t === 'settings') {
+        window.renderTrainingPlanEditor();
+    }
     document.querySelector('.app-content').scrollTo({top: 0, behavior: 'smooth'});
 };
 window.toggleAccordion = function(e) { const c = e.closest('.card'); if(c) c.classList.toggle('is-open'); };
-function updateBroExerciseDropdown() { const sel = document.getElementById('bro-exercise-select'); if (!sel) return; sel.innerHTML = '<option value="">Übung wählen...</option>' + exerciseDefinitions.sort((a,b)=>a.name.localeCompare(b.name)).map(ex => `<option value="${ex.name}">${ex.name}</option>`).join(''); }
+function updateBroExerciseDropdown() { const sel = document.getElementById('bro-exercise-select'); if (!sel) return; sel.innerHTML = '<option value="">Übung wählen...</option>' + exerciseDefinitions.map(ex => `<option value="${ex.name}">${ex.name}</option>`).join(''); }
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(e => console.error(e)));
